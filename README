@@ -1,0 +1,143 @@
+# Padel UCN
+
+Sistema de gestión para canchas de pádel de la Universidad Católica del Norte.
+
+## Módulo de Canchas
+
+El sistema permite la gestión completa de canchas con sus respectivos atributos:
+- **Número**: Identificador único de la cancha (Primary Key)
+- **Costo**: Valor por hora de la cancha en la moneda local
+
+### Endpoints de la API para Canchas
+
+| Método HTTP | Endpoint | Descripción |
+|-------------|----------|-------------|
+| GET | `/api/canchas` | Obtiene todas las canchas disponibles |
+| GET | `/api/canchas/:numero` | Obtiene la información de una cancha específica por su número |
+| POST | `/api/canchas` | Crea una nueva cancha |
+| PATCH | `/api/canchas/:numero` | Actualiza la información de una cancha existente |
+| DELETE | `/api/canchas/:numero` | Elimina una cancha |
+
+### Formato de datos
+
+#### Creación de cancha (POST)
+```json
+{
+  "numero": 1,
+  "costo": 50
+}
+```
+
+#### Actualización de cancha (PATCH)
+```json
+{
+  "costo": 60
+}
+```
+
+### Canchas disponibles
+
+| Número de Cancha | Costo por hora |
+|------------------|---------------|
+| 1                | 50            |
+| 2                | 40            |
+| 3                | 40            |
+| 4                | 30            |
+| 5                | 30            |
+| 6                | 20            |
+
+## Módulo de Autenticación (JWT)
+
+El sistema implementa autenticación mediante JSON Web Tokens (JWT) para proteger las rutas y asegurar que solo usuarios autorizados puedan acceder a ciertos recursos.
+
+### Endpoints de Autenticación
+
+| Método HTTP | Endpoint | Descripción | Protegido |
+|-------------|----------|-------------|-----------|
+| POST | `/auth/register` | Registra un nuevo usuario en el sistema | No |
+| POST | `/auth/login` | Inicia sesión y obtiene un token JWT | No |
+| GET | `/auth/profile` | Obtiene el perfil del usuario autenticado | Sí |
+
+### Módulo de Usuarios
+
+| Método HTTP | Endpoint | Descripción | Protegido |
+|-------------|----------|-------------|-----------|
+| GET | `/users` | Obtiene todos los usuarios registrados | Sí |
+| GET | `/users/:rut` | Obtiene la información de un usuario específico | Sí |
+| POST | `/users` | Crea un nuevo usuario (solo administradores) | Sí |
+| PATCH | `/users/:rut` | Actualiza la información de un usuario | Sí |
+| DELETE | `/users/:rut` | Elimina un usuario | Sí |
+
+### Cómo utilizar la autenticación JWT
+
+#### 1. Registrar un nuevo usuario
+
+```http
+POST /auth/register
+Content-Type: application/json
+
+{
+  "rut": "12345678-9",
+  "password": "123456",
+  "nombre": "Juan Pérez"
+}
+```
+
+#### 2. Iniciar sesión
+
+```http
+POST /auth/login
+Content-Type: application/json
+
+{
+  "rut": "12345678-9",
+  "password": "123456"
+}
+```
+
+#### Respuesta del inicio de sesión:
+
+```json
+{
+  "statusCode": 200,
+  "message": "Inicio de sesión exitoso",
+  "data": {
+    "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+  },
+  "success": true
+}
+```
+
+#### 3. Acceder a rutas protegidas
+
+Para acceder a cualquier ruta protegida, es necesario incluir el token JWT en el encabezado de autorización:
+
+```http
+GET /users
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+```
+
+### Seguridad
+
+- Las contraseñas se almacenan encriptadas en la base de datos utilizando bcrypt.
+- Los tokens JWT tienen una validez de 24 horas.
+- Se recomienda mantener el token de forma segura y no compartirlo con terceros.
+
+### Formato de datos de Usuario
+
+#### Creación de usuario (POST)
+```json
+{
+  "rut": "12345678-9",
+  "password": "123456",
+  "nombre": "Juan Pérez"
+}
+```
+
+#### Actualización de usuario (PATCH)
+```json
+{
+  "nombre": "Juan Antonio Pérez",
+  "password": "nuevaContraseña"
+}
+```

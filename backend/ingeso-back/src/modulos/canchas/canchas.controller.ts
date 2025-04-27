@@ -14,7 +14,7 @@ export class CanchasController {
   @ApiOperation({ summary: 'Crear una nueva cancha' })
   @ApiResponse({ status: 201, description: 'Cancha creada exitosamente' })
   @ApiResponse({ status: 400, description: 'Datos inválidos o cancha ya existente' })
-  async create(@Body() createCanchaDto: CreateCanchaDto) {
+  async   create(@Body() createCanchaDto: CreateCanchaDto) {
     return await this.canchasService.create(createCanchaDto);
   }
 
