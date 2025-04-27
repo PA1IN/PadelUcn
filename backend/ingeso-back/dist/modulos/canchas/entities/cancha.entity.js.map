@@ -1,1 +1,1 @@
-{"version":3,"file":"cancha.entity.js","sourceRoot":"","sources":["../../../../src/modulos/canchas/entities/cancha.entity.ts"],"names":[],"mappings":";;;AAAA,MAAa,MAAM;CAAG;AAAtB,wBAAsB"}
+{"version":3,"file":"cancha.entity.js","sourceRoot":"","sources":["../../../../src/modulos/canchas/entities/cancha.entity.ts"],"names":[],"mappings":";;;;;;;;;;;;AAAA,qCAAwD;AAGjD,IAAM,MAAM,GAAZ,MAAM,MAAM;IAEjB,MAAM,CAAS;IAGf,KAAK,CAAS;CACf,CAAA;AANY,wBAAM;AAEjB;IADC,IAAA,uBAAa,GAAE;;sCACD;AAGf;IADC,IAAA,gBAAM,GAAE;;qCACK;iBALH,MAAM;IADlB,IAAA,gBAAM,GAAE;GACI,MAAM,CAMlB"}
