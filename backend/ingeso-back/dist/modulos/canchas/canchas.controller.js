@@ -17,64 +17,81 @@ const common_1 = require("@nestjs/common");
 const canchas_service_1 = require("./canchas.service");
 const create_cancha_dto_1 = require("./dto/create-cancha.dto");
 const update_cancha_dto_1 = require("./dto/update-cancha.dto");
+const swagger_1 = require("@nestjs/swagger");
 let CanchasController = class CanchasController {
     canchasService;
     constructor(canchasService) {
         this.canchasService = canchasService;
     }
-    create(createCanchaDto) {
-        return this.canchasService.create(createCanchaDto);
+    async create(createCanchaDto) {
+        return await this.canchasService.create(createCanchaDto);
     }
-    findAll() {
-        return this.canchasService.findAll();
+    async findAll() {
+        return await this.canchasService.findAll();
     }
-    findOne(id) {
-        return this.canchasService.findOne(+id);
+    async findOne(numero) {
+        return await this.canchasService.findOne(+numero);
     }
-    update(id, updateCanchaDto) {
-        return this.canchasService.update(+id, updateCanchaDto);
+    async update(numero, updateCanchaDto) {
+        return await this.canchasService.update(+numero, updateCanchaDto);
     }
-    remove(id) {
-        return this.canchasService.remove(+id);
+    async remove(numero) {
+        return await this.canchasService.remove(+numero);
     }
 };
 exports.CanchasController = CanchasController;
 __decorate([
     (0, common_1.Post)(),
+    (0, swagger_1.ApiOperation)({ summary: 'Crear una nueva cancha' }),
+    (0, swagger_1.ApiResponse)({ status: 201, description: 'Cancha creada exitosamente' }),
+    (0, swagger_1.ApiResponse)({ status: 400, description: 'Datos inválidos o cancha ya existente' }),
     __param(0, (0, common_1.Body)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [create_cancha_dto_1.CreateCanchaDto]),
-    __metadata("design:returntype", void 0)
+    __metadata("design:returntype", Promise)
 ], CanchasController.prototype, "create", null);
 __decorate([
     (0, common_1.Get)(),
+    (0, swagger_1.ApiOperation)({ summary: 'Obtener todas las canchas' }),
+    (0, swagger_1.ApiResponse)({ status: 200, description: 'Lista de canchas obtenida exitosamente' }),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", []),
-    __metadata("design:returntype", void 0)
+    __metadata("design:returntype", Promise)
 ], CanchasController.prototype, "findAll", null);
 __decorate([
-    (0, common_1.Get)(':id'),
-    __param(0, (0, common_1.Param)('id')),
+    (0, common_1.Get)(':numero'),
+    (0, swagger_1.ApiOperation)({ summary: 'Obtener una cancha por su número' }),
+    (0, swagger_1.ApiResponse)({ status: 200, description: 'Cancha obtenida exitosamente' }),
+    (0, swagger_1.ApiResponse)({ status: 404, description: 'Cancha no encontrada' }),
+    __param(0, (0, common_1.Param)('numero')),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String]),
-    __metadata("design:returntype", void 0)
+    __metadata("design:returntype", Promise)
 ], CanchasController.prototype, "findOne", null);
 __decorate([
-    (0, common_1.Patch)(':id'),
-    __param(0, (0, common_1.Param)('id')),
+    (0, common_1.Patch)(':numero'),
+    (0, swagger_1.ApiOperation)({ summary: 'Actualizar una cancha existente' }),
+    (0, swagger_1.ApiResponse)({ status: 200, description: 'Cancha actualizada exitosamente' }),
+    (0, swagger_1.ApiResponse)({ status: 404, description: 'Cancha no encontrada' }),
+    (0, swagger_1.ApiResponse)({ status: 400, description: 'Datos inválidos' }),
+    __param(0, (0, common_1.Param)('numero')),
     __param(1, (0, common_1.Body)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String, update_cancha_dto_1.UpdateCanchaDto]),
-    __metadata("design:returntype", void 0)
+    __metadata("design:returntype", Promise)
 ], CanchasController.prototype, "update", null);
 __decorate([
-    (0, common_1.Delete)(':id'),
-    __param(0, (0, common_1.Param)('id')),
+    (0, common_1.Delete)(':numero'),
+    (0, swagger_1.ApiOperation)({ summary: 'Eliminar una cancha' }),
+    (0, swagger_1.ApiResponse)({ status: 200, description: 'Cancha eliminada exitosamente' }),
+    (0, swagger_1.ApiResponse)({ status: 404, description: 'Cancha no encontrada' }),
+    __param(0, (0, common_1.Param)('numero')),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String]),
-    __metadata("design:returntype", void 0)
+    __metadata("design:returntype", Promise)
 ], CanchasController.prototype, "remove", null);
 exports.CanchasController = CanchasController = __decorate([
+    (0, swagger_1.ApiTags)('canchas'),
     (0, common_1.Controller)('canchas'),
     __metadata("design:paramtypes", [canchas_service_1.CanchasService])
 ], CanchasController);
