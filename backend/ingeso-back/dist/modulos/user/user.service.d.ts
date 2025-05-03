@@ -9,7 +9,7 @@ export declare class UserService {
     create(createUserDto: CreateUserDto): Promise<ApiResponse<User>>;
     findAll(): Promise<ApiResponse<User[]>>;
     findOne(rut: string): Promise<ApiResponse<User>>;
-    findByRut(rut: string): Promise<User>;
+    findByRut(rut: string): Promise<User | null>;
     update(rut: string, updateUserDto: UpdateUserDto): Promise<ApiResponse<User>>;
     remove(rut: string): Promise<ApiResponse<null>>;
 }

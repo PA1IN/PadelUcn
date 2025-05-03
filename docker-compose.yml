@@ -1,0 +1,49 @@
+version: '3.8'
+services:
+  padelucn-db:
+    image: postgres:latest
+    container_name: padelucn-postgres
+    ports:
+      - "5433:5432"
+    environment:
+      POSTGRES_USER: ingeso
+      POSTGRES_PASSWORD: 12342
+      POSTGRES_DB: padelucn
+    volumes:
+      - padelucn_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ingeso -d padelucn"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+    networks:
+      - padelucn-network
+
+  padelucn-backend:
+    build:
+      context: ./backend/ingeso-back
+      dockerfile: Dockerfile
+    container_name: padelucn-backend
+    ports:
+      - "3000:3000"
+    depends_on:
+      padelucn-db:
+        condition: service_healthy
+    environment:
+      - NODE_ENV=development
+      - DB_HOST=padelucn-db
+      - DB_PORT=5432
+      - DB_USER=ingeso
+      - DB_PASSWORD=12342
+      - DB_NAME=padelucn
+    restart: unless-stopped
+    networks:
+      - padelucn-network
+
+volumes:
+  padelucn_data:
+
+networks:
+  padelucn-network:
+    driver: bridge

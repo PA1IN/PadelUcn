@@ -90,7 +90,7 @@ export class UserService {
     }
   }
 
-  async findByRut(rut: string): Promise<User> {
+  async findByRut(rut: string): Promise<User | null> {
     return await this.userRepository.findOne({ where: { rut } });
   }
 
@@ -109,6 +109,10 @@ export class UserService {
       
       await this.userRepository.update(rut, updateUserDto);
       const updatedUser = await this.userRepository.findOne({ where: { rut } });
+      
+      if (!updatedUser) {
+        throw new Error(`Error al obtener usuario actualizado con RUT ${rut}`);
+      }
       
       // No devolver la contraseña
       const { password, ...result } = updatedUser;

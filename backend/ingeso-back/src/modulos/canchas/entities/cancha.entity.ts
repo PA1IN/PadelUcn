@@ -1,4 +1,5 @@
-import { Entity, PrimaryColumn, Column } from 'typeorm';
+import { Entity, PrimaryColumn, Column, OneToMany } from 'typeorm';
+import { Reserva } from '../../reserva/entities/reserva.entity';
 
 @Entity()
 export class Cancha {
@@ -7,4 +8,7 @@ export class Cancha {
 
   @Column()
   costo: number;
+
+  @OneToMany(() => Reserva, reserva => reserva.cancha)
+  reservas: Reserva[];
 }

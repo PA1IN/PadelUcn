@@ -16,6 +16,7 @@ const class_validator_1 = require("class-validator");
 class UpdateUserDto extends (0, mapped_types_1.PartialType)(create_user_dto_1.CreateUserDto) {
     password;
     nombre;
+    correo;
 }
 exports.UpdateUserDto = UpdateUserDto;
 __decorate([
@@ -29,4 +30,12 @@ __decorate([
     (0, class_validator_1.IsString)({ message: 'El nombre debe ser texto' }),
     __metadata("design:type", String)
 ], UpdateUserDto.prototype, "nombre", void 0);
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsEmail)({}, { message: 'Formato de correo electrónico inválido' }),
+    (0, class_validator_1.Matches)(/^[a-zA-Z0-9._%+-]+@(gmail|hotmail|outlook|yahoo|ucn|alumnos\.ucn|disc\.ucn|ce\.ucn|live)+\.[a-zA-Z]{2,}$/, {
+        message: 'El correo debe ser de un dominio válido (gmail.com, hotmail.com, ucn.cl, etc.)',
+    }),
+    __metadata("design:type", String)
+], UpdateUserDto.prototype, "correo", void 0);
 //# sourceMappingURL=update-user.dto.js.map

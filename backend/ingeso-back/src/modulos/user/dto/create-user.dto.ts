@@ -1,4 +1,4 @@
-import { IsNotEmpty, IsString, MinLength, Matches } from 'class-validator';
+import { IsNotEmpty, IsString, MinLength, Matches, IsEmail, IsOptional } from 'class-validator';
 
 export class CreateUserDto {
   @IsNotEmpty({ message: 'El RUT es requerido' })
@@ -14,4 +14,11 @@ export class CreateUserDto {
   @IsNotEmpty({ message: 'El nombre es requerido' })
   @IsString({ message: 'El nombre debe ser texto' })
   nombre: string;
+
+  @IsOptional()
+  @IsEmail({}, { message: 'Formato de correo electrónico inválido' })
+  @Matches(/^[a-zA-Z0-9._%+-]+@(gmail|hotmail|outlook|yahoo|ucn|alumnos\.ucn|disc\.ucn|ce\.ucn|live)+\.[a-zA-Z]{2,}$/, {
+    message: 'El correo debe ser de un dominio válido (gmail.com, hotmail.com, ucn.cl, etc.)',
+  })
+  correo?: string;
 }

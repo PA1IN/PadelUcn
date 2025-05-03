@@ -86,6 +86,9 @@ let UserService = class UserService {
             }
             await this.userRepository.update(rut, updateUserDto);
             const updatedUser = await this.userRepository.findOne({ where: { rut } });
+            if (!updatedUser) {
+                throw new Error(`Error al obtener usuario actualizado con RUT ${rut}`);
+            }
             const { password, ...result } = updatedUser;
             return (0, api_response_util_1.CreateResponse)('Usuario actualizado exitosamente', result, 'OK');
         }
