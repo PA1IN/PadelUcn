@@ -21,6 +21,7 @@ services:
       - padelucn-network
 
   padelucn-backend:
+    platform: linux/amd64  # Especificamos la plataforma explícitamente
     build:
       context: ./backend/ingeso-back
       dockerfile: Dockerfile

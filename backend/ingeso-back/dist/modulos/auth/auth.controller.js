@@ -14,19 +14,40 @@ var __param = (this && this.__param) || function (paramIndex, decorator) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.AuthController = void 0;
 const common_1 = require("@nestjs/common");
-const passport_1 = require("@nestjs/passport");
 const auth_service_1 = require("./auth.service");
 const create_user_dto_1 = require("../user/dto/create-user.dto");
 const swagger_1 = require("@nestjs/swagger");
 const jwt_auth_guard_1 = require("./guards/jwt-auth.guard");
 const login_dto_1 = require("./dto/login.dto");
+const user_service_1 = require("../user/user.service");
+const bcrypt = require("bcryptjs");
 let AuthController = class AuthController {
     authService;
-    constructor(authService) {
+    userService;
+    constructor(authService, userService) {
         this.authService = authService;
+        this.userService = userService;
     }
-    async login(req, loginDto) {
-        return this.authService.login(req.user);
+    async login(loginDto) {
+        const { rut, password } = loginDto;
+        const user = await this.userService.findByRut(rut);
+        if (!user) {
+            return {
+                statusCode: 401,
+                message: 'Credenciales inválidas: Usuario no encontrado',
+                success: false
+            };
+        }
+        const isPasswordValid = await bcrypt.compare(password, user.password);
+        if (!isPasswordValid) {
+            return {
+                statusCode: 401,
+                message: 'Credenciales inválidas: Contraseña incorrecta',
+                success: false
+            };
+        }
+        const { password: _, ...userWithoutPassword } = user;
+        return this.authService.login(userWithoutPassword);
     }
     async register(createUserDto) {
         return this.authService.register(createUserDto);
@@ -37,15 +58,13 @@ let AuthController = class AuthController {
 };
 exports.AuthController = AuthController;
 __decorate([
-    (0, common_1.UseGuards)((0, passport_1.AuthGuard)('local')),
     (0, common_1.Post)('login'),
     (0, swagger_1.ApiOperation)({ summary: 'Iniciar sesión' }),
     (0, swagger_1.ApiResponse)({ status: 200, description: 'Usuario autenticado correctamente' }),
     (0, swagger_1.ApiResponse)({ status: 401, description: 'Credenciales inválidas' }),
-    __param(0, (0, common_1.Request)()),
-    __param(1, (0, common_1.Body)()),
+    __param(0, (0, common_1.Body)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Object, login_dto_1.LoginDto]),
+    __metadata("design:paramtypes", [login_dto_1.LoginDto]),
     __metadata("design:returntype", Promise)
 ], AuthController.prototype, "login", null);
 __decorate([
@@ -72,6 +91,7 @@ __decorate([
 exports.AuthController = AuthController = __decorate([
     (0, swagger_1.ApiTags)('auth'),
     (0, common_1.Controller)('auth'),
-    __metadata("design:paramtypes", [auth_service_1.AuthService])
+    __metadata("design:paramtypes", [auth_service_1.AuthService,
+        user_service_1.UserService])
 ], AuthController);
 //# sourceMappingURL=auth.controller.js.map

@@ -12,12 +12,16 @@ const typeorm_1 = require("@nestjs/typeorm");
 const boleta_equipamiento_service_1 = require("./boleta-equipamiento.service");
 const boleta_equipamiento_controller_1 = require("./boleta-equipamiento.controller");
 const boleta_equipamiento_entity_1 = require("./entities/boleta-equipamiento.entity");
+const equipamiento_module_1 = require("../equipamiento/equipamiento.module");
 let BoletaEquipamientoModule = class BoletaEquipamientoModule {
 };
 exports.BoletaEquipamientoModule = BoletaEquipamientoModule;
 exports.BoletaEquipamientoModule = BoletaEquipamientoModule = __decorate([
     (0, common_1.Module)({
-        imports: [typeorm_1.TypeOrmModule.forFeature([boleta_equipamiento_entity_1.BoletaEquipamiento])],
+        imports: [
+            typeorm_1.TypeOrmModule.forFeature([boleta_equipamiento_entity_1.BoletaEquipamiento]),
+            equipamiento_module_1.EquipamientoModule,
+        ],
         controllers: [boleta_equipamiento_controller_1.BoletaEquipamientoController],
         providers: [boleta_equipamiento_service_1.BoletaEquipamientoService],
         exports: [boleta_equipamiento_service_1.BoletaEquipamientoService],

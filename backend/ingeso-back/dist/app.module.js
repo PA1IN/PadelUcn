@@ -9,6 +9,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.AppModule = void 0;
 const common_1 = require("@nestjs/common");
 const typeorm_1 = require("@nestjs/typeorm");
+const config_1 = require("@nestjs/config");
 const app_controller_1 = require("./app.controller");
 const app_service_1 = require("./app.service");
 const canchas_module_1 = require("./modulos/canchas/canchas.module");
@@ -24,15 +25,27 @@ exports.AppModule = AppModule;
 exports.AppModule = AppModule = __decorate([
     (0, common_1.Module)({
         imports: [
-            typeorm_1.TypeOrmModule.forRoot({
-                type: 'postgres',
-                host: 'localhost',
-                port: 5433,
-                username: 'ingeso',
-                password: '12342',
-                database: 'padelucn',
-                entities: [__dirname + '/**/*.entity{.ts,.js}'],
-                synchronize: true,
+            config_1.ConfigModule.forRoot({
+                isGlobal: true,
+                envFilePath: '.env',
+            }),
+            typeorm_1.TypeOrmModule.forRootAsync({
+                imports: [config_1.ConfigModule],
+                inject: [config_1.ConfigService],
+                useFactory: (configService) => ({
+                    type: 'postgres',
+                    host: configService.get('DB_HOST', 'localhost'),
+                    port: parseInt(configService.get('DB_PORT', '5433')),
+                    username: configService.get('DB_USER', 'ingeso'),
+                    password: configService.get('DB_PASSWORD', '12342'),
+                    database: configService.get('DB_NAME', 'padelucn'),
+                    entities: [__dirname + '/**/*.entity{.ts,.js}'],
+                    synchronize: true,
+                    logging: true,
+                    retryAttempts: 5,
+                    retryDelay: 3000,
+                    connectTimeoutMS: 10000,
+                }),
             }),
             canchas_module_1.CanchasModule,
             user_module_1.UserModule,
