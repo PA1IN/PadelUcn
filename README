@@ -287,7 +287,7 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
   "correo": "juan.antonio@hotmail.com"
 }
 ```
-````
+
 #### Base de datos
 
 Host: localhost
@@ -295,3 +295,122 @@ Puerto: 5433
 Usuario: ingeso
 Contraseña: 12342
 Base de datos: padelucn
+
+## Uso de Postman
+
+[Postman](https://www.postman.com/) es una herramienta que permite probar y documentar APIs de forma sencilla. A continuación se describe cómo utilizar Postman con la API REST de PadelUCN.
+
+### Instalación
+
+1. Descarga Postman desde [https://www.postman.com/downloads/](https://www.postman.com/downloads/)
+2. Instala la aplicación siguiendo las instrucciones del instalador
+3. Crea una cuenta o inicia sesión (opcional)
+
+### Configuración de Colección para PadelUCN
+
+1. Crea una nueva colección llamada "PadelUCN API"
+2. Configura variables de entorno:
+   - URL_BASE: http://localhost:3000
+
+### Ejemplos de Peticiones
+
+#### Autenticación
+
+1. **Registro de Usuario**:
+   - Método: POST
+   - URL: {{URL_BASE}}/auth/register
+   - Body (raw/JSON):
+   ```json
+   {
+     "rut": "12345678-9",
+     "password": "123456",
+     "nombre": "Juan Pérez",
+     "correo": "juan.perez@gmail.com"
+   }
+   ```
+
+2. **Iniciar Sesión**:
+   - Método: POST
+   - URL: {{URL_BASE}}/auth/login
+   - Body (raw/JSON):
+   ```json
+   {
+     "rut": "12345678-9",
+     "password": "123456"
+   }
+   ```
+   - Guarda el token recibido como variable de entorno "TOKEN"
+
+3. **Uso del Token para Requests Autenticados**:
+   - En Headers, añade:
+   ```
+   Authorization: Bearer {{TOKEN}}
+   ```
+
+#### Canchas
+
+1. **Obtener todas las canchas**:
+   - Método: GET
+   - URL: {{URL_BASE}}/api/canchas
+   - Headers: Authorization: Bearer {{TOKEN}}
+
+2. **Crear cancha nueva**:
+   - Método: POST
+   - URL: {{URL_BASE}}/api/canchas
+   - Headers: Authorization: Bearer {{TOKEN}}
+   - Body (raw/JSON):
+   ```json
+   {
+     "numero": 7,
+     "costo": 45
+   }
+   ```
+
+#### Reservas
+
+1. **Crear reserva**:
+   - Método: POST
+   - URL: {{URL_BASE}}/reserva
+   - Headers: Authorization: Bearer {{TOKEN}}
+   - Body (raw/JSON):
+   ```json
+   {
+     "fecha": "2025-05-15",
+     "hora_inicio": "16:00",
+     "hora_termino": "17:00",
+     "rut_usuario": "12345678-9",
+     "numero_cancha": 3
+   }
+   ```
+
+### Colecciones Organizadas
+
+Para un mejor manejo de las peticiones, se recomienda organizar la colección en carpetas:
+
+- Auth (login, register, profile)
+- Users (CRUD de usuarios)
+- Canchas (CRUD de canchas)
+- Reservas (CRUD de reservas)
+- Equipamiento (CRUD de equipamiento)
+- Boletas (CRUD de boletas de equipamiento)
+
+### Automatización de Tests
+
+Postman permite añadir tests a las peticiones para verificar que funcionen correctamente:
+
+```javascript
+// Ejemplo de test para verificar login exitoso
+pm.test("Login exitoso", function () {
+    pm.response.to.have.status(200);
+    pm.expect(pm.response.json().success).to.be.true;
+    pm.expect(pm.response.json().data.access_token).to.exist;
+});
+```
+
+### Exportar/Importar Colecciones
+
+Para compartir la colección con el equipo:
+1. Haz clic en los tres puntos (...) junto al nombre de la colección
+2. Selecciona "Export"
+3. Guarda el archivo JSON generado
+4. Otros miembros pueden importar este archivo desde el menú "Import" en Postman
