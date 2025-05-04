@@ -26,7 +26,7 @@ services:
       dockerfile: Dockerfile
     container_name: padelucn-backend
     ports:
-      - "3000:3000"
+      - "8080:8080"
     depends_on:
       padelucn-db:
         condition: service_healthy
@@ -37,6 +37,7 @@ services:
       - DB_USER=ingeso
       - DB_PASSWORD=12342
       - DB_NAME=padelucn
+      - PORT=8080
     restart: unless-stopped
     networks:
       - padelucn-network

@@ -20,7 +20,7 @@ COPY . .
 RUN npm run build
 
 # Exponer el puerto que usa la aplicación
-EXPOSE 3000
+EXPOSE 8080
 
 # Usar variables de entorno para la base de datos
 ENV NODE_ENV=development
@@ -29,6 +29,7 @@ ENV DB_PORT=5432
 ENV DB_USER=ingeso
 ENV DB_PASSWORD=12342
 ENV DB_NAME=padelucn
+ENV PORT=8080
 
 # Comando para iniciar la aplicación
 CMD ["npm", "run", "start:prod"]

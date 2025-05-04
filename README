@@ -310,7 +310,7 @@ Base de datos: padelucn
 
 1. Crea una nueva colección llamada "PadelUCN API"
 2. Configura variables de entorno:
-   - URL_BASE: http://localhost:3000
+   - URL_BASE: http://localhost:8080
 
 ### Ejemplos de Peticiones
 
