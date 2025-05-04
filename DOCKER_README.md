@@ -66,6 +66,59 @@ docker exec -it padelucn-postgres psql -U ingeso -d padelucn -c "\dt"
 
 Deberías ver las siguientes tablas: `user`, `admin`, `cancha`, `equipamiento`, `reserva` y `boleta_equipamiento`.
 
+## Actualización de contenedores ya construidos
+
+Si ya habías construido los contenedores anteriormente y necesitas actualizarlos debido a cambios en el código o configuración, sigue estos pasos:
+
+### 1. Actualización con cambios menores
+
+Para cambios menores en el código del backend que no afecten a dependencias:
+
+```bash
+# Simplemente reinicia el contenedor para aplicar los cambios
+docker-compose restart padelucn-backend
+```
+
+### 2. Actualización con cambios importantes
+
+Para cambios importantes que incluyan modificaciones en el Dockerfile, package.json, o dependencias:
+
+```bash
+# Detén todos los contenedores
+docker-compose down
+
+# Reconstruye las imágenes sin usar caché
+docker-compose build --no-cache
+
+# Reinicia todos los servicios
+docker-compose up -d
+```
+
+### 3. Actualización con cambios en la estructura de la base de datos
+
+Si has modificado la estructura de la base de datos (por ejemplo, nuevas tablas o columnas):
+
+```bash
+# Aplica los cambios a la base de datos
+docker exec -i padelucn-postgres psql -U ingeso -d padelucn < backend/ingeso-back/database-schema.sql
+```
+
+Para Windows con PowerShell:
+```powershell
+Get-Content backend/ingeso-back/database-schema.sql | docker exec -i padelucn-postgres psql -U ingeso -d padelucn
+```
+
+### 4. Solución a problemas de compatibilidad (bcrypt)
+
+Si encuentras errores relacionados con bcrypt o incompatibilidad de módulos nativos:
+
+```bash
+# Modifica el Dockerfile para usar bcryptjs en lugar de bcrypt (implementación pura JavaScript)
+# Luego reconstruye la imagen sin usar caché
+docker-compose build --no-cache padelucn-backend
+docker-compose up -d
+```
+
 ## Acceder a los endpoints
 
 Una vez que los servicios estén en ejecución y la base de datos esté configurada, puedes acceder a los endpoints de la API REST:
@@ -165,3 +218,29 @@ Este error suele aparecer cuando hay problemas de resolución de nombres en la r
 
 - Si ejecutas todo en Docker Compose: `DB_HOST=padelucn-postgres`
 - Si ejecutas el backend localmente: `DB_HOST=localhost`
+
+### 5. Errores con módulos nativos (bcrypt_lib.node)
+
+Si recibes errores como "bcrypt_lib.node no es compatible con la arquitectura del contenedor", significa que los módulos nativos compilados en tu sistema local no son compatibles con el contenedor Docker:
+
+```bash
+# Solución 1: Usa volúmenes anónimos para node_modules en docker-compose.yml
+# Solución 2: Modifica el Dockerfile para usar bcryptjs en lugar de bcrypt
+# Solución 3: Reconstruye el contenedor sin usar node_modules local:
+docker-compose down
+rm -rf backend/ingeso-back/node_modules
+docker-compose build --no-cache padelucn-backend
+docker-compose up -d
+```
+
+### 6. Ver cambios en tiempo real (desarrollo)
+
+Para desarrollo, puedes configurar volúmenes para reflejar los cambios en tiempo real:
+
+```yaml
+# En docker-compose.yml, añade este volumen al servicio padelucn-backend:
+volumes:
+  - ./backend/ingeso-back/src:/app/src
+```
+
+Reinicia el contenedor después de hacer esta modificación.
