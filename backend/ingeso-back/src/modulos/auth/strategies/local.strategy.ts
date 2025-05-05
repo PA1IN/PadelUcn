@@ -2,6 +2,7 @@ import { Strategy } from 'passport-local';
 import { PassportStrategy } from '@nestjs/passport';
 import { Injectable, UnauthorizedException, Logger } from '@nestjs/common';
 import { AuthService } from '../auth.service';
+import { User } from 'src/modulos/user/entities/user.entity';
 
 @Injectable()
 export class LocalStrategy extends PassportStrategy(Strategy) {
@@ -14,19 +15,24 @@ export class LocalStrategy extends PassportStrategy(Strategy) {
     this.logger.log('LocalStrategy initialized with usernameField: rut');
   }
 
-  async validate(rut: string, password: string): Promise<any> {
+  async validate(rut: string, password: string): Promise<User> {
     this.logger.log(`Attempting to validate user with rut: ${rut}`);
     try {
-      const user = await this.authService.validateUser(rut, password);
+      const user: User = await this.authService.validateUser(rut, password);
       if (!user) {
         this.logger.error(`Authentication failed: Invalid credentials for rut ${rut}`);
         throw new UnauthorizedException('Credenciales inválidas');
       }
       this.logger.log(`Authentication successful for rut ${rut}`);
       return user;
-    } catch (error) {
-      this.logger.error(`Authentication error: ${error.message}`, error.stack);
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        this.logger.error(`Authentication error: ${error.message}`, error.stack);
+      } else {
+        this.logger.error('Authentication error', JSON.stringify(error));
+      }
       throw error;
     }
+    
   }
 }
