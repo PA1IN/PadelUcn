@@ -58,7 +58,7 @@ export default function Login() {
             required
             value={rut}
             onChange={e => setRut(e.target.value)}
-            placeholder="Ingrese por favor su RUT sin puntos ni guiones porfavor..."
+            placeholder="Ingrese por favor su RUT sin puntos ni guiones..."
             className="mt-1 w-full px-3 py-2 border rounded-md shadow-sm focus:ring-black focus:border-black placeholder:text-gray-400 text-gray-800"
           />
         </div>
