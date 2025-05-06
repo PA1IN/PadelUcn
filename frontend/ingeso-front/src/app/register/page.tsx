@@ -60,7 +60,7 @@ export default function Register() { //Hooks
             <input
               type="text"
               name="rut"
-              placeholder="Ingrese un rut por favor..."
+              placeholder="Ingrese su rut sin puntos ni guiones por favor..."
               
               required
               value={rut}
