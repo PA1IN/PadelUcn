@@ -1,0 +1,416 @@
+# Padel UCN
+
+Sistema de gestión para canchas de pádel de la Universidad Católica del Norte.
+
+## Módulo de Canchas
+
+El sistema permite la gestión completa de canchas con sus respectivos atributos:
+- **Número**: Identificador único de la cancha (Primary Key)
+- **Costo**: Valor por hora de la cancha en la moneda local
+
+### Endpoints de la API para Canchas
+
+| Método HTTP | Endpoint | Descripción |
+|-------------|----------|-------------|
+| GET | `/api/canchas` | Obtiene todas las canchas disponibles |
+| GET | `/api/canchas/:numero` | Obtiene la información de una cancha específica por su número |
+| POST | `/api/canchas` | Crea una nueva cancha |
+| PATCH | `/api/canchas/:numero` | Actualiza la información de una cancha existente |
+| DELETE | `/api/canchas/:numero` | Elimina una cancha |
+
+### Formato de datos
+
+#### Creación de cancha (POST)
+```json
+{
+  "numero": 1,
+  "costo": 50
+}
+```
+
+#### Actualización de cancha (PATCH)
+```json
+{
+  "costo": 60
+}
+```
+
+### Canchas disponibles
+
+| Número de Cancha | Costo por hora |
+|------------------|---------------|
+| 1                | 50            |
+| 2                | 40            |
+| 3                | 40            |
+| 4                | 30            |
+| 5                | 30            |
+| 6                | 20            |
+
+## Módulo de Autenticación (JWT)
+
+El sistema implementa autenticación mediante JSON Web Tokens (JWT) para proteger las rutas y asegurar que solo usuarios autorizados puedan acceder a ciertos recursos.
+
+### Endpoints de Autenticación
+
+| Método HTTP | Endpoint | Descripción | Protegido |
+|-------------|----------|-------------|-----------|
+| POST | `/auth/register` | Registra un nuevo usuario en el sistema | No |
+| POST | `/auth/login` | Inicia sesión y obtiene un token JWT | No |
+| GET | `/auth/profile` | Obtiene el perfil del usuario autenticado | Sí |
+
+### Módulo de Usuarios
+
+| Método HTTP | Endpoint | Descripción | Protegido |
+|-------------|----------|-------------|-----------|
+| GET | `/users` | Obtiene todos los usuarios registrados | Sí |
+| GET | `/users/:rut` | Obtiene la información de un usuario específico | Sí |
+| POST | `/users` | Crea un nuevo usuario (solo administradores) | Sí |
+| PATCH | `/users/:rut` | Actualiza la información de un usuario | Sí |
+| DELETE | `/users/:rut` | Elimina un usuario | Sí |
+
+## Módulo de Administradores
+
+El sistema permite la gestión de administradores que pueden supervisar las reservas y el uso del sistema.
+
+### Endpoints de la API para Administradores
+
+| Método HTTP | Endpoint | Descripción | Protegido |
+|-------------|----------|-------------|-----------|
+| GET | `/admin` | Obtiene todos los administradores | Sí |
+| GET | `/admin/:id` | Obtiene la información de un administrador específico | Sí |
+| POST | `/admin` | Crea un nuevo administrador | Sí |
+| PATCH | `/admin/:id` | Actualiza la información de un administrador | Sí |
+| DELETE | `/admin/:id` | Elimina un administrador | Sí |
+
+### Formato de datos de Administrador
+
+#### Creación de administrador (POST)
+```json
+{
+  "nombre_usuario": "admin123",
+  "password": "adminPass456"
+}
+```
+
+#### Actualización de administrador (PATCH)
+```json
+{
+  "nombre_usuario": "superadmin",
+  "password": "nuevaContraseña"
+}
+```
+
+## Módulo de Reservas
+
+Sistema de reservas para las canchas de pádel que relaciona usuarios, administradores y canchas.
+
+### Endpoints de la API para Reservas
+
+| Método HTTP | Endpoint | Descripción | Protegido |
+|-------------|----------|-------------|-----------|
+| GET | `/reserva` | Obtiene todas las reservas | Sí |
+| GET | `/reserva/:id` | Obtiene la información de una reserva específica | Sí |
+| GET | `/reserva/usuario/:rut` | Obtiene todas las reservas de un usuario | Sí |
+| POST | `/reserva` | Crea una nueva reserva | Sí |
+| PATCH | `/reserva/:id` | Actualiza la información de una reserva | Sí |
+| DELETE | `/reserva/:id` | Cancela una reserva | Sí |
+
+### Formato de datos de Reserva
+
+#### Creación de reserva (POST)
+```json
+{
+  "fecha": "2025-05-15",
+  "hora_inicio": "16:00",
+  "hora_termino": "17:00",
+  "rut_usuario": "12345678-9",
+  "numero_cancha": 3
+}
+```
+
+#### Actualización de reserva (PATCH)
+```json
+{
+  "fecha": "2025-05-16",
+  "hora_inicio": "17:00",
+  "hora_termino": "18:00"
+}
+```
+
+## Módulo de Equipamiento
+
+Sistema de gestión de equipamiento deportivo disponible para alquiler.
+
+### Endpoints de la API para Equipamiento
+
+| Método HTTP | Endpoint | Descripción | Protegido |
+|-------------|----------|-------------|-----------|
+| GET | `/equipamiento` | Obtiene todo el equipamiento disponible | Sí |
+| GET | `/equipamiento/:id` | Obtiene la información de un equipamiento específico | Sí |
+| POST | `/equipamiento` | Registra un nuevo equipamiento | Sí |
+| PATCH | `/equipamiento/:id` | Actualiza la información de un equipamiento | Sí |
+| PATCH | `/equipamiento/:id/stock` | Actualiza el stock de un equipamiento | Sí |
+| DELETE | `/equipamiento/:id` | Elimina un equipamiento | Sí |
+
+### Formato de datos de Equipamiento
+
+#### Creación de equipamiento (POST)
+```json
+{
+  "tipo": "Raqueta Profesional",
+  "costo": 5000,
+  "stock": 10
+}
+```
+
+#### Actualización de equipamiento (PATCH)
+```json
+{
+  "costo": 5500,
+  "stock": 15
+}
+```
+
+#### Actualización de stock (PATCH)
+```json
+{
+  "cantidad": 5
+}
+```
+
+## Módulo de Boletas de Equipamiento
+
+Sistema para gestionar el alquiler de equipamiento asociado a reservas.
+
+### Endpoints de la API para Boletas de Equipamiento
+
+| Método HTTP | Endpoint | Descripción | Protegido |
+|-------------|----------|-------------|-----------|
+| GET | `/boleta-equipamiento` | Obtiene todas las boletas de equipamiento | Sí |
+| GET | `/boleta-equipamiento/:id` | Obtiene la información de una boleta específica | Sí |
+| GET | `/boleta-equipamiento/reserva/:idReserva` | Obtiene todas las boletas de una reserva | Sí |
+| POST | `/boleta-equipamiento` | Crea una nueva boleta de equipamiento | Sí |
+| PATCH | `/boleta-equipamiento/:id` | Actualiza la información de una boleta | Sí |
+| DELETE | `/boleta-equipamiento/:id` | Elimina una boleta y devuelve el equipamiento al stock | Sí |
+
+### Formato de datos de Boleta de Equipamiento
+
+#### Creación de boleta de equipamiento (POST)
+```json
+{
+  "rut_usuario": "12345678-9",
+  "id_reserva": 1,
+  "id_equipamiento": 2,
+  "cantidad": 1
+}
+```
+
+#### Actualización de boleta de equipamiento (PATCH)
+```json
+{
+  "cantidad": 2
+}
+```
+
+### Cómo utilizar la autenticación JWT
+
+#### 1. Registrar un nuevo usuario
+
+```http
+POST /auth/register
+Content-Type: application/json
+
+{
+  "rut": "12345678-9",
+  "password": "123456",
+  "nombre": "Juan Pérez"
+}
+```
+
+#### 2. Iniciar sesión
+
+```http
+POST /auth/login
+Content-Type: application/json
+
+{
+  "rut": "12345678-9",
+  "password": "123456"
+}
+```
+
+#### Respuesta del inicio de sesión:
+
+```json
+{
+  "statusCode": 200,
+  "message": "Inicio de sesión exitoso",
+  "data": {
+    "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+  },
+  "success": true
+}
+```
+
+#### 3. Acceder a rutas protegidas
+
+Para acceder a cualquier ruta protegida, es necesario incluir el token JWT en el encabezado de autorización:
+
+```http
+GET /users
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+```
+
+### Seguridad
+
+- Las contraseñas se almacenan encriptadas en la base de datos utilizando bcrypt.
+- Los tokens JWT tienen una validez de 24 horas.
+- Se recomienda mantener el token de forma segura y no compartirlo con terceros.
+
+### Formato de datos de Usuario
+
+#### Creación de usuario (POST)
+```json
+{
+  "rut": "12345678-9",
+  "password": "123456",
+  "nombre": "Juan Pérez",
+  "correo": "juan.perez@gmail.com"
+}
+```
+
+#### Actualización de usuario (PATCH)
+```json
+{
+  "nombre": "Juan Antonio Pérez",
+  "password": "nuevaContraseña",
+  "correo": "juan.antonio@hotmail.com"
+}
+```
+
+#### Base de datos
+
+Host: localhost
+Puerto: 5433
+Usuario: ingeso
+Contraseña: 12342
+Base de datos: padelucn
+
+## Uso de Postman
+
+[Postman](https://www.postman.com/) es una herramienta que permite probar y documentar APIs de forma sencilla. A continuación se describe cómo utilizar Postman con la API REST de PadelUCN.
+
+### Instalación
+
+1. Descarga Postman desde [https://www.postman.com/downloads/](https://www.postman.com/downloads/)
+2. Instala la aplicación siguiendo las instrucciones del instalador
+3. Crea una cuenta o inicia sesión (opcional)
+
+### Configuración de Colección para PadelUCN
+
+1. Crea una nueva colección llamada "PadelUCN API"
+2. Configura variables de entorno:
+   - URL_BASE: http://localhost:8080
+
+### Ejemplos de Peticiones
+
+#### Autenticación
+
+1. **Registro de Usuario**:
+   - Método: POST
+   - URL: {{URL_BASE}}/auth/register
+   - Body (raw/JSON):
+   ```json
+   {
+     "rut": "12345678-9",
+     "password": "123456",
+     "nombre": "Juan Pérez",
+     "correo": "juan.perez@gmail.com"
+   }
+   ```
+
+2. **Iniciar Sesión**:
+   - Método: POST
+   - URL: {{URL_BASE}}/auth/login
+   - Body (raw/JSON):
+   ```json
+   {
+     "rut": "12345678-9",
+     "password": "123456"
+   }
+   ```
+   - Guarda el token recibido como variable de entorno "TOKEN"
+
+3. **Uso del Token para Requests Autenticados**:
+   - En Headers, añade:
+   ```
+   Authorization: Bearer {{TOKEN}}
+   ```
+
+#### Canchas
+
+1. **Obtener todas las canchas**:
+   - Método: GET
+   - URL: {{URL_BASE}}/api/canchas
+   - Headers: Authorization: Bearer {{TOKEN}}
+
+2. **Crear cancha nueva**:
+   - Método: POST
+   - URL: {{URL_BASE}}/api/canchas
+   - Headers: Authorization: Bearer {{TOKEN}}
+   - Body (raw/JSON):
+   ```json
+   {
+     "numero": 7,
+     "costo": 45
+   }
+   ```
+
+#### Reservas
+
+1. **Crear reserva**:
+   - Método: POST
+   - URL: {{URL_BASE}}/reserva
+   - Headers: Authorization: Bearer {{TOKEN}}
+   - Body (raw/JSON):
+   ```json
+   {
+     "fecha": "2025-05-15",
+     "hora_inicio": "16:00",
+     "hora_termino": "17:00",
+     "rut_usuario": "12345678-9",
+     "numero_cancha": 3
+   }
+   ```
+
+### Colecciones Organizadas
+
+Para un mejor manejo de las peticiones, se recomienda organizar la colección en carpetas:
+
+- Auth (login, register, profile)
+- Users (CRUD de usuarios)
+- Canchas (CRUD de canchas)
+- Reservas (CRUD de reservas)
+- Equipamiento (CRUD de equipamiento)
+- Boletas (CRUD de boletas de equipamiento)
+
+### Automatización de Tests
+
+Postman permite añadir tests a las peticiones para verificar que funcionen correctamente:
+
+```javascript
+// Ejemplo de test para verificar login exitoso
+pm.test("Login exitoso", function () {
+    pm.response.to.have.status(200);
+    pm.expect(pm.response.json().success).to.be.true;
+    pm.expect(pm.response.json().data.access_token).to.exist;
+});
+```
+
+### Exportar/Importar Colecciones
+
+Para compartir la colección con el equipo:
+1. Haz clic en los tres puntos (...) junto al nombre de la colección
+2. Selecciona "Export"
+3. Guarda el archivo JSON generado
+4. Otros miembros pueden importar este archivo desde el menú "Import" en Postman
