@@ -80,7 +80,7 @@ export class CanchasService {
         throw new Error(`No se encontró una cancha con el número ${numero}`);
       }
       
-      // Actualizar solo el campo de costo, manteniendo el número igual
+      // Actualizar los campos, manteniendo el número igual
       const updatedCancha = this.canchaRepository.merge(cancha, updateCanchaDto);
       const result = await this.canchaRepository.save(updatedCancha);
       

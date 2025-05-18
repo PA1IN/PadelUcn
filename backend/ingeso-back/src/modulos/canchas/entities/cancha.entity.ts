@@ -1,13 +1,25 @@
-import { Entity, PrimaryColumn, Column, OneToMany } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, OneToMany } from 'typeorm';
 import { Reserva } from '../../reserva/entities/reserva.entity';
 
-@Entity()
+@Entity({ name: 'cancha' })
 export class Cancha {
-  @PrimaryColumn()
+  @PrimaryGeneratedColumn({ name: 'id_cancha' })
+  id: number;
+  
+  @Column({ unique: true })
   numero: number;
-
+  
   @Column()
-  costo: number;
+  nombre: string;
+  
+  @Column({ nullable: true })
+  descripcion: string;
+  
+  @Column({ default: false })
+  mantenimiento: boolean;
+  
+  @Column()
+  valor: number;
 
   @OneToMany(() => Reserva, reserva => reserva.cancha)
   reservas: Reserva[];

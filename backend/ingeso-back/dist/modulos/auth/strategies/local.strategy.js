@@ -37,7 +37,12 @@ let LocalStrategy = LocalStrategy_1 = class LocalStrategy extends (0, passport_1
             return user;
         }
         catch (error) {
-            this.logger.error(`Authentication error: ${error.message}`, error.stack);
+            if (error instanceof Error) {
+                this.logger.error(`Authentication error: ${error.message}`, error.stack);
+            }
+            else {
+                this.logger.error('Authentication error', JSON.stringify(error));
+            }
             throw error;
         }
     }

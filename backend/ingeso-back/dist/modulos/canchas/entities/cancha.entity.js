@@ -13,24 +13,44 @@ exports.Cancha = void 0;
 const typeorm_1 = require("typeorm");
 const reserva_entity_1 = require("../../reserva/entities/reserva.entity");
 let Cancha = class Cancha {
+    id;
     numero;
-    costo;
+    nombre;
+    descripcion;
+    mantenimiento;
+    valor;
     reservas;
 };
 exports.Cancha = Cancha;
 __decorate([
-    (0, typeorm_1.PrimaryColumn)(),
+    (0, typeorm_1.PrimaryGeneratedColumn)({ name: 'id_cancha' }),
+    __metadata("design:type", Number)
+], Cancha.prototype, "id", void 0);
+__decorate([
+    (0, typeorm_1.Column)({ unique: true }),
     __metadata("design:type", Number)
 ], Cancha.prototype, "numero", void 0);
 __decorate([
     (0, typeorm_1.Column)(),
+    __metadata("design:type", String)
+], Cancha.prototype, "nombre", void 0);
+__decorate([
+    (0, typeorm_1.Column)({ nullable: true }),
+    __metadata("design:type", String)
+], Cancha.prototype, "descripcion", void 0);
+__decorate([
+    (0, typeorm_1.Column)({ default: false }),
+    __metadata("design:type", Boolean)
+], Cancha.prototype, "mantenimiento", void 0);
+__decorate([
+    (0, typeorm_1.Column)(),
     __metadata("design:type", Number)
-], Cancha.prototype, "costo", void 0);
+], Cancha.prototype, "valor", void 0);
 __decorate([
     (0, typeorm_1.OneToMany)(() => reserva_entity_1.Reserva, reserva => reserva.cancha),
     __metadata("design:type", Array)
 ], Cancha.prototype, "reservas", void 0);
 exports.Cancha = Cancha = __decorate([
-    (0, typeorm_1.Entity)()
+    (0, typeorm_1.Entity)({ name: 'cancha' })
 ], Cancha);
 //# sourceMappingURL=cancha.entity.js.map

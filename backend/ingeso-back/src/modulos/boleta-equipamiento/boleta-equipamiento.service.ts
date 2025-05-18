@@ -35,7 +35,7 @@ export class BoletaEquipamientoService {
       const savedBoleta = await this.boletaRepository.save(newBoleta);
       
       // Actualizar el stock del equipamiento
-      await this.equipamientoService.actualizarStock(equipamiento.id_equipamiento, -createBoletaDto.cantidad);
+      await this.equipamientoService.actualizarStock(equipamiento.id, -createBoletaDto.cantidad);
       
       return CreateResponse('Boleta de equipamiento creada exitosamente', savedBoleta, 'CREATED');
     } catch (error) {
@@ -63,9 +63,9 @@ export class BoletaEquipamientoService {
 
   async findOne(id: number): Promise<ApiResponse<BoletaEquipamiento>> {
     try {
-      const boleta = await this.boletaRepository.findOne({ 
-        where: { id_boleta: id },
-        relations: ['usuario', 'reserva', 'equipamiento'],
+      const boleta = await this.boletaRepository.findOne({
+        where: { id: id },
+        relations: ['reserva', 'equipamiento'],
       });
       
       if (!boleta) {
@@ -91,7 +91,7 @@ export class BoletaEquipamientoService {
   async findByReserva(idReserva: number): Promise<ApiResponse<BoletaEquipamiento[]>> {
     try {
       const boletas = await this.boletaRepository.find({
-        where: { reserva: { id_reserva: idReserva } },
+        where: { idReserva: idReserva },
         relations: ['equipamiento'],
       });
       
@@ -106,8 +106,8 @@ export class BoletaEquipamientoService {
 
   async update(id: number, updateBoletaDto: UpdateBoletaEquipamientoDto): Promise<ApiResponse<BoletaEquipamiento>> {
     try {
-      const boleta = await this.boletaRepository.findOne({ 
-        where: { id_boleta: id },
+      const boleta = await this.boletaRepository.findOne({
+        where: { id: id },
         relations: ['equipamiento'],
       });
       
@@ -115,27 +115,23 @@ export class BoletaEquipamientoService {
         throw new Error(`No se encontró una boleta de equipamiento con el ID ${id}`);
       }
       
-      // Si se está actualizando la cantidad, manejar el stock
+      // Actualizar stock del equipamiento si es necesario
       if (updateBoletaDto.cantidad && updateBoletaDto.cantidad !== boleta.cantidad) {
-        const diferencia = updateBoletaDto.cantidad - boleta.cantidad;
+        const equipamientoResponse = await this.equipamientoService.findOne(boleta.equipamiento.id);
+        const equipamiento = equipamientoResponse.data;
         
         // Verificar si hay stock suficiente en caso de aumento
-        if (diferencia > 0) {
-          const equipamientoResponse = await this.equipamientoService.findOne(boleta.equipamiento.id_equipamiento);
-          const equipamiento = equipamientoResponse.data;
-          
-          if (equipamiento && equipamiento.stock < diferencia) {
-            throw new Error(`Stock insuficiente para aumentar la cantidad de equipamiento`);
-          }
+        if (updateBoletaDto.cantidad > boleta.cantidad && equipamiento && equipamiento.stock < (updateBoletaDto.cantidad - boleta.cantidad)) {
+          throw new Error(`Stock insuficiente para aumentar la cantidad de equipamiento`);
         }
         
         // Actualizar el stock
-        await this.equipamientoService.actualizarStock(boleta.equipamiento.id_equipamiento, -diferencia);
+        await this.equipamientoService.actualizarStock(boleta.equipamiento.id, updateBoletaDto.cantidad - boleta.cantidad);
       }
       
       await this.boletaRepository.update(id, updateBoletaDto);
       const updatedBoleta = await this.boletaRepository.findOne({
-        where: { id_boleta: id },
+        where: { id: id },
         relations: ['usuario', 'reserva', 'equipamiento'],
       });
       
@@ -161,8 +157,8 @@ export class BoletaEquipamientoService {
 
   async remove(id: number): Promise<ApiResponse<null>> {
     try {
-      const boleta = await this.boletaRepository.findOne({ 
-        where: { id_boleta: id },
+      const boleta = await this.boletaRepository.findOne({
+        where: { id: id },
         relations: ['equipamiento'],
       });
       
@@ -170,8 +166,8 @@ export class BoletaEquipamientoService {
         throw new Error(`No se encontró una boleta de equipamiento con el ID ${id}`);
       }
       
-      // Devolver el stock del equipamiento
-      await this.equipamientoService.actualizarStock(boleta.equipamiento.id_equipamiento, boleta.cantidad);
+      // Devolver el stock al equipamiento
+      await this.equipamientoService.actualizarStock(boleta.equipamiento.id, boleta.cantidad);
       
       await this.boletaRepository.delete(id);
       return CreateResponse('Boleta de equipamiento eliminada exitosamente', null, 'OK');

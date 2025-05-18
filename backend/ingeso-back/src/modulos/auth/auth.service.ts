@@ -21,16 +21,21 @@ export class AuthService {
       return result;
     }
     return null;
-  }
-
-  async login(user: any): Promise<ApiResponse<{access_token: string}>> {
+  }  async login(user: any): Promise<ApiResponse<any>> {
     try {
-      const payload = { rut: user.rut };
+      const payload = { rut: user.rut, isAdmin: user.isAdmin };
       const token = this.jwtService.sign(payload);
       
+      // El nuevo formato requerido {rut, nombre, correo, rol, token}
       return CreateResponse(
         'Inicio de sesión exitoso',
-        { access_token: token },
+        { 
+          rut: user.rut,
+          nombre: user.nombre,
+          correo: user.correo,
+          rol: user.isAdmin ? 'admin' : 'usuario',
+          token: token 
+        },
         'OK'
       );
     } catch (error) {

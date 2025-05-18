@@ -13,7 +13,10 @@ exports.CreateCanchaDto = void 0;
 const class_validator_1 = require("class-validator");
 class CreateCanchaDto {
     numero;
-    costo;
+    nombre;
+    descripcion;
+    mantenimiento;
+    valor;
 }
 exports.CreateCanchaDto = CreateCanchaDto;
 __decorate([
@@ -23,9 +26,24 @@ __decorate([
     __metadata("design:type", Number)
 ], CreateCanchaDto.prototype, "numero", void 0);
 __decorate([
-    (0, class_validator_1.IsNotEmpty)({ message: 'El costo de la cancha es requerido' }),
-    (0, class_validator_1.IsNumber)({}, { message: 'El costo debe ser un valor numérico' }),
-    (0, class_validator_1.Min)(0, { message: 'El costo no puede ser negativo' }),
+    (0, class_validator_1.IsNotEmpty)({ message: 'El nombre de la cancha es requerido' }),
+    (0, class_validator_1.IsString)({ message: 'El nombre debe ser un texto' }),
+    __metadata("design:type", String)
+], CreateCanchaDto.prototype, "nombre", void 0);
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsString)({ message: 'La descripción debe ser un texto' }),
+    __metadata("design:type", String)
+], CreateCanchaDto.prototype, "descripcion", void 0);
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsBoolean)({ message: 'El estado de mantenimiento debe ser un booleano' }),
+    __metadata("design:type", Boolean)
+], CreateCanchaDto.prototype, "mantenimiento", void 0);
+__decorate([
+    (0, class_validator_1.IsNotEmpty)({ message: 'El valor de la cancha es requerido' }),
+    (0, class_validator_1.IsNumber)({}, { message: 'El valor debe ser un valor numérico' }),
+    (0, class_validator_1.Min)(0, { message: 'El valor no puede ser negativo' }),
     __metadata("design:type", Number)
-], CreateCanchaDto.prototype, "costo", void 0);
+], CreateCanchaDto.prototype, "valor", void 0);
 //# sourceMappingURL=create-cancha.dto.js.map

@@ -50,12 +50,12 @@ export class ReservaService {
       
       // Cargamos las relaciones para devolver una respuesta completa
       const reservaCompleta = await this.reservaRepository.findOne({
-        where: { id_reserva: savedReserva.id_reserva },
-        relations: ['usuario', 'cancha', 'administrador'],
+        where: { id: savedReserva.id },
+        relations: ['usuario', 'cancha'],
       });
 
       return CreateResponse(
-        `Reserva #${savedReserva.id_reserva} creada exitosamente para la cancha #${createReservaDto.numero_cancha}`, 
+        `Reserva #${savedReserva.id} creada exitosamente para la cancha #${createReservaDto.numero_cancha}`, 
         reservaCompleta, 
         'CREATED'
       );
@@ -83,9 +83,9 @@ export class ReservaService {
 
   async findOne(id: number): Promise<ApiResponse<Reserva>> {
     try {
-      const reserva = await this.reservaRepository.findOne({ 
-        where: { id_reserva: id },
-        relations: ['usuario', 'cancha', 'administrador', 'boletas', 'boletas.equipamiento'],
+      const reserva = await this.reservaRepository.findOne({
+        where: { id: id },
+        relations: ['usuario', 'cancha', 'boletas', 'boletas.equipamiento', 'historial'],
       });
       
       if (!reserva) {
@@ -141,8 +141,8 @@ export class ReservaService {
   }
   async update(id: number, updateReservaDto: UpdateReservaDto): Promise<ApiResponse<Reserva>> {
     try {
-      const reserva = await this.reservaRepository.findOne({ 
-        where: { id_reserva: id },
+      const reserva = await this.reservaRepository.findOne({
+        where: { id: id },
         relations: ['usuario', 'cancha'],
       });
       
@@ -172,7 +172,7 @@ export class ReservaService {
             horaInicio,
             horaTermino,
           })
-          .andWhere('reserva.id_reserva != :id', { id })
+          .andWhere('reserva.id != :id', { id })
           .getMany();
         
         if (existingReservas.length > 0) {
@@ -190,7 +190,7 @@ export class ReservaService {
       
       await this.reservaRepository.update(id, updateReservaDto);
       const updatedReserva = await this.reservaRepository.findOne({
-        where: { id_reserva: id },
+        where: { id: id },
         relations: ['usuario', 'cancha', 'administrador'],
       });
       
@@ -216,7 +216,10 @@ export class ReservaService {
 
   async remove(id: number): Promise<ApiResponse<null>> {
     try {
-      const reserva = await this.reservaRepository.findOne({ where: { id_reserva: id } });
+      const reserva = await this.reservaRepository.findOne({
+        where: { id: id },
+        relations: ['boletas'],
+      });
       
       if (!reserva) {
         throw new Error(`No se encontró una reserva con el ID ${id}`);
@@ -401,6 +404,30 @@ export class ReservaService {
     } catch (error) {
       throw new HttpException(
         CreateResponse('Error al obtener estadísticas', null, 'INTERNAL_SERVER_ERROR', error.message),
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
+  }
+
+  async findOneByIdForCheckout(id: number): Promise<ApiResponse<Reserva>> {
+    try {
+      const reserva = await this.reservaRepository.findOne({ where: { id: id } });
+      
+      if (!reserva) {
+        throw new Error(`No se encontró una reserva con el ID ${id}`);
+      }
+      
+      return CreateResponse('Reserva obtenida exitosamente', reserva, 'OK');
+    } catch (error) {
+      if (error.message.includes('No se encontró')) {
+        throw new HttpException(
+          CreateResponse('Reserva no encontrada', null, 'NOT_FOUND', error.message),
+          HttpStatus.NOT_FOUND,
+        );
+      }
+      
+      throw new HttpException(
+        CreateResponse('Error al obtener la reserva', null, 'INTERNAL_SERVER_ERROR', error.message),
         HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }
