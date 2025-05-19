@@ -6,10 +6,10 @@ export class Cancha {
   @PrimaryGeneratedColumn({ name: 'id_cancha' })
   id: number;
   
-  // Alias para evitar errores de acceso a id_cancha
-  get id_cancha(): number {
-    return this.id;
-  }
+  // Duplicamos la propiedad para que TypeORM pueda acceder a ella directamente
+  // Esta propiedad será mapeada a la misma columna que 'id'
+  @PrimaryGeneratedColumn({ name: 'id_cancha' })
+  id_cancha: number;
   
   @Column({ unique: true })
   numero: number;
