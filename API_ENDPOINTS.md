@@ -34,6 +34,33 @@ Este documento detalla los endpoints disponibles después de la restructuración
 | GET | `/users/:rut` | Obtener usuario por RUT | Sin cambios |
 | PATCH | `/users/:rut` | Actualizar usuario | Sin cambios |
 | DELETE | `/users/:rut` | Eliminar usuario | Sin cambios |
+| PATCH | `/users/:rut/role` | Actualizar rol de usuario | **Nuevo**: Permite cambiar el rol de un usuario a administrador o regular |
+| GET | `/users/:rut/make-admin` | Hacer administrador a un usuario | **Temporal**: Endpoint para facilitar la conversión de usuarios a administradores |
+
+### Ejemplo de actualización de rol de usuario
+```json
+{
+  "isAdmin": true
+}
+```
+
+### Ejemplo de respuesta tras actualizar rol
+```json
+{
+  "message": "Rol de usuario actualizado exitosamente a administrador",
+  "data": {
+    "id_usuario": 1,
+    "rut": "12345678-9",
+    "nombre": "Juan Pérez",
+    "correo": "jperez@example.com",
+    "isAdmin": true,
+    "createdAt": "2025-05-18T14:30:45.123Z",
+    "updatedAt": "2025-05-19T10:35:21.456Z"
+  },
+  "status": "OK",
+  "timestamp": "2025-05-19T10:35:21.456Z"
+}
+```
 
 ## 3. Canchas
 
@@ -65,9 +92,40 @@ Este documento detalla los endpoints disponibles después de la restructuración
 | GET | `/reservas` | Obtener todas las reservas | Sin cambios |
 | GET | `/reservas/:id` | Obtener reserva por ID | Sin cambios |
 | GET | `/reservas/usuario/:idUsuario` | Obtener reservas de un usuario | Sin cambios |
-| POST | `/reservas` | Crear nueva reserva | **Modificado**: Ahora crea automáticamente un registro en historial_reserva |
+| POST | `/reservas` | Crear nueva reserva | **Modificado**: Ahora incluye campos de precio (default 10000) y estado de pago |
 | PATCH | `/reservas/:id` | Actualizar reserva | **Modificado**: Ahora crea automáticamente un registro en historial_reserva |
 | DELETE | `/reservas/:id` | Cancelar reserva | **Modificado**: Ahora crea automáticamente un registro en historial_reserva |
+| PATCH | `/reservas/:id/pago` | Actualizar estado de pago | **Nuevo**: Permite marcar una reserva como pagada o no pagada |
+| GET | `/reservas/:id/marcar-como-pagado` | Marcar como pagada | **Nuevo**: Endpoint de conveniencia para marcar una reserva como pagada |
+
+### Ejemplo de respuesta de Reserva (modificada)
+```json
+{
+  "id": 1,
+  "fecha": "2025-05-20",
+  "hora_inicio": "18:00",
+  "hora_termino": "19:00",
+  "precio": 10000,
+  "pagado": false,
+  "usuario": {
+    "id_usuario": 1,
+    "rut": "12345678-9",
+    "nombre": "Juan Pérez"
+  },
+  "cancha": {
+    "id": 1,
+    "numero": 5,
+    "nombre": "Cancha Principal"
+  }
+}
+```
+
+### Ejemplo para actualizar estado de pago
+```json
+{
+  "pagado": true
+}
+```
 
 ## 5. Historial de Reservas (Nuevo módulo)
 
@@ -135,5 +193,7 @@ Este documento detalla los endpoints disponibles después de la restructuración
    - `Modificado`: Cuando se modifica una reserva existente
    - `Cancelado`: Cuando se cancela una reserva
    - `Completado`: Cuando una reserva se marca como realizada
+   - `PAGADO`: Cuando una reserva se marca como pagada
+   - `NO_PAGADO`: Cuando se actualiza el estado de pago a no pagado
 
 4. **Mantenimiento de canchas**: Las canchas con `mantenimiento=true` no están disponibles para reservas.

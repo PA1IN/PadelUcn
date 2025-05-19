@@ -41,14 +41,15 @@ export class ReservaService {
 
       // Verificar existencia del usuario y la cancha antes de crear la reserva
       // (Aquí idealmente se debería verificar en los servicios correspondientes)
-      
-      // Crear objeto reserva con los IDs correctos
+        // Crear objeto reserva con los IDs correctos
       const newReserva = this.reservaRepository.create({
         fecha: fechaFormateada,
         hora_inicio: createReservaDto.hora_inicio,
         hora_termino: createReservaDto.hora_termino,
         idUsuario: createReservaDto.id_usuario,
-        idCancha: createReservaDto.id_cancha
+        idCancha: createReservaDto.id_cancha,
+        precio: createReservaDto.precio || 10000, // Valor por defecto: 10000
+        pagado: createReservaDto.pagado || false // Por defecto no está pagado
       });
       
       const savedReserva = await this.reservaRepository.save(newReserva);
@@ -439,9 +440,49 @@ export class ReservaService {
           HttpStatus.NOT_FOUND,
         );
       }
+        throw new HttpException(
+        CreateResponse('Error al obtener la reserva', null, 'INTERNAL_SERVER_ERROR', error.message),
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
+  }
+  
+  async updatePago(id: number, pagado: boolean): Promise<ApiResponse<Reserva>> {
+    try {
+      const reserva = await this.reservaRepository.findOne({
+        where: { id },
+        relations: ['usuario', 'cancha'],
+      });
+      
+      if (!reserva) {
+        throw new Error(`No se encontró una reserva con el ID ${id}`);
+      }
+      
+      // Actualizar el estado de pago
+      reserva.pagado = pagado;
+      const savedReserva = await this.reservaRepository.save(reserva);
+        // Registrar en el historial de reservas
+      await this.historialReservaService.create({
+        idReserva: reserva.id,
+        estado: pagado ? 'PAGADO' : 'NO_PAGADO',
+        idUsuario: reserva.idUsuario // Usamos el usuario de la reserva
+      });
+      
+      return CreateResponse(
+        pagado ? 'Pago registrado exitosamente' : 'Estado de pago actualizado',
+        savedReserva,
+        'OK'
+      );
+    } catch (error) {
+      if (error.message.includes('No se encontró')) {
+        throw new HttpException(
+          CreateResponse('Reserva no encontrada', null, 'NOT_FOUND', error.message),
+          HttpStatus.NOT_FOUND,
+        );
+      }
       
       throw new HttpException(
-        CreateResponse('Error al obtener la reserva', null, 'INTERNAL_SERVER_ERROR', error.message),
+        CreateResponse('Error al actualizar el pago', null, 'INTERNAL_SERVER_ERROR', error.message),
         HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }

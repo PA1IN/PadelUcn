@@ -8,11 +8,11 @@ services:
     environment:
       POSTGRES_USER: ingeso
       POSTGRES_PASSWORD: 12342
-      POSTGRES_DB: padelucn
-    volumes:
+      POSTGRES_DB: padelucn    volumes:
       - padelucn_data:/var/lib/postgresql/data
       - ./backend/ingeso-back/database-schema-new.sql:/docker-entrypoint-initdb.d/01-schema.sql
       - ./backend/ingeso-back/sample-data-new.sql:/docker-entrypoint-initdb.d/02-sample-data.sql
+      - ./backend/ingeso-back/add-missing-columns.sql:/docker-entrypoint-initdb.d/03-add-missing-columns.sql
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ingeso -d padelucn"]
       interval: 10s

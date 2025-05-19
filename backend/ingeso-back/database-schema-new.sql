@@ -47,6 +47,8 @@ CREATE TABLE "reserva" (
   "hora_termino" TIME NOT NULL,
   "id_cancha" INT NOT NULL,
   "id_usuario" INT NOT NULL,
+  "precio" DECIMAL(10,2) NOT NULL DEFAULT 10000,
+  "pagado" BOOLEAN NOT NULL DEFAULT FALSE,
   CONSTRAINT "fk_cancha" FOREIGN KEY ("id_cancha") REFERENCES "cancha" ("id_cancha") ON DELETE CASCADE,
   CONSTRAINT "fk_usuario" FOREIGN KEY ("id_usuario") REFERENCES "usuario" ("id_usuario") ON DELETE CASCADE
 );
@@ -54,7 +56,7 @@ CREATE TABLE "reserva" (
 -- Tabla historial_reserva con los nuevos campos
 CREATE TABLE "historial_reserva" (
   "id_historial" SERIAL PRIMARY KEY,
-  "estado" VARCHAR NOT NULL CHECK (estado IN ('Cancelado', 'Modificado', 'Completado', 'Pendiente')),
+  "estado" VARCHAR NOT NULL CHECK (estado IN ('Cancelado', 'Modificado', 'Completado', 'Pendiente', 'PAGADO', 'NO_PAGADO')),
   "fecha_estado" TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   "id_reserva" INT NOT NULL,
   "id_usuario" INT NOT NULL,

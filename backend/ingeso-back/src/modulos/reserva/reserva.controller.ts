@@ -2,6 +2,7 @@ import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards } from '@n
 import { ReservaService } from './reserva.service';
 import { CreateReservaDto } from './dto/create-reserva.dto';
 import { UpdateReservaDto } from './dto/update-reserva.dto';
+import { UpdatePagoDto } from './dto/update-pago.dto';
 import { ApiTags, ApiOperation, ApiResponse as SwaggerResponse } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 
@@ -100,12 +101,32 @@ export class ReservaController {
   ) {
     return this.reservaService.obtenerHorariosDisponibles(+numero, fecha);
   }
-
   @Get('estadisticas')
   @ApiOperation({ summary: 'Obtener estadísticas de uso de canchas' })
   @SwaggerResponse({ status: 200, description: 'Estadísticas obtenidas exitosamente' })
   @SwaggerResponse({ status: 401, description: 'No autorizado' })
   obtenerEstadisticas() {
     return this.reservaService.obtenerEstadisticas();
+  }
+
+  @Patch(':id/pago')
+  @ApiOperation({ summary: 'Actualizar estado de pago de una reserva' })
+  @SwaggerResponse({ status: 200, description: 'Estado de pago actualizado exitosamente' })
+  @SwaggerResponse({ status: 404, description: 'Reserva no encontrada' })
+  @SwaggerResponse({ status: 400, description: 'Datos inválidos' })
+  @SwaggerResponse({ status: 401, description: 'No autorizado' })
+  // En producción debería estar protegido con @UseGuards(JwtAuthGuard)
+  actualizarPago(@Param('id') id: string, @Body() updatePagoDto: UpdatePagoDto) {
+    return this.reservaService.updatePago(+id, updatePagoDto.pagado);
+  }
+
+  @Get(':id/marcar-como-pagado')
+  @ApiOperation({ summary: 'Marcar reserva como pagada (endpoint de conveniencia)' })
+  @SwaggerResponse({ status: 200, description: 'Reserva marcada como pagada exitosamente' })
+  @SwaggerResponse({ status: 404, description: 'Reserva no encontrada' })
+  @SwaggerResponse({ status: 401, description: 'No autorizado' })
+  // En producción debería estar protegido con @UseGuards(JwtAuthGuard)
+  marcarComoPagado(@Param('id') id: string) {
+    return this.reservaService.updatePago(+id, true);
   }
 }

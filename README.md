@@ -182,6 +182,8 @@ El sistema permite la gestión de reservas de canchas con su respectivo historia
 - **Hora Término**: Hora de término de la reserva
 - **ID Cancha**: ID de la cancha reservada
 - **ID Usuario**: ID del usuario que realiza la reserva
+- **Precio**: Precio de la reserva (por defecto 10000)
+- **Pagado**: Estado de pago de la reserva (true/false)
 
 ### Atributos de Historial de Reserva
 - **ID**: Identificador único del registro de historial
@@ -199,6 +201,8 @@ El sistema permite la gestión de reservas de canchas con su respectivo historia
 | POST | `/api/reservas` | Crea una nueva reserva |
 | PATCH | `/api/reservas/:id` | Actualiza la información de una reserva existente |
 | DELETE | `/api/reservas/:id` | Cancela una reserva |
+| PATCH | `/api/reservas/:id/pago` | Actualiza el estado de pago de una reserva |
+| GET | `/api/reservas/:id/marcar-como-pagado` | Endpoint de conveniencia para marcar una reserva como pagada |
 | GET | `/api/reservas/historial/:id` | Obtiene el historial de una reserva |
 | GET | `/api/reservas/usuario/:rut` | Obtiene todas las reservas de un usuario |
 | GET | `/api/reservas/cancha/:numero` | Obtiene todas las reservas de una cancha |

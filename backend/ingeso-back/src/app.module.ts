@@ -23,9 +23,8 @@ import { BoletaEquipamientoModule } from './modulos/boleta-equipamiento/boleta-e
         host: configService.get('DB_HOST', 'localhost'),
         port: parseInt(configService.get('DB_PORT', '5433')),
         username: configService.get('DB_USER', 'ingeso'),
-        password: configService.get('DB_PASSWORD', '12342'),        database: configService.get('DB_NAME', 'padelucn'),
-        entities: [__dirname + '/**/*.entity{.ts,.js}'],
-        synchronize: false, // Desactivado para evitar cambios automáticos en el esquema
+        password: configService.get('DB_PASSWORD', '12342'),        database: configService.get('DB_NAME', 'padelucn'),        entities: [__dirname + '/**/*.entity{.ts,.js}'],
+        synchronize: true, // Temporalmente activado para actualizar el esquema
         logging: true,
         retryAttempts: 5,
         retryDelay: 3000,
