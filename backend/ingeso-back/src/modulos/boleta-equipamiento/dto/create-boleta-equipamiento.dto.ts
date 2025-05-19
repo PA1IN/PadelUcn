@@ -1,10 +1,6 @@
-import { IsNotEmpty, IsNumber, IsString } from 'class-validator';
+import { IsNotEmpty, IsNumber } from 'class-validator';
 
 export class CreateBoletaEquipamientoDto {
-  @IsNotEmpty()
-  @IsString()
-  rut_usuario: string;
-
   @IsNotEmpty()
   @IsNumber()
   id_reserva: number;
@@ -16,4 +12,8 @@ export class CreateBoletaEquipamientoDto {
   @IsNotEmpty()
   @IsNumber()
   cantidad: number;
+
+  @IsNotEmpty()
+  @IsNumber()
+  monto_total: number;
 }

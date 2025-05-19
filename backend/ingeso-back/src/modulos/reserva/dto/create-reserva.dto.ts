@@ -1,4 +1,4 @@
-import { IsDateString, IsNotEmpty, IsNumber, IsOptional, IsString } from 'class-validator';
+import { IsDateString, IsNotEmpty, IsNumber, IsString } from 'class-validator';
 
 export class CreateReservaDto {
   @IsNotEmpty()
@@ -14,14 +14,10 @@ export class CreateReservaDto {
   hora_termino: string;
 
   @IsNotEmpty()
-  @IsString()
-  rut_usuario: string;
+  @IsNumber()
+  id_usuario: number;
 
   @IsNotEmpty()
   @IsNumber()
-  numero_cancha: number;
-
-  @IsOptional()
-  @IsNumber()
-  id_admin?: number;
+  id_cancha: number;
 }

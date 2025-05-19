@@ -6,14 +6,15 @@ import { UpdateReservaDto } from './dto/update-reserva.dto';
 import { Reserva } from './entities/reserva.entity';
 import { ApiResponse } from '../../interface/Apiresponce';
 import { CreateResponse } from '../../utils/api-response.util';
+import { HistorialReservaService } from './historial-reserva/historial-reserva.service';
 
 @Injectable()
 export class ReservaService {
   constructor(
     @InjectRepository(Reserva)
     private reservaRepository: Repository<Reserva>,
-  ) {}
-  async create(createReservaDto: CreateReservaDto): Promise<ApiResponse<Reserva>> {
+    private historialReservaService: HistorialReservaService,
+  ) {}async create(createReservaDto: CreateReservaDto): Promise<ApiResponse<Reserva>> {
     try {
       // Verificar disponibilidad de la cancha en el horario solicitado
       const fecha = new Date(createReservaDto.fecha);
@@ -26,7 +27,7 @@ export class ReservaService {
       const existingReservas = await this.reservaRepository
         .createQueryBuilder('reserva')
         .innerJoin('reserva.cancha', 'cancha')
-        .where('cancha.numero = :numeroCancha', { numeroCancha: createReservaDto.numero_cancha })
+        .where('cancha.id = :idCancha', { idCancha: createReservaDto.id_cancha })
         .andWhere('reserva.fecha = :fecha', { fecha: fechaFormateada })
         .andWhere('(reserva.hora_inicio < :horaTermino AND reserva.hora_termino > :horaInicio)', {
           horaInicio: createReservaDto.hora_inicio,
@@ -35,15 +36,19 @@ export class ReservaService {
         .getMany();
 
       if (existingReservas.length > 0) {
-        throw new Error(`La cancha #${createReservaDto.numero_cancha} no está disponible en el horario solicitado`);
+        throw new Error(`La cancha ID #${createReservaDto.id_cancha} no está disponible en el horario solicitado`);
       }
 
       // Verificar existencia del usuario y la cancha antes de crear la reserva
       // (Aquí idealmente se debería verificar en los servicios correspondientes)
       
+      // Crear objeto reserva con los IDs correctos
       const newReserva = this.reservaRepository.create({
-        ...createReservaDto,
         fecha: fechaFormateada,
+        hora_inicio: createReservaDto.hora_inicio,
+        hora_termino: createReservaDto.hora_termino,
+        idUsuario: createReservaDto.id_usuario,
+        idCancha: createReservaDto.id_cancha
       });
       
       const savedReserva = await this.reservaRepository.save(newReserva);
@@ -53,9 +58,21 @@ export class ReservaService {
         where: { id: savedReserva.id },
         relations: ['usuario', 'cancha'],
       });
+      
+      // Crear entrada en el historial de reserva con estado inicial "Pendiente"
+      try {
+        await this.historialReservaService.create({
+          estado: 'Pendiente',
+          idReserva: savedReserva.id,
+          idUsuario: createReservaDto.id_usuario
+        });
+      } catch (historialError) {
+        console.error('Error al crear historial de reserva:', historialError);
+        // No bloqueamos la creación de la reserva si falla el historial
+      }
 
       return CreateResponse(
-        `Reserva #${savedReserva.id} creada exitosamente para la cancha #${createReservaDto.numero_cancha}`, 
+        `Reserva #${savedReserva.id} creada exitosamente para la cancha ID #${createReservaDto.id_cancha}`, 
         reservaCompleta, 
         'CREATED'
       );
@@ -66,11 +83,10 @@ export class ReservaService {
       );
     }
   }
-
   async findAll(): Promise<ApiResponse<Reserva[]>> {
     try {
       const reservas = await this.reservaRepository.find({
-        relations: ['usuario', 'cancha', 'administrador'],
+        relations: ['usuario', 'cancha', 'historial'],
       });
       return CreateResponse('Reservas obtenidas exitosamente', reservas, 'OK');
     } catch (error) {
@@ -122,12 +138,11 @@ export class ReservaService {
       );
     }
   }
-
   async findByCancha(numeroCancha: number): Promise<ApiResponse<Reserva[]>> {
     try {
       const reservas = await this.reservaRepository.find({
         where: { cancha: { numero: numeroCancha } },
-        relations: ['usuario', 'administrador', 'boletas'],
+        relations: ['usuario', 'boletas', 'historial'],
         order: { fecha: 'ASC', hora_inicio: 'ASC' },
       });
       
@@ -187,11 +202,10 @@ export class ReservaService {
           fecha.getFullYear(), fecha.getMonth(), fecha.getDate()
         ) as any;
       }
-      
-      await this.reservaRepository.update(id, updateReservaDto);
+        await this.reservaRepository.update(id, updateReservaDto);
       const updatedReserva = await this.reservaRepository.findOne({
         where: { id: id },
-        relations: ['usuario', 'cancha', 'administrador'],
+        relations: ['usuario', 'cancha', 'historial'],
       });
       
       if (!updatedReserva) {

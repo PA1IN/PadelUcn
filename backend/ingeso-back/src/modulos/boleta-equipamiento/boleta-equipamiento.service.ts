@@ -15,7 +15,6 @@ export class BoletaEquipamientoService {
     private boletaRepository: Repository<BoletaEquipamiento>,
     private equipamientoService: EquipamientoService,
   ) {}
-
   async create(createBoletaDto: CreateBoletaEquipamientoDto): Promise<ApiResponse<BoletaEquipamiento>> {
     try {
       // Verificar disponibilidad de stock del equipamiento
@@ -30,8 +29,14 @@ export class BoletaEquipamientoService {
         throw new Error(`Stock insuficiente para el equipamiento ${equipamiento.tipo}`);
       }
       
-      // Crear la boleta
-      const newBoleta = this.boletaRepository.create(createBoletaDto);
+      // Crear la boleta con todos los campos necesarios
+      const newBoleta = this.boletaRepository.create({
+        idReserva: createBoletaDto.id_reserva,
+        idEquipamiento: createBoletaDto.id_equipamiento,
+        cantidad: createBoletaDto.cantidad,
+        montoTotal: createBoletaDto.monto_total
+      });
+      
       const savedBoleta = await this.boletaRepository.save(newBoleta);
       
       // Actualizar el stock del equipamiento
@@ -45,11 +50,10 @@ export class BoletaEquipamientoService {
       );
     }
   }
-
   async findAll(): Promise<ApiResponse<BoletaEquipamiento[]>> {
     try {
       const boletas = await this.boletaRepository.find({
-        relations: ['usuario', 'reserva', 'equipamiento'],
+        relations: ['reserva', 'equipamiento'],
       });
       
       return CreateResponse('Boletas de equipamiento obtenidas exitosamente', boletas, 'OK');
@@ -128,11 +132,10 @@ export class BoletaEquipamientoService {
         // Actualizar el stock
         await this.equipamientoService.actualizarStock(boleta.equipamiento.id, updateBoletaDto.cantidad - boleta.cantidad);
       }
-      
-      await this.boletaRepository.update(id, updateBoletaDto);
+        await this.boletaRepository.update(id, updateBoletaDto);
       const updatedBoleta = await this.boletaRepository.findOne({
         where: { id: id },
-        relations: ['usuario', 'reserva', 'equipamiento'],
+        relations: ['reserva', 'equipamiento'],
       });
       
       if (!updatedBoleta) {
