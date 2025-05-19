@@ -14,7 +14,8 @@ export class ReservaService {
     @InjectRepository(Reserva)
     private reservaRepository: Repository<Reserva>,
     private historialReservaService: HistorialReservaService,
-  ) {}async create(createReservaDto: CreateReservaDto): Promise<ApiResponse<Reserva>> {
+  ) {}
+  async create(createReservaDto: CreateReservaDto): Promise<ApiResponse<Reserva>> {
     try {
       // Verificar disponibilidad de la cancha en el horario solicitado
       const fecha = new Date(createReservaDto.fecha);
