@@ -102,11 +102,39 @@ El sistema permite la gestión de reservas de canchas con su respectivo historia
 | PATCH | `/api/reservas/:id` | Actualiza la información de una reserva existente |
 | DELETE | `/api/reservas/:id` | Cancela una reserva |
 | GET | `/api/reservas/historial/:id` | Obtiene el historial de una reserva |
+| GET | `/api/reservas/usuario/:rut` | Obtiene todas las reservas de un usuario |
+| GET | `/api/reservas/cancha/:numero` | Obtiene todas las reservas de una cancha |
 
-## Recursos e Instrucciones Adicionales
+### Formato de datos
 
-Para obtener más información sobre:
-- La estructura completa de la API: consulte [API_ENDPOINTS.md](API_ENDPOINTS.md)
-- Instrucciones de Docker: consulte [DOCKER_README.md](DOCKER_README.md)
-- Instrucciones para actualizar la base de datos: consulte [REMODELACION_INSTRUCCIONES.md](REMODELACION_INSTRUCCIONES.md)
-- Detalles técnicos de la actualización: consulte [ENTITY_UPDATES.md](ENTITY_UPDATES.md)
+#### Creación de reserva (POST)
+```json
+{
+  "fecha": "2025-06-01",
+  "hora_inicio": "18:00",
+  "hora_termino": "19:00",
+  "rut_usuario": "12345678-9",
+  "numero_cancha": 1
+}
+```
+
+#### Actualización de reserva (PATCH)
+```json
+{
+  "fecha": "2025-06-02",
+  "hora_inicio": "19:00",
+  "hora_termino": "20:00"
+}
+```
+
+#### Verificar disponibilidad
+```
+GET /api/reservas/disponibilidad/1/2025-06-01/18:00/19:00
+```
+
+#### Obtener horarios disponibles
+```
+GET /api/reservas/disponibilidad-dia/1/2025-06-01
+```
+
+

@@ -6,6 +6,11 @@ export class Cancha {
   @PrimaryGeneratedColumn({ name: 'id_cancha' })
   id: number;
   
+  // Alias para evitar errores de acceso a id_cancha
+  get id_cancha(): number {
+    return this.id;
+  }
+  
   @Column({ unique: true })
   numero: number;
   

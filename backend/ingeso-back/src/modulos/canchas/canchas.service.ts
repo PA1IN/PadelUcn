@@ -13,7 +13,6 @@ export class CanchasService {
     @InjectRepository(Cancha)
     private canchaRepository: Repository<Cancha>,
   ) {}
-
   async create(createCanchaDto: CreateCanchaDto): Promise<ApiResponse<Cancha>> {
     try {
       // Verificar si ya existe una cancha con el mismo número
