@@ -1,26 +1,22 @@
-import React from 'react';
-import Providers from './providers';
-import './globals.css';
+import type React from "react"
+import Providers from "./providers"
+import "./globals.css"
 
 export const metadata = {
-  title: 'reservas',
-  description:'sistema de reservas',
+  title: "Reservas",
+  description: "Sistema de reservas",
 }
-
 
 export default function RootLayout({
   children,
 }: {
-  children: React.ReactNode;
+  children: React.ReactNode
 }) {
   return (
-    <html>
+    <html lang="es">
       <body>
-          <Providers>
-            {children}
-          </Providers>
+        <Providers>{children}</Providers>
       </body>
     </html>
-  );
+  )
 }
-
