@@ -1,21 +1,26 @@
-﻿FROM node:18-alpine
+FROM node:18-alpine
+
 WORKDIR /app
-# Copiar solo package.json para aprovechar cache de Docker
+
+# Copiar solo package.json para aprovechar caché de Docker
 COPY package.json ./
+
 # Instalar dependencias limpiamente, sin usar package-lock existente
 RUN npm install --no-package-lock
-# Instalar bcryptjs explicitamente para asegurar que se use la version JS
+# Instalar bcryptjs explícitamente para asegurar que se use la versión JS
 RUN npm install bcryptjs @types/bcryptjs --no-package-lock
-# Instalar class-transformer para el ValidationPipe
-RUN npm install class-transformer class-validator --no-package-lock
 # Instalar NestJS CLI globalmente
 RUN npm install -g @nestjs/cli
+
 # Ahora copiar el resto de archivos del proyecto
 COPY . .
+
 # Compilar el proyecto
 RUN npm run build
-# Exponer el puerto que usa la aplicacion
+
+# Exponer el puerto que usa la aplicación
 EXPOSE 8080
+
 # Variables de entorno
 ENV NODE_ENV=development
 ENV DB_HOST=padelucn-db
@@ -26,5 +31,6 @@ ENV DB_NAME=padelucn
 ENV PORT=8080
 # Habilitar crypto globalmente
 ENV NODE_OPTIONS=--experimental-global-webcrypto
-# Comando para iniciar la aplicacion
+
+# Comando para iniciar la aplicación
 CMD ["npm", "run", "start:prod"]

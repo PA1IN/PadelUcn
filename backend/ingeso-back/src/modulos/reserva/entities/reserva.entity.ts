@@ -17,11 +17,6 @@ export class Reserva {
 
   @Column({ type: 'time' })
   hora_termino: string;
-    @Column({ type: 'decimal', precision: 10, scale: 2, default: 10000, nullable: false })
-  precio: number;
-  
-  @Column({ type: 'boolean', default: false })
-  pagado: boolean;
 
   @ManyToOne(() => User, usuario => usuario.reservas)
   @JoinColumn({ name: 'id_usuario' })

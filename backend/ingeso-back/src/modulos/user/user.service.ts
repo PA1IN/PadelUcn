@@ -156,34 +156,4 @@ export class UserService {
       );
     }
   }
-
-  async updateRole(rut: string, isAdmin: boolean): Promise<ApiResponse<User>> {
-    try {
-      const user = await this.userRepository.findOne({ where: { rut } });
-      
-      if (!user) {
-        throw new Error(`No se encontró un usuario con el RUT ${rut}`);
-      }
-      
-      // Actualizar el rol del usuario
-      user.isAdmin = isAdmin;
-      const updatedUser = await this.userRepository.save(user);
-      
-      // No devolver la contraseña en la respuesta
-      const { password, ...result } = updatedUser;
-      return CreateResponse(`Rol de usuario actualizado exitosamente a ${isAdmin ? 'administrador' : 'usuario regular'}`, result as User, 'OK');
-    } catch (error) {
-      if (error.message.includes('No se encontró')) {
-        throw new HttpException(
-          CreateResponse('Usuario no encontrado', null, 'NOT_FOUND', error.message),
-          HttpStatus.NOT_FOUND,
-        );
-      }
-      
-      throw new HttpException(
-        CreateResponse('Error al actualizar el rol del usuario', null, 'BAD_REQUEST', error.message),
-        HttpStatus.BAD_REQUEST,
-      );
-    }
-  }
 }
