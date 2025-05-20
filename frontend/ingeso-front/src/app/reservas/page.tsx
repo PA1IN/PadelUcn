@@ -61,6 +61,15 @@ export default function VerReservas() {
           ))}
         </div>
       )}
+
+       <div className="mt-8 text-center">
+        <button
+          onClick={() => router.push("/home")}
+          className="text-green-600 hover:underline text-sm"
+        >
+          Volver a la página principal
+        </button>
+      </div> 
     </div>
   )
 }

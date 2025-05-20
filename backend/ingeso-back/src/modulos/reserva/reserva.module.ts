@@ -8,9 +8,11 @@ import { Cancha } from '../canchas/entities/cancha.entity';
 import { HistorialReserva } from './entities/historial-reserva.entity';
 import { HistorialReservaService } from './historial-reserva/historial-reserva.service';
 import { HistorialReservaController } from './historial-reserva/historial-reserva.controller';
+import { BoletaEquipamiento } from '../boleta-equipamiento/entities/boleta-equipamiento.entity';
+import { Equipamiento } from '../equipamiento/entities/equipamiento.entity';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Reserva, HistorialReserva, Cancha, User])],
+  imports: [TypeOrmModule.forFeature([Reserva, HistorialReserva, Cancha, User, BoletaEquipamiento, Equipamiento])],
   controllers: [ReservaController, HistorialReservaController],
   providers: [ReservaService, HistorialReservaService],
   exports: [ReservaService, HistorialReservaService],

@@ -9,15 +9,18 @@ import { Reserva } from './entities/reserva.entity';
 import { ApiResponse } from '../../interface/Apiresponce';
 import { CreateResponse } from '../../utils/api-response.util';
 import { HistorialReservaService } from './historial-reserva/historial-reserva.service';
+import { BoletaEquipamiento } from '../boleta-equipamiento/entities/boleta-equipamiento.entity';
+import { Equipamiento } from '../equipamiento/entities/equipamiento.entity';
 
 @Injectable()
 export class ReservaService {
   constructor(
+    @InjectRepository(BoletaEquipamiento)
+    private boletaEquipamientoRepository: Repository<BoletaEquipamiento>,
     @InjectRepository(User)
     private usuarioRepository: Repository<User>,
     @InjectRepository(Cancha)
     private canchaRespository: Repository<Cancha>,
-
     @InjectRepository(Reserva)
     private reservaRepository: Repository<Reserva>,
     private historialReservaService: HistorialReservaService,
@@ -163,76 +166,112 @@ export class ReservaService {
   async update(id: number, updateReservaDto: UpdateReservaDto): Promise<ApiResponse<Reserva>> {
     try {
       const reserva = await this.reservaRepository.findOne({
-        where: { id: id },
+        where: { id },
         relations: ['usuario', 'cancha'],
       });
-      
+
       if (!reserva) {
         throw new Error(`No se encontró una reserva con el ID ${id}`);
       }
-      
-      // Si se está cambiando la hora o fecha o cancha, verificar disponibilidad
+
+      // Validar disponibilidad si se modifica fecha, hora o cancha
       if (updateReservaDto.fecha || updateReservaDto.hora_inicio || updateReservaDto.hora_termino || updateReservaDto.numero_cancha) {
         const numeroCancha = updateReservaDto.numero_cancha || reserva.cancha.numero;
         const fechaStr = updateReservaDto.fecha || reserva.fecha.toISOString().split('T')[0];
         const fecha = new Date(fechaStr);
-        
-        // Formatear la fecha para que solo tenga la parte de fecha (sin hora)
         const fechaFormateada = new Date(fecha.getFullYear(), fecha.getMonth(), fecha.getDate());
-        
         const horaInicio = updateReservaDto.hora_inicio || reserva.hora_inicio;
         const horaTermino = updateReservaDto.hora_termino || reserva.hora_termino;
-        
-        // Verificar traslapes con otras reservas (excluyendo la reserva actual)
-        const existingReservas = await this.reservaRepository
-          .createQueryBuilder('reserva')
+
+        const conflictos = await this.reservaRepository.createQueryBuilder('reserva')
           .innerJoin('reserva.cancha', 'cancha')
           .where('cancha.numero = :numeroCancha', { numeroCancha })
           .andWhere('reserva.fecha = :fecha', { fecha: fechaFormateada })
-          .andWhere('(reserva.hora_inicio < :horaTermino AND reserva.hora_termino > :horaInicio)', {
-            horaInicio,
-            horaTermino,
-          })
+          .andWhere('(reserva.hora_inicio < :horaTermino AND reserva.hora_termino > :horaInicio)')
           .andWhere('reserva.id != :id', { id })
+          .setParameters({ horaInicio, horaTermino })
           .getMany();
-        
-        if (existingReservas.length > 0) {
-          throw new Error(`La cancha #${numeroCancha} no está disponible en el horario solicitado`);
+
+        if (conflictos.length > 0) {
+          throw new Error(`La cancha #${numeroCancha} no está disponible en ese horario`);
         }
       }
-      
-      // Convertir fecha a Date si está presente
+
+      // Asignar nueva cancha si se cambia
+      if (updateReservaDto.numero_cancha) {
+        const nuevaCancha = await this.canchaRespository.findOne({
+          where: { numero: updateReservaDto.numero_cancha }
+        });
+
+        if (!nuevaCancha) {
+          throw new Error(`Cancha número ${updateReservaDto.numero_cancha} no encontrada`);
+        }
+
+        reserva.cancha = nuevaCancha;
+      }
+
+      // Actualizar campos si vienen
       if (updateReservaDto.fecha) {
         const fecha = new Date(updateReservaDto.fecha);
-        updateReservaDto.fecha = new Date(
-          fecha.getFullYear(), fecha.getMonth(), fecha.getDate()
-        ) as any;
+        reserva.fecha = new Date(fecha.getFullYear(), fecha.getMonth(), fecha.getDate());
       }
-        await this.reservaRepository.update(id, updateReservaDto);
-      const updatedReserva = await this.reservaRepository.findOne({
-        where: { id: id },
-        relations: ['usuario', 'cancha', 'historial'],
+      if (updateReservaDto.hora_inicio) {
+        reserva.hora_inicio = updateReservaDto.hora_inicio;
+      }
+      if (updateReservaDto.hora_termino) {
+        reserva.hora_termino = updateReservaDto.hora_termino;
+      }
+
+      // Guardar reserva con cambios de fecha/hora/cancha
+      await this.reservaRepository.save(reserva);
+
+      // Actualizar equipamiento
+      if (Array.isArray(updateReservaDto.equipamiento)) {
+        // Eliminar boletas anteriores
+        await this.boletaEquipamientoRepository.delete({ reserva: { id } });
+
+        for (const item of updateReservaDto.equipamiento) {
+          const { id: idEquip, cantidad } = item;
+
+          const equipamiento = await this.boletaEquipamientoRepository.manager.getRepository(Equipamiento).findOne({
+            where: { id: idEquip }
+          });
+
+          if (!equipamiento) {
+            throw new Error(`Equipamiento con ID ${idEquip} no encontrado`);
+          }
+
+          const nuevaBoleta = this.boletaEquipamientoRepository.create({
+            reserva: { id },
+            equipamiento: { id: idEquip },
+            cantidad: cantidad || 1,
+            montoTotal: equipamiento.costo * (cantidad || 1),
+          });
+
+          await this.boletaEquipamientoRepository.save(nuevaBoleta);
+        }
+      }
+
+      const reservaActualizada = await this.reservaRepository.findOne({
+        where: { id },
+        relations: ['usuario', 'cancha', 'boletas', 'boletas.equipamiento'],
       });
-      
-      if (!updatedReserva) {
-        throw new Error(`Error al obtener reserva actualizada con ID ${id}`);
+
+      if (!reservaActualizada) {
+        throw new Error('Error al cargar la reserva actualizada');
       }
-      
-      return CreateResponse('Reserva actualizada exitosamente', updatedReserva, 'OK');
+
+      return CreateResponse('Reserva modificada exitosamente', reservaActualizada, 'OK');
     } catch (error) {
-      if (error.message.includes('No se encontró')) {
-        throw new HttpException(
-          CreateResponse('Reserva no encontrada', null, 'NOT_FOUND', error.message),
-          HttpStatus.NOT_FOUND,
-        );
-      }
-      
       throw new HttpException(
-        CreateResponse('Error al actualizar la reserva', null, 'BAD_REQUEST', error.message),
+        CreateResponse('Error al modificar la reserva', null, 'BAD_REQUEST', error.message),
         HttpStatus.BAD_REQUEST,
       );
     }
   }
+
+
+
 
   async remove(id: number): Promise<ApiResponse<null>> {
     try {

@@ -5,6 +5,7 @@ import { useUserProfile } from "@/hooks/useUserProfile"
 import { useCrearReserva } from "@/hooks/useReserva"
 import { useCanchas } from "@/hooks/useCancha"
 import { useEquipamiento } from "@/hooks/useEquipamiento"
+import { useRouter } from "next/navigation"
 
 function formatDateInSpanish(dateStr: string): string {
   const date = new Date(dateStr)
@@ -19,6 +20,7 @@ export default function ReservaTabla() {
   const { data: user } = useUserProfile()
   const { data: courts, isLoading: loadingCourts, isError: errorCanchas } = useCanchas()
   const { data: availableEquipment = [], isError: errorEquipamiento } = useEquipamiento()
+  const router = useRouter();
 
   const [selectedCourt, setSelectedCourt] = useState("")
   const [selectedDate, setSelectedDate] = useState("")
@@ -166,7 +168,13 @@ export default function ReservaTabla() {
 
         <div className="pt-4 border-t border-gray-200 mt-6">
           <p className="text-center text-sm text-black">
-            <a href="/home" className="text-green-600 hover:underline">Volver a la página principal</a>
+            <button
+              type="button"
+              onClick={() => router.push("/home")}
+              className="text-green-600 hover:underline"
+            >
+              Volver a Home
+            </button>
           </p>
         </div>
       </div>

@@ -70,7 +70,7 @@ export interface DatosReservaParcial {
     hora_inicio: string
     hora_termino: string
     numero_cancha?:number
-    equipamiento?:string[]
+    equipamiento?:{id:number, cantidad:number}
 }
 
 export function useModificarReserva(rut:string){

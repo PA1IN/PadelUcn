@@ -7,6 +7,11 @@ import { useModificarReserva, useReservaPorId } from "@/hooks/useReserva"
 import { useCanchas } from "@/hooks/useCancha"
 import { useEquipamiento } from "@/hooks/useEquipamiento"
 
+interface EquipamientoSeleccionado {
+  id: number
+  cantidad: number
+}
+
 export default function ModificarReserva() {
   const router = useRouter()
   const params = useParams()
@@ -17,13 +22,13 @@ export default function ModificarReserva() {
   const { data: equipamiento = [] } = useEquipamiento()
   const { data: reservaActual, isLoading } = useReservaPorId(id)
 
-  const modificarReserva = useModificarReserva(user?.rut)
+  const modificarReserva = useModificarReserva()
 
   const [fecha, setFecha] = useState("")
   const [hora_inicio, setHoraInicio] = useState("")
   const [hora_termino, setHoraTermino] = useState("")
   const [numero_cancha, setNumeroCancha] = useState("")
-  const [equipamientoSeleccionado, setEquipamientoSeleccionado] = useState<number[]>([])
+  const [equipamientoSeleccionado, setEquipamientoSeleccionado] = useState<EquipamientoSeleccionado[]>([])
 
   useEffect(() => {
     if (reservaActual) {
@@ -31,23 +36,39 @@ export default function ModificarReserva() {
       setHoraInicio(reservaActual.hora_inicio)
       setHoraTermino(reservaActual.hora_termino)
       setNumeroCancha(reservaActual.cancha.numero.toString())
-      setEquipamientoSeleccionado(reservaActual.boletas?.map(b => b.id_equipamiento) || [])
+      setEquipamientoSeleccionado(
+        reservaActual.boletas?.map(b => ({
+          id: b.equipamiento.id,
+          cantidad: b.cantidad ?? 1
+        })) || []
+      )
     }
   }, [reservaActual])
 
   const toggleEquipamiento = (id: number) => {
+    setEquipamientoSeleccionado(prev => {
+      const existe = prev.find(e => e.id === id)
+      if (existe) {
+        return prev.filter(e => e.id !== id)
+      } else {
+        return [...prev, { id, cantidad: 1 }]
+      }
+    })
+  }
+
+  const cambiarCantidad = (id: number, cantidad: number) => {
     setEquipamientoSeleccionado(prev =>
-      prev.includes(id) ? prev.filter(e => e !== id) : [...prev, id]
+      prev.map(e => e.id === id ? { ...e, cantidad } : e)
     )
   }
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    if (!fecha || !hora_inicio || !hora_termino || !numero_cancha || !user?.rut || !id) return
+    if (!fecha || !hora_inicio || !hora_termino || !numero_cancha || !id) return
 
     modificarReserva.mutate({
-      id_reserva: id,
-      datos: {
+      id: id,
+      data: {
         fecha,
         hora_inicio,
         hora_termino,
@@ -57,7 +78,7 @@ export default function ModificarReserva() {
     }, {
       onSuccess: () => {
         alert("Reserva modificada exitosamente")
-        router.push("/verReservas")
+        router.push("/reservas")
       },
       onError: () => {
         alert("Error al modificar reserva")
@@ -81,16 +102,35 @@ export default function ModificarReserva() {
           ))}
         </select>
 
-        <div className="flex flex-wrap gap-2">
-          {equipamiento.map((e: any) => (
-            <button key={e.id} type="button" onClick={() => toggleEquipamiento(e.id)}
-              className={`px-3 py-1 rounded text-sm ${equipamientoSeleccionado.includes(e.id) ? 'bg-green-600 text-white' : 'bg-gray-200 text-black'}`}> 
-              {e.nombre}
-            </button>
-          ))}
+        <div className="flex flex-col gap-3">
+          <p className="font-medium">Equipamiento:</p>
+          {equipamiento.map((e: any) => {
+            const seleccionado = equipamientoSeleccionado.find(eq => eq.id === e.id)
+            return (
+              <div key={e.id} className="flex items-center gap-2">
+                <input
+                  type="checkbox"
+                  checked={!!seleccionado}
+                  onChange={() => toggleEquipamiento(e.id)}
+                />
+                <label className="flex-1">{e.nombre}</label>
+                {seleccionado && (
+                  <input
+                    type="number"
+                    min={1}
+                    value={seleccionado.cantidad}
+                    onChange={evt => cambiarCantidad(e.id, Number(evt.target.value))}
+                    className="w-16 border p-1"
+                  />
+                )}
+              </div>
+            )
+          })}
         </div>
 
-        <button type="submit" className="bg-blue-600 text-white px-4 py-2 rounded">Guardar Cambios</button>
+        <button type="submit" className="bg-blue-600 text-white px-4 py-2 rounded w-full">
+          Guardar Cambios
+        </button>
       </form>
     </div>
   )
