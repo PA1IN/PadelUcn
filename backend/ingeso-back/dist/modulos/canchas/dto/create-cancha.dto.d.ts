@@ -1,4 +1,7 @@
 export declare class CreateCanchaDto {
     numero: number;
-    costo: number;
+    nombre: string;
+    descripcion?: string;
+    mantenimiento?: boolean;
+    valor: number;
 }

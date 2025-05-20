@@ -15,7 +15,6 @@ const app_service_1 = require("./app.service");
 const canchas_module_1 = require("./modulos/canchas/canchas.module");
 const user_module_1 = require("./modulos/user/user.module");
 const auth_module_1 = require("./modulos/auth/auth.module");
-const admin_module_1 = require("./modulos/admin/admin.module");
 const reserva_module_1 = require("./modulos/reserva/reserva.module");
 const equipamiento_module_1 = require("./modulos/equipamiento/equipamiento.module");
 const boleta_equipamiento_module_1 = require("./modulos/boleta-equipamiento/boleta-equipamiento.module");
@@ -23,8 +22,7 @@ let AppModule = class AppModule {
 };
 exports.AppModule = AppModule;
 exports.AppModule = AppModule = __decorate([
-    (0, common_1.Module)({
-        imports: [
+    (0, common_1.Module)({ imports: [
             config_1.ConfigModule.forRoot({
                 isGlobal: true,
                 envFilePath: '.env',
@@ -37,10 +35,9 @@ exports.AppModule = AppModule = __decorate([
                     host: configService.get('DB_HOST', 'localhost'),
                     port: parseInt(configService.get('DB_PORT', '5433')),
                     username: configService.get('DB_USER', 'ingeso'),
-                    password: configService.get('DB_PASSWORD', '12342'),
-                    database: configService.get('DB_NAME', 'padelucn'),
+                    password: configService.get('DB_PASSWORD', '12342'), database: configService.get('DB_NAME', 'padelucn'),
                     entities: [__dirname + '/**/*.entity{.ts,.js}'],
-                    synchronize: true,
+                    synchronize: false,
                     logging: true,
                     retryAttempts: 5,
                     retryDelay: 3000,
@@ -50,13 +47,11 @@ exports.AppModule = AppModule = __decorate([
             canchas_module_1.CanchasModule,
             user_module_1.UserModule,
             auth_module_1.AuthModule,
-            admin_module_1.AdminModule,
             reserva_module_1.ReservaModule,
             equipamiento_module_1.EquipamientoModule,
             boleta_equipamiento_module_1.BoletaEquipamientoModule,
         ],
         controllers: [app_controller_1.AppController],
-        providers: [app_service_1.AppService],
-    })
+        providers: [app_service_1.AppService], })
 ], AppModule);
 //# sourceMappingURL=app.module.js.map

@@ -6,9 +6,7 @@ export declare class AuthController {
     private authService;
     private userService;
     constructor(authService: AuthService, userService: UserService);
-    login(loginDto: LoginDto): Promise<import("../../interface/Apiresponce").ApiResponse<{
-        access_token: string;
-    }> | {
+    login(loginDto: LoginDto): Promise<import("../../interface/Apiresponce").ApiResponse<any> | {
         statusCode: number;
         message: string;
         success: boolean;

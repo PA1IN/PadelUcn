@@ -45,7 +45,7 @@ let EquipamientoService = class EquipamientoService {
     async findOne(id) {
         try {
             const equipamiento = await this.equipamientoRepository.findOne({
-                where: { id_equipamiento: id },
+                where: { id: id },
                 relations: ['boletas'],
             });
             if (!equipamiento) {
@@ -62,12 +62,12 @@ let EquipamientoService = class EquipamientoService {
     }
     async update(id, updateEquipamientoDto) {
         try {
-            const equipamiento = await this.equipamientoRepository.findOne({ where: { id_equipamiento: id } });
+            const equipamiento = await this.equipamientoRepository.findOne({ where: { id: id } });
             if (!equipamiento) {
                 throw new Error(`No se encontró un equipamiento con el ID ${id}`);
             }
             await this.equipamientoRepository.update(id, updateEquipamientoDto);
-            const updatedEquipamiento = await this.equipamientoRepository.findOne({ where: { id_equipamiento: id } });
+            const updatedEquipamiento = await this.equipamientoRepository.findOne({ where: { id: id } });
             if (!updatedEquipamiento) {
                 throw new Error(`Error al obtener equipamiento actualizado con ID ${id}`);
             }
@@ -82,7 +82,7 @@ let EquipamientoService = class EquipamientoService {
     }
     async remove(id) {
         try {
-            const equipamiento = await this.equipamientoRepository.findOne({ where: { id_equipamiento: id } });
+            const equipamiento = await this.equipamientoRepository.findOne({ where: { id: id } });
             if (!equipamiento) {
                 throw new Error(`No se encontró un equipamiento con el ID ${id}`);
             }
@@ -98,7 +98,7 @@ let EquipamientoService = class EquipamientoService {
     }
     async actualizarStock(id, cantidad) {
         try {
-            const equipamiento = await this.equipamientoRepository.findOne({ where: { id_equipamiento: id } });
+            const equipamiento = await this.equipamientoRepository.findOne({ where: { id: id } });
             if (!equipamiento) {
                 throw new Error(`No se encontró un equipamiento con el ID ${id}`);
             }

@@ -2,6 +2,8 @@
 
 Este documento explica cómo ejecutar el proyecto completo (backend y base de datos PostgreSQL) usando Docker.
 
+> **ACTUALIZACIÓN IMPORTANTE:** La estructura de la base de datos ha sido modificada. Para usar el nuevo esquema, ejecuta el script `update-database.ps1` o aplica manualmente `database-schema-new.sql` y `sample-data-new.sql`.
+
 ## Requisitos previos
 
 - [Docker](https://www.docker.com/products/docker-desktop/) instalado en tu sistema

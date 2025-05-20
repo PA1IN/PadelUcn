@@ -11,6 +11,8 @@ services:
       POSTGRES_DB: padelucn
     volumes:
       - padelucn_data:/var/lib/postgresql/data
+      - ./backend/ingeso-back/database-schema-new.sql:/docker-entrypoint-initdb.d/01-schema.sql
+      - ./backend/ingeso-back/sample-data-new.sql:/docker-entrypoint-initdb.d/02-sample-data.sql
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ingeso -d padelucn"]
       interval: 10s

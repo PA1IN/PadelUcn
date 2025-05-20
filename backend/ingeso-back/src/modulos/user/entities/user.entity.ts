@@ -1,24 +1,35 @@
-import { Entity, Column, PrimaryColumn, OneToMany } from 'typeorm';
+import { Entity, Column, PrimaryGeneratedColumn, OneToMany } from 'typeorm';
 import { Reserva } from '../../reserva/entities/reserva.entity';
-import { BoletaEquipamiento } from '../../boleta-equipamiento/entities/boleta-equipamiento.entity';
+import { HistorialReserva } from '../../reserva/entities/historial-reserva.entity';
 
-@Entity()
+@Entity({ name: 'usuario' })
 export class User {
-  @PrimaryColumn()
+  @PrimaryGeneratedColumn({ name: 'id_usuario' })
+  id: number;
+  
+  @Column({ unique: true })
   rut: string;
 
-  @Column()
+  @Column({ name: 'contraseña' })
   password: string;
 
-  @Column()
+  @Column({ name: 'nombre_usuario' })
   nombre: string;
 
-  @Column({ nullable: true })
+  @Column()
   correo: string;
+  
+  @Column({ nullable: true })
+  telefono: string;
+  
+  @Column({ default: 0 })
+  saldo: number;
+  
+  @Column({ name: 'is_admin', default: false })
+  isAdmin: boolean;
 
   @OneToMany(() => Reserva, reserva => reserva.usuario)
   reservas: Reserva[];
-
-  @OneToMany(() => BoletaEquipamiento, boleta => boleta.usuario)
-  boletas: BoletaEquipamiento[];
+  @OneToMany(() => HistorialReserva, historial => historial.usuario)
+  historialReservas: HistorialReserva[];
 }

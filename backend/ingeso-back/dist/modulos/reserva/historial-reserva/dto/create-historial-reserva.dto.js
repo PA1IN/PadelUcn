@@ -9,21 +9,35 @@ var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.CreateAdminDto = void 0;
+exports.CreateHistorialReservaDto = void 0;
 const class_validator_1 = require("class-validator");
-class CreateAdminDto {
-    nombre_usuario;
-    password;
+class CreateHistorialReservaDto {
+    estado;
+    fechaEstado;
+    idReserva;
+    idUsuario;
 }
-exports.CreateAdminDto = CreateAdminDto;
+exports.CreateHistorialReservaDto = CreateHistorialReservaDto;
 __decorate([
     (0, class_validator_1.IsNotEmpty)(),
-    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.IsEnum)(['Cancelado', 'Modificado', 'Completado', 'Pendiente'], {
+        message: 'El estado debe ser: Cancelado, Modificado, Completado o Pendiente'
+    }),
     __metadata("design:type", String)
-], CreateAdminDto.prototype, "nombre_usuario", void 0);
+], CreateHistorialReservaDto.prototype, "estado", void 0);
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsDate)(),
+    __metadata("design:type", Date)
+], CreateHistorialReservaDto.prototype, "fechaEstado", void 0);
 __decorate([
     (0, class_validator_1.IsNotEmpty)(),
-    (0, class_validator_1.IsString)(),
-    __metadata("design:type", String)
-], CreateAdminDto.prototype, "password", void 0);
-//# sourceMappingURL=create-admin.dto.js.map
+    (0, class_validator_1.IsNumber)(),
+    __metadata("design:type", Number)
+], CreateHistorialReservaDto.prototype, "idReserva", void 0);
+__decorate([
+    (0, class_validator_1.IsNotEmpty)(),
+    (0, class_validator_1.IsNumber)(),
+    __metadata("design:type", Number)
+], CreateHistorialReservaDto.prototype, "idUsuario", void 0);
+//# sourceMappingURL=create-historial-reserva.dto.js.map

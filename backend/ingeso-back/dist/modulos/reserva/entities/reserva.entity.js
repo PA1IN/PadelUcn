@@ -12,24 +12,26 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.Reserva = void 0;
 const typeorm_1 = require("typeorm");
 const user_entity_1 = require("../../user/entities/user.entity");
-const admin_entity_1 = require("../../admin/entities/admin.entity");
 const cancha_entity_1 = require("../../canchas/entities/cancha.entity");
 const boleta_equipamiento_entity_1 = require("../../boleta-equipamiento/entities/boleta-equipamiento.entity");
+const historial_reserva_entity_1 = require("./historial-reserva.entity");
 let Reserva = class Reserva {
-    id_reserva;
+    id;
     fecha;
     hora_inicio;
     hora_termino;
     usuario;
-    administrador;
+    idUsuario;
     cancha;
+    idCancha;
+    historial;
     boletas;
 };
 exports.Reserva = Reserva;
 __decorate([
-    (0, typeorm_1.PrimaryGeneratedColumn)(),
+    (0, typeorm_1.PrimaryGeneratedColumn)({ name: 'id_reserva' }),
     __metadata("design:type", Number)
-], Reserva.prototype, "id_reserva", void 0);
+], Reserva.prototype, "id", void 0);
 __decorate([
     (0, typeorm_1.Column)({ type: 'date' }),
     __metadata("design:type", Date)
@@ -44,24 +46,31 @@ __decorate([
 ], Reserva.prototype, "hora_termino", void 0);
 __decorate([
     (0, typeorm_1.ManyToOne)(() => user_entity_1.User, usuario => usuario.reservas),
-    (0, typeorm_1.JoinColumn)({ name: 'rut_usuario' }),
+    (0, typeorm_1.JoinColumn)({ name: 'id_usuario' }),
     __metadata("design:type", user_entity_1.User)
 ], Reserva.prototype, "usuario", void 0);
 __decorate([
-    (0, typeorm_1.ManyToOne)(() => admin_entity_1.Admin, admin => admin.reservas, { nullable: true }),
-    (0, typeorm_1.JoinColumn)({ name: 'id_admin' }),
-    __metadata("design:type", admin_entity_1.Admin)
-], Reserva.prototype, "administrador", void 0);
+    (0, typeorm_1.Column)({ name: 'id_usuario' }),
+    __metadata("design:type", Number)
+], Reserva.prototype, "idUsuario", void 0);
 __decorate([
     (0, typeorm_1.ManyToOne)(() => cancha_entity_1.Cancha, cancha => cancha.reservas),
-    (0, typeorm_1.JoinColumn)({ name: 'numero_cancha' }),
+    (0, typeorm_1.JoinColumn)({ name: 'id_cancha' }),
     __metadata("design:type", cancha_entity_1.Cancha)
 ], Reserva.prototype, "cancha", void 0);
+__decorate([
+    (0, typeorm_1.Column)({ name: 'id_cancha' }),
+    __metadata("design:type", Number)
+], Reserva.prototype, "idCancha", void 0);
+__decorate([
+    (0, typeorm_1.OneToMany)(() => historial_reserva_entity_1.HistorialReserva, historial => historial.reserva),
+    __metadata("design:type", Array)
+], Reserva.prototype, "historial", void 0);
 __decorate([
     (0, typeorm_1.OneToMany)(() => boleta_equipamiento_entity_1.BoletaEquipamiento, boleta => boleta.reserva),
     __metadata("design:type", Array)
 ], Reserva.prototype, "boletas", void 0);
 exports.Reserva = Reserva = __decorate([
-    (0, typeorm_1.Entity)()
+    (0, typeorm_1.Entity)({ name: 'reserva' })
 ], Reserva);
 //# sourceMappingURL=reserva.entity.js.map
