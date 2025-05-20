@@ -6,12 +6,14 @@ interface TipoAutenticacion
 {
     token: string | null;
     setToken: (token: string | null) => void;
+    loading: boolean;
 }
 
 const contextoAutenticacion = createContext<TipoAutenticacion | undefined>(undefined);
 
 export const ProveedorAuth = ({children}:{children: React.ReactNode}) => {
     const [token, setToken] = useState<string | null>(null);
+    const [loading, setLoading] = useState(true);
 
     useEffect(() => {
         const tokenguardado = sessionStorage.getItem('token');
@@ -19,6 +21,7 @@ export const ProveedorAuth = ({children}:{children: React.ReactNode}) => {
         {
             setToken(tokenguardado);
         }
+        setLoading(false);
     }, []);
 
 
@@ -31,7 +34,7 @@ export const ProveedorAuth = ({children}:{children: React.ReactNode}) => {
     }, [token]);
 
     return (
-        <contextoAutenticacion.Provider value = {{token, setToken}}>
+        <contextoAutenticacion.Provider value = {{token, setToken, loading}}>
             {children}
         </contextoAutenticacion.Provider>
     );
