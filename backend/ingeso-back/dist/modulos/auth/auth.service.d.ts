@@ -8,9 +8,7 @@ export declare class AuthService {
     private jwtService;
     constructor(userService: UserService, jwtService: JwtService);
     validateUser(rut: string, password: string): Promise<any>;
-    login(user: any): Promise<ApiResponse<{
-        access_token: string;
-    }>>;
+    login(user: any): Promise<ApiResponse<any>>;
     register(createUserDto: CreateUserDto): Promise<ApiResponse<User>>;
     getProfile(rut: string): Promise<ApiResponse<User>>;
 }

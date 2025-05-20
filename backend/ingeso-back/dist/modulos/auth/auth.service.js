@@ -32,9 +32,15 @@ let AuthService = class AuthService {
     }
     async login(user) {
         try {
-            const payload = { rut: user.rut };
+            const payload = { rut: user.rut, isAdmin: user.isAdmin };
             const token = this.jwtService.sign(payload);
-            return (0, api_response_util_1.CreateResponse)('Inicio de sesión exitoso', { access_token: token }, 'OK');
+            return (0, api_response_util_1.CreateResponse)('Inicio de sesión exitoso', {
+                rut: user.rut,
+                nombre: user.nombre,
+                correo: user.correo,
+                rol: user.isAdmin ? 'admin' : 'usuario',
+                token: token
+            }, 'OK');
         }
         catch (error) {
             throw new common_1.UnauthorizedException((0, api_response_util_1.CreateResponse)('Error al iniciar sesión', null, 'UNAUTHORIZED', error.message));

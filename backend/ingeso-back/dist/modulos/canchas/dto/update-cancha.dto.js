@@ -14,13 +14,31 @@ const mapped_types_1 = require("@nestjs/mapped-types");
 const create_cancha_dto_1 = require("./create-cancha.dto");
 const class_validator_1 = require("class-validator");
 class UpdateCanchaDto extends (0, mapped_types_1.PartialType)(create_cancha_dto_1.CreateCanchaDto) {
-    costo;
+    nombre;
+    descripcion;
+    mantenimiento;
+    valor;
 }
 exports.UpdateCanchaDto = UpdateCanchaDto;
 __decorate([
     (0, class_validator_1.IsOptional)(),
-    (0, class_validator_1.IsNumber)({}, { message: 'El costo debe ser un valor numérico' }),
-    (0, class_validator_1.Min)(0, { message: 'El costo no puede ser negativo' }),
+    (0, class_validator_1.IsString)({ message: 'El nombre debe ser un texto' }),
+    __metadata("design:type", String)
+], UpdateCanchaDto.prototype, "nombre", void 0);
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsString)({ message: 'La descripción debe ser un texto' }),
+    __metadata("design:type", String)
+], UpdateCanchaDto.prototype, "descripcion", void 0);
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsBoolean)({ message: 'El estado de mantenimiento debe ser un booleano' }),
+    __metadata("design:type", Boolean)
+], UpdateCanchaDto.prototype, "mantenimiento", void 0);
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsNumber)({}, { message: 'El valor debe ser un valor numérico' }),
+    (0, class_validator_1.Min)(0, { message: 'El valor no puede ser negativo' }),
     __metadata("design:type", Number)
-], UpdateCanchaDto.prototype, "costo", void 0);
+], UpdateCanchaDto.prototype, "valor", void 0);
 //# sourceMappingURL=update-cancha.dto.js.map

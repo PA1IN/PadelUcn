@@ -43,7 +43,7 @@ export class EquipamientoService {
   async findOne(id: number): Promise<ApiResponse<Equipamiento>> {
     try {
       const equipamiento = await this.equipamientoRepository.findOne({ 
-        where: { id_equipamiento: id },
+        where: { id: id },
         relations: ['boletas'],
       });
       
@@ -69,14 +69,14 @@ export class EquipamientoService {
 
   async update(id: number, updateEquipamientoDto: UpdateEquipamientoDto): Promise<ApiResponse<Equipamiento>> {
     try {
-      const equipamiento = await this.equipamientoRepository.findOne({ where: { id_equipamiento: id } });
+      const equipamiento = await this.equipamientoRepository.findOne({ where: { id: id } });
       
       if (!equipamiento) {
         throw new Error(`No se encontró un equipamiento con el ID ${id}`);
       }
       
       await this.equipamientoRepository.update(id, updateEquipamientoDto);
-      const updatedEquipamiento = await this.equipamientoRepository.findOne({ where: { id_equipamiento: id } });
+      const updatedEquipamiento = await this.equipamientoRepository.findOne({ where: { id: id } });
       
       if (!updatedEquipamiento) {
         throw new Error(`Error al obtener equipamiento actualizado con ID ${id}`);
@@ -100,7 +100,7 @@ export class EquipamientoService {
 
   async remove(id: number): Promise<ApiResponse<null>> {
     try {
-      const equipamiento = await this.equipamientoRepository.findOne({ where: { id_equipamiento: id } });
+      const equipamiento = await this.equipamientoRepository.findOne({ where: { id: id } });
       
       if (!equipamiento) {
         throw new Error(`No se encontró un equipamiento con el ID ${id}`);
@@ -125,7 +125,7 @@ export class EquipamientoService {
 
   async actualizarStock(id: number, cantidad: number): Promise<ApiResponse<Equipamiento>> {
     try {
-      const equipamiento = await this.equipamientoRepository.findOne({ where: { id_equipamiento: id } });
+      const equipamiento = await this.equipamientoRepository.findOne({ where: { id: id } });
       
       if (!equipamiento) {
         throw new Error(`No se encontró un equipamiento con el ID ${id}`);

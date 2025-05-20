@@ -1,8 +1,9 @@
 import { BoletaEquipamiento } from '../../boleta-equipamiento/entities/boleta-equipamiento.entity';
 export declare class Equipamiento {
-    id_equipamiento: number;
+    id: number;
     tipo: string;
     costo: number;
     stock: number;
+    nombre: string;
     boletas: BoletaEquipamiento[];
 }
