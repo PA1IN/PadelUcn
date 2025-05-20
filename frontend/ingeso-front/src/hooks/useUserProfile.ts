@@ -18,9 +18,6 @@ interface Perfilresponse
 
 }
 
-
-
-
 export function useUserProfile(){
     return useQuery<Userperfil>({
         queryKey:['user'],

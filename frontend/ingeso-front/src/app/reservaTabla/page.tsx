@@ -71,7 +71,7 @@ export default function ReservaTabla() {
   useEffect(() => {
     const fetchCourts = async () => {
       try {
-        const response = await fetch("/api/courts")
+        const response = await fetch("http://localhost:3000/apa/courts")
         if (!response.ok) throw new Error("Error al cargar las canchas")
 
         const data = await response.json()
@@ -91,7 +91,7 @@ export default function ReservaTabla() {
   useEffect(() => {
     const fetchDates = async () => {
       try {
-        const response = await fetch("/api/dates")
+        const response = await fetch("http://localhost:3000/apa/dates")
         if (!response.ok) throw new Error("Error al cargar las fechas")
 
         const data = await response.json()
@@ -119,7 +119,7 @@ export default function ReservaTabla() {
       setSelectedTime("")
 
       try {
-        const response = await fetch(`/api/times?date=${selectedDate}`)
+        const response = await fetch(`http://localhost:3000/apa/times?date=${selectedDate}`)
         if (!response.ok) throw new Error("Error al cargar las horas")
 
         const data = await response.json()
@@ -147,7 +147,7 @@ export default function ReservaTabla() {
       setSelectedEquipment([])
 
       try {
-        const response = await fetch(`/api/equipment?time=${selectedTime}`)
+        const response = await fetch(`http://localhost:3000/apa/equipment?time=${selectedTime}`)
         if (!response.ok) throw new Error("Error al cargar el equipamiento")
 
         const data = await response.json()
@@ -182,7 +182,7 @@ export default function ReservaTabla() {
     setLoading((prev) => ({ ...prev, submit: true }))
 
     try {
-      const response = await fetch("/api/reserve", {
+      const response = await fetch("http://localhost:3000/apa/reserve", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

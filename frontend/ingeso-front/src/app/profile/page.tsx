@@ -83,7 +83,7 @@ export default function ProfilePage() {
           {activeTab === "security" && (
             <div className="space-y-4">
               <p className="text-gray-700">
-                Administra la seguridad de tu cuenta, cambia tu contraseña y configura la autenticación de dos factores.
+                Administra la seguridad de tu cuenta y cambia tu contraseña.
               </p>
               <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4">
                 <div className="flex">

@@ -15,7 +15,7 @@ export default function Login() {
   const login = useLogin(
     (token) => {
       setToken(token)
-      router.push("/reservaTabla") // Modificado: ahora redirecciona a reservaTabla en lugar de /home
+      router.push("/home") // Modificado: ahora redirecciona a reservaTabla en lugar de /home
     },
     (error) => {
       setErrorMsg(error)
