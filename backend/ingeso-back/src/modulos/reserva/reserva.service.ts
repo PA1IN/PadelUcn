@@ -3,6 +3,8 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { CreateReservaDto } from './dto/create-reserva.dto';
 import { UpdateReservaDto } from './dto/update-reserva.dto';
+import { Cancha } from '../canchas/entities/cancha.entity';
+import { User } from '../user/entities/user.entity';
 import { Reserva } from './entities/reserva.entity';
 import { ApiResponse } from '../../interface/Apiresponce';
 import { CreateResponse } from '../../utils/api-response.util';
@@ -11,6 +13,11 @@ import { HistorialReservaService } from './historial-reserva/historial-reserva.s
 @Injectable()
 export class ReservaService {
   constructor(
+    @InjectRepository(User)
+    private usuarioRepository: Repository<User>,
+    @InjectRepository(Cancha)
+    private canchaRespository: Repository<Cancha>,
+
     @InjectRepository(Reserva)
     private reservaRepository: Repository<Reserva>,
     private historialReservaService: HistorialReservaService,
@@ -24,7 +31,7 @@ export class ReservaService {
       const existingReservas = await this.reservaRepository
         .createQueryBuilder('reserva')
         .innerJoin('reserva.cancha', 'cancha')
-        .where('cancha.id = :idCancha', { idCancha: createReservaDto.id_cancha })
+        .where('cancha.numero = :numeroCancha', { numeroCancha: createReservaDto.numero_cancha })
         .andWhere('reserva.fecha = :fecha', { fecha: fechaFormateada })
         .andWhere('(reserva.hora_inicio < :horaTermino AND reserva.hora_termino > :horaInicio)', {
           horaInicio: createReservaDto.hora_inicio,
@@ -33,15 +40,24 @@ export class ReservaService {
         .getMany();
 
       if (existingReservas.length > 0) {
-        throw new Error(`La cancha ID #${createReservaDto.id_cancha} no está disponible en el horario solicitado`);
+        throw new Error(`La cancha #${createReservaDto.numero_cancha} no está disponible en el horario solicitado`);
+      }
+      const usuario = await this.usuarioRepository.findOne({ where: { rut: createReservaDto.rut_usuario } });
+      if (!usuario) {
+        throw new Error(`Usuario con rut ${createReservaDto.rut_usuario} no encontrado`);
+      }
+
+      const cancha = await this.canchaRespository.findOne({ where: { numero: createReservaDto.numero_cancha } });
+      if (!cancha) {
+        throw new Error(`Cancha número ${createReservaDto.numero_cancha} no encontrada`);
       }
 
       const newReserva = this.reservaRepository.create({
         fecha: fechaFormateada,
         hora_inicio: createReservaDto.hora_inicio,
         hora_termino: createReservaDto.hora_termino,
-        usuario: { id: createReservaDto.id_usuario },
-        cancha: { id: createReservaDto.id_cancha }
+        usuario,
+        cancha,
       });
 
       const savedReserva = await this.reservaRepository.save(newReserva);
@@ -54,16 +70,16 @@ export class ReservaService {
       try {
         await this.historialReservaService.create({
           estado: 'Pendiente',
-          idReserva:savedReserva.id,
-          idUsuario:createReservaDto.id_usuario
+          idReserva: savedReserva.id,
+          idUsuario: reservaCompleta!.usuario.id
         });
       } catch (historialError) {
         console.error('Error al crear historial de reserva:', historialError);
       }
 
       return CreateResponse(
-        `Reserva #${savedReserva.id} creada exitosamente para la cancha ID #${createReservaDto.id_cancha}`,
-        reservaCompleta,
+        `Reserva #${savedReserva.id} creada exitosamente para la cancha #${createReservaDto.numero_cancha}`,
+        reservaCompleta!,
         'CREATED'
       );
     } catch (error) {

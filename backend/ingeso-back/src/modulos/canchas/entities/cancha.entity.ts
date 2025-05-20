@@ -23,7 +23,7 @@ export class Cancha {
   @Column({ default: false })
   mantenimiento: boolean;
   
-  @Column()
+  @Column({ type: 'int', nullable:false})
   valor: number;
 
   @OneToMany(() => Reserva, reserva => reserva.cancha)

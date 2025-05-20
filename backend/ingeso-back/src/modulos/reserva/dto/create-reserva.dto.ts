@@ -14,10 +14,10 @@ export class CreateReservaDto {
   hora_termino: string;
 
   @IsNotEmpty()
-  @IsNumber()
-  id_usuario: number;
+  @IsString()
+  rut_usuario: string;
 
   @IsNotEmpty()
   @IsNumber()
-  id_cancha: number;
+  numero_cancha: number;
 }
