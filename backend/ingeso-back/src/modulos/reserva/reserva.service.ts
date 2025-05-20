@@ -14,16 +14,13 @@ export class ReservaService {
     @InjectRepository(Reserva)
     private reservaRepository: Repository<Reserva>,
     private historialReservaService: HistorialReservaService,
-  ) {}async create(createReservaDto: CreateReservaDto): Promise<ApiResponse<Reserva>> {
+  ) {}
+
+  async create(createReservaDto: CreateReservaDto): Promise<ApiResponse<Reserva>> {
     try {
-      // Verificar disponibilidad de la cancha en el horario solicitado
       const fecha = new Date(createReservaDto.fecha);
-      
-      // Formatear la fecha para que solo tenga la parte de fecha (sin hora)
       const fechaFormateada = new Date(fecha.getFullYear(), fecha.getMonth(), fecha.getDate());
-      
-      // Verificar traslape de horarios usando consulta SQL nativa
-      // Buscar reservas para la misma cancha, el mismo día, y con horarios que se traslapen
+
       const existingReservas = await this.reservaRepository
         .createQueryBuilder('reserva')
         .innerJoin('reserva.cancha', 'cancha')
@@ -39,41 +36,34 @@ export class ReservaService {
         throw new Error(`La cancha ID #${createReservaDto.id_cancha} no está disponible en el horario solicitado`);
       }
 
-      // Verificar existencia del usuario y la cancha antes de crear la reserva
-      // (Aquí idealmente se debería verificar en los servicios correspondientes)
-      
-      // Crear objeto reserva con los IDs correctos
       const newReserva = this.reservaRepository.create({
         fecha: fechaFormateada,
         hora_inicio: createReservaDto.hora_inicio,
         hora_termino: createReservaDto.hora_termino,
-        idUsuario: createReservaDto.id_usuario,
-        idCancha: createReservaDto.id_cancha
+        usuario: { id: createReservaDto.id_usuario },
+        cancha: { id: createReservaDto.id_cancha }
       });
-      
+
       const savedReserva = await this.reservaRepository.save(newReserva);
-      
-      // Cargamos las relaciones para devolver una respuesta completa
+
       const reservaCompleta = await this.reservaRepository.findOne({
         where: { id: savedReserva.id },
         relations: ['usuario', 'cancha'],
       });
-      
-      // Crear entrada en el historial de reserva con estado inicial "Pendiente"
+
       try {
         await this.historialReservaService.create({
           estado: 'Pendiente',
-          idReserva: savedReserva.id,
-          idUsuario: createReservaDto.id_usuario
+          idReserva:savedReserva.id,
+          idUsuario:createReservaDto.id_usuario
         });
       } catch (historialError) {
         console.error('Error al crear historial de reserva:', historialError);
-        // No bloqueamos la creación de la reserva si falla el historial
       }
 
       return CreateResponse(
-        `Reserva #${savedReserva.id} creada exitosamente para la cancha ID #${createReservaDto.id_cancha}`, 
-        reservaCompleta, 
+        `Reserva #${savedReserva.id} creada exitosamente para la cancha ID #${createReservaDto.id_cancha}`,
+        reservaCompleta,
         'CREATED'
       );
     } catch (error) {

@@ -8,8 +8,8 @@ export class Cancha {
   
   // Duplicamos la propiedad para que TypeORM pueda acceder a ella directamente
   // Esta propiedad será mapeada a la misma columna que 'id'
-  @PrimaryGeneratedColumn({ name: 'id_cancha' })
-  id_cancha: number;
+  /*@PrimaryGeneratedColumn({ name: 'id_cancha' })
+  id_cancha: number;*/
   
   @Column({ unique: true })
   numero: number;

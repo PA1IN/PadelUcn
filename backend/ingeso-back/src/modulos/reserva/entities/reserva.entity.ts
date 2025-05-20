@@ -22,16 +22,10 @@ export class Reserva {
   @JoinColumn({ name: 'id_usuario' })
   usuario: User;
 
-  @Column({ name: 'id_usuario' })
-  idUsuario: number;
-
   @ManyToOne(() => Cancha, cancha => cancha.reservas)
   @JoinColumn({ name: 'id_cancha' })
   cancha: Cancha;
-  
-  @Column({ name: 'id_cancha' })
-  idCancha: number;
-  
+
   @OneToMany(() => HistorialReserva, historial => historial.reserva)
   historial: HistorialReserva[];
 

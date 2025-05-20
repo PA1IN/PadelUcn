@@ -15,9 +15,14 @@ export class HistorialReservaService {
 
   async create(createHistorialReservaDto: CreateHistorialReservaDto): Promise<ApiResponse<HistorialReserva>> {
     try {
-      const nuevoHistorial = this.historialReservaRepository.create(createHistorialReservaDto);
-      const savedHistorial = await this.historialReservaRepository.save(nuevoHistorial);
-      
+      const historial = this.historialReservaRepository.create({
+        estado: createHistorialReservaDto.estado,
+        fechaEstado: createHistorialReservaDto.fechaEstado,
+        reserva: { id: createHistorialReservaDto.idReserva },
+        usuario: { id: createHistorialReservaDto.idUsuario },
+      });
+
+      const savedHistorial = await this.historialReservaRepository.save(historial);
       return CreateResponse('Historial de reserva creado exitosamente', savedHistorial, 'CREATED');
     } catch (error) {
       throw new HttpException(
@@ -32,7 +37,7 @@ export class HistorialReservaService {
       const historiales = await this.historialReservaRepository.find({
         relations: ['reserva', 'usuario'],
       });
-      
+
       return CreateResponse('Historiales de reserva obtenidos exitosamente', historiales, 'OK');
     } catch (error) {
       throw new HttpException(
@@ -45,11 +50,11 @@ export class HistorialReservaService {
   async findByReserva(idReserva: number): Promise<ApiResponse<HistorialReserva[]>> {
     try {
       const historiales = await this.historialReservaRepository.find({
-        where: { idReserva },
+        where: { reserva: { id: idReserva } },
         relations: ['usuario'],
         order: { fechaEstado: 'DESC' },
       });
-      
+
       return CreateResponse('Historiales de reserva obtenidos exitosamente', historiales, 'OK');
     } catch (error) {
       throw new HttpException(
@@ -62,11 +67,11 @@ export class HistorialReservaService {
   async findByUsuario(idUsuario: number): Promise<ApiResponse<HistorialReserva[]>> {
     try {
       const historiales = await this.historialReservaRepository.find({
-        where: { idUsuario },
+        where: { usuario: { id: idUsuario } },
         relations: ['reserva'],
         order: { fechaEstado: 'DESC' },
       });
-      
+
       return CreateResponse('Historiales de reserva obtenidos exitosamente', historiales, 'OK');
     } catch (error) {
       throw new HttpException(
@@ -82,11 +87,11 @@ export class HistorialReservaService {
         where: { id },
         relations: ['reserva', 'usuario'],
       });
-      
+
       if (!historial) {
         throw new Error(`No se encontró un historial con el ID ${id}`);
       }
-      
+
       return CreateResponse('Historial de reserva obtenido exitosamente', historial, 'OK');
     } catch (error) {
       if (error.message.includes('No se encontró')) {
@@ -95,7 +100,7 @@ export class HistorialReservaService {
           HttpStatus.NOT_FOUND,
         );
       }
-      
+
       throw new HttpException(
         CreateResponse('Error al obtener historial de reserva', null, 'INTERNAL_SERVER_ERROR', error.message),
         HttpStatus.INTERNAL_SERVER_ERROR,
