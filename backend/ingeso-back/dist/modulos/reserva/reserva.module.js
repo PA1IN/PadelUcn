@@ -12,15 +12,19 @@ const typeorm_1 = require("@nestjs/typeorm");
 const reserva_service_1 = require("./reserva.service");
 const reserva_controller_1 = require("./reserva.controller");
 const reserva_entity_1 = require("./entities/reserva.entity");
+const user_entity_1 = require("../user/entities/user.entity");
+const cancha_entity_1 = require("../canchas/entities/cancha.entity");
 const historial_reserva_entity_1 = require("./entities/historial-reserva.entity");
 const historial_reserva_service_1 = require("./historial-reserva/historial-reserva.service");
 const historial_reserva_controller_1 = require("./historial-reserva/historial-reserva.controller");
+const boleta_equipamiento_entity_1 = require("../boleta-equipamiento/entities/boleta-equipamiento.entity");
+const equipamiento_entity_1 = require("../equipamiento/entities/equipamiento.entity");
 let ReservaModule = class ReservaModule {
 };
 exports.ReservaModule = ReservaModule;
 exports.ReservaModule = ReservaModule = __decorate([
     (0, common_1.Module)({
-        imports: [typeorm_1.TypeOrmModule.forFeature([reserva_entity_1.Reserva, historial_reserva_entity_1.HistorialReserva])],
+        imports: [typeorm_1.TypeOrmModule.forFeature([reserva_entity_1.Reserva, historial_reserva_entity_1.HistorialReserva, cancha_entity_1.Cancha, user_entity_1.User, boleta_equipamiento_entity_1.BoletaEquipamiento, equipamiento_entity_1.Equipamiento])],
         controllers: [reserva_controller_1.ReservaController, historial_reserva_controller_1.HistorialReservaController],
         providers: [reserva_service_1.ReservaService, historial_reserva_service_1.HistorialReservaService],
         exports: [reserva_service_1.ReservaService, historial_reserva_service_1.HistorialReservaService],

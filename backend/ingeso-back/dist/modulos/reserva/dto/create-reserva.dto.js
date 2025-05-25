@@ -17,7 +17,6 @@ class CreateReservaDto {
     hora_termino;
     rut_usuario;
     numero_cancha;
-    id_admin;
 }
 exports.CreateReservaDto = CreateReservaDto;
 __decorate([
@@ -45,9 +44,4 @@ __decorate([
     (0, class_validator_1.IsNumber)(),
     __metadata("design:type", Number)
 ], CreateReservaDto.prototype, "numero_cancha", void 0);
-__decorate([
-    (0, class_validator_1.IsOptional)(),
-    (0, class_validator_1.IsNumber)(),
-    __metadata("design:type", Number)
-], CreateReservaDto.prototype, "id_admin", void 0);
 //# sourceMappingURL=create-reserva.dto.js.map

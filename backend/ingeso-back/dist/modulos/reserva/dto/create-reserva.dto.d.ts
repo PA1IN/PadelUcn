@@ -4,5 +4,4 @@ export declare class CreateReservaDto {
     hora_termino: string;
     rut_usuario: string;
     numero_cancha: number;
-    id_admin?: number;
 }

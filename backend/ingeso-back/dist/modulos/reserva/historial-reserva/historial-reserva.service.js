@@ -25,8 +25,13 @@ let HistorialReservaService = class HistorialReservaService {
     }
     async create(createHistorialReservaDto) {
         try {
-            const nuevoHistorial = this.historialReservaRepository.create(createHistorialReservaDto);
-            const savedHistorial = await this.historialReservaRepository.save(nuevoHistorial);
+            const historial = this.historialReservaRepository.create({
+                estado: createHistorialReservaDto.estado,
+                fechaEstado: createHistorialReservaDto.fechaEstado,
+                reserva: { id: createHistorialReservaDto.idReserva },
+                usuario: { id: createHistorialReservaDto.idUsuario },
+            });
+            const savedHistorial = await this.historialReservaRepository.save(historial);
             return (0, api_response_util_1.CreateResponse)('Historial de reserva creado exitosamente', savedHistorial, 'CREATED');
         }
         catch (error) {
@@ -47,7 +52,7 @@ let HistorialReservaService = class HistorialReservaService {
     async findByReserva(idReserva) {
         try {
             const historiales = await this.historialReservaRepository.find({
-                where: { idReserva },
+                where: { reserva: { id: idReserva } },
                 relations: ['usuario'],
                 order: { fechaEstado: 'DESC' },
             });
@@ -60,7 +65,7 @@ let HistorialReservaService = class HistorialReservaService {
     async findByUsuario(idUsuario) {
         try {
             const historiales = await this.historialReservaRepository.find({
-                where: { idUsuario },
+                where: { usuario: { id: idUsuario } },
                 relations: ['reserva'],
                 order: { fechaEstado: 'DESC' },
             });

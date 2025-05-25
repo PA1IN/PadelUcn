@@ -16,12 +16,25 @@ exports.ReservaService = void 0;
 const common_1 = require("@nestjs/common");
 const typeorm_1 = require("@nestjs/typeorm");
 const typeorm_2 = require("typeorm");
+const cancha_entity_1 = require("../canchas/entities/cancha.entity");
+const user_entity_1 = require("../user/entities/user.entity");
 const reserva_entity_1 = require("./entities/reserva.entity");
 const api_response_util_1 = require("../../utils/api-response.util");
+const historial_reserva_service_1 = require("./historial-reserva/historial-reserva.service");
+const boleta_equipamiento_entity_1 = require("../boleta-equipamiento/entities/boleta-equipamiento.entity");
+const equipamiento_entity_1 = require("../equipamiento/entities/equipamiento.entity");
 let ReservaService = class ReservaService {
+    boletaEquipamientoRepository;
+    usuarioRepository;
+    canchaRespository;
     reservaRepository;
-    constructor(reservaRepository) {
+    historialReservaService;
+    constructor(boletaEquipamientoRepository, usuarioRepository, canchaRespository, reservaRepository, historialReservaService) {
+        this.boletaEquipamientoRepository = boletaEquipamientoRepository;
+        this.usuarioRepository = usuarioRepository;
+        this.canchaRespository = canchaRespository;
         this.reservaRepository = reservaRepository;
+        this.historialReservaService = historialReservaService;
     }
     async create(createReservaDto) {
         try {
@@ -40,15 +53,36 @@ let ReservaService = class ReservaService {
             if (existingReservas.length > 0) {
                 throw new Error(`La cancha #${createReservaDto.numero_cancha} no está disponible en el horario solicitado`);
             }
+            const usuario = await this.usuarioRepository.findOne({ where: { rut: createReservaDto.rut_usuario } });
+            if (!usuario) {
+                throw new Error(`Usuario con rut ${createReservaDto.rut_usuario} no encontrado`);
+            }
+            const cancha = await this.canchaRespository.findOne({ where: { numero: createReservaDto.numero_cancha } });
+            if (!cancha) {
+                throw new Error(`Cancha número ${createReservaDto.numero_cancha} no encontrada`);
+            }
             const newReserva = this.reservaRepository.create({
-                ...createReservaDto,
                 fecha: fechaFormateada,
+                hora_inicio: createReservaDto.hora_inicio,
+                hora_termino: createReservaDto.hora_termino,
+                usuario,
+                cancha,
             });
             const savedReserva = await this.reservaRepository.save(newReserva);
             const reservaCompleta = await this.reservaRepository.findOne({
                 where: { id: savedReserva.id },
                 relations: ['usuario', 'cancha'],
             });
+            try {
+                await this.historialReservaService.create({
+                    estado: 'Pendiente',
+                    idReserva: savedReserva.id,
+                    idUsuario: reservaCompleta.usuario.id
+                });
+            }
+            catch (historialError) {
+                console.error('Error al crear historial de reserva:', historialError);
+            }
             return (0, api_response_util_1.CreateResponse)(`Reserva #${savedReserva.id} creada exitosamente para la cancha #${createReservaDto.numero_cancha}`, reservaCompleta, 'CREATED');
         }
         catch (error) {
@@ -58,7 +92,7 @@ let ReservaService = class ReservaService {
     async findAll() {
         try {
             const reservas = await this.reservaRepository.find({
-                relations: ['usuario', 'cancha', 'administrador'],
+                relations: ['usuario', 'cancha', 'historial'],
             });
             return (0, api_response_util_1.CreateResponse)('Reservas obtenidas exitosamente', reservas, 'OK');
         }
@@ -100,7 +134,7 @@ let ReservaService = class ReservaService {
         try {
             const reservas = await this.reservaRepository.find({
                 where: { cancha: { numero: numeroCancha } },
-                relations: ['usuario', 'administrador', 'boletas'],
+                relations: ['usuario', 'boletas', 'historial'],
                 order: { fecha: 'ASC', hora_inicio: 'ASC' },
             });
             return (0, api_response_util_1.CreateResponse)('Reservas de la cancha obtenidas exitosamente', reservas, 'OK');
@@ -112,7 +146,7 @@ let ReservaService = class ReservaService {
     async update(id, updateReservaDto) {
         try {
             const reserva = await this.reservaRepository.findOne({
-                where: { id: id },
+                where: { id },
                 relations: ['usuario', 'cancha'],
             });
             if (!reserva) {
@@ -125,40 +159,68 @@ let ReservaService = class ReservaService {
                 const fechaFormateada = new Date(fecha.getFullYear(), fecha.getMonth(), fecha.getDate());
                 const horaInicio = updateReservaDto.hora_inicio || reserva.hora_inicio;
                 const horaTermino = updateReservaDto.hora_termino || reserva.hora_termino;
-                const existingReservas = await this.reservaRepository
-                    .createQueryBuilder('reserva')
+                const conflictos = await this.reservaRepository.createQueryBuilder('reserva')
                     .innerJoin('reserva.cancha', 'cancha')
                     .where('cancha.numero = :numeroCancha', { numeroCancha })
                     .andWhere('reserva.fecha = :fecha', { fecha: fechaFormateada })
-                    .andWhere('(reserva.hora_inicio < :horaTermino AND reserva.hora_termino > :horaInicio)', {
-                    horaInicio,
-                    horaTermino,
-                })
+                    .andWhere('(reserva.hora_inicio < :horaTermino AND reserva.hora_termino > :horaInicio)')
                     .andWhere('reserva.id != :id', { id })
+                    .setParameters({ horaInicio, horaTermino })
                     .getMany();
-                if (existingReservas.length > 0) {
-                    throw new Error(`La cancha #${numeroCancha} no está disponible en el horario solicitado`);
+                if (conflictos.length > 0) {
+                    throw new Error(`La cancha #${numeroCancha} no está disponible en ese horario`);
                 }
+            }
+            if (updateReservaDto.numero_cancha) {
+                const nuevaCancha = await this.canchaRespository.findOne({
+                    where: { numero: updateReservaDto.numero_cancha }
+                });
+                if (!nuevaCancha) {
+                    throw new Error(`Cancha número ${updateReservaDto.numero_cancha} no encontrada`);
+                }
+                reserva.cancha = nuevaCancha;
             }
             if (updateReservaDto.fecha) {
                 const fecha = new Date(updateReservaDto.fecha);
-                updateReservaDto.fecha = new Date(fecha.getFullYear(), fecha.getMonth(), fecha.getDate());
+                reserva.fecha = new Date(fecha.getFullYear(), fecha.getMonth(), fecha.getDate());
             }
-            await this.reservaRepository.update(id, updateReservaDto);
-            const updatedReserva = await this.reservaRepository.findOne({
-                where: { id: id },
-                relations: ['usuario', 'cancha', 'administrador'],
+            if (updateReservaDto.hora_inicio) {
+                reserva.hora_inicio = updateReservaDto.hora_inicio;
+            }
+            if (updateReservaDto.hora_termino) {
+                reserva.hora_termino = updateReservaDto.hora_termino;
+            }
+            await this.reservaRepository.save(reserva);
+            if (Array.isArray(updateReservaDto.equipamiento)) {
+                await this.boletaEquipamientoRepository.delete({ reserva: { id } });
+                for (const item of updateReservaDto.equipamiento) {
+                    const { id: idEquip, cantidad } = item;
+                    const equipamiento = await this.boletaEquipamientoRepository.manager.getRepository(equipamiento_entity_1.Equipamiento).findOne({
+                        where: { id: idEquip }
+                    });
+                    if (!equipamiento) {
+                        throw new Error(`Equipamiento con ID ${idEquip} no encontrado`);
+                    }
+                    const nuevaBoleta = this.boletaEquipamientoRepository.create({
+                        reserva: { id },
+                        equipamiento: { id: idEquip },
+                        cantidad: cantidad || 1,
+                        montoTotal: equipamiento.costo * (cantidad || 1),
+                    });
+                    await this.boletaEquipamientoRepository.save(nuevaBoleta);
+                }
+            }
+            const reservaActualizada = await this.reservaRepository.findOne({
+                where: { id },
+                relations: ['usuario', 'cancha', 'boletas', 'boletas.equipamiento'],
             });
-            if (!updatedReserva) {
-                throw new Error(`Error al obtener reserva actualizada con ID ${id}`);
+            if (!reservaActualizada) {
+                throw new Error('Error al cargar la reserva actualizada');
             }
-            return (0, api_response_util_1.CreateResponse)('Reserva actualizada exitosamente', updatedReserva, 'OK');
+            return (0, api_response_util_1.CreateResponse)('Reserva modificada exitosamente', reservaActualizada, 'OK');
         }
         catch (error) {
-            if (error.message.includes('No se encontró')) {
-                throw new common_1.HttpException((0, api_response_util_1.CreateResponse)('Reserva no encontrada', null, 'NOT_FOUND', error.message), common_1.HttpStatus.NOT_FOUND);
-            }
-            throw new common_1.HttpException((0, api_response_util_1.CreateResponse)('Error al actualizar la reserva', null, 'BAD_REQUEST', error.message), common_1.HttpStatus.BAD_REQUEST);
+            throw new common_1.HttpException((0, api_response_util_1.CreateResponse)('Error al modificar la reserva', null, 'BAD_REQUEST', error.message), common_1.HttpStatus.BAD_REQUEST);
         }
     }
     async remove(id) {
@@ -306,7 +368,14 @@ let ReservaService = class ReservaService {
 exports.ReservaService = ReservaService;
 exports.ReservaService = ReservaService = __decorate([
     (0, common_1.Injectable)(),
-    __param(0, (0, typeorm_1.InjectRepository)(reserva_entity_1.Reserva)),
-    __metadata("design:paramtypes", [typeorm_2.Repository])
+    __param(0, (0, typeorm_1.InjectRepository)(boleta_equipamiento_entity_1.BoletaEquipamiento)),
+    __param(1, (0, typeorm_1.InjectRepository)(user_entity_1.User)),
+    __param(2, (0, typeorm_1.InjectRepository)(cancha_entity_1.Cancha)),
+    __param(3, (0, typeorm_1.InjectRepository)(reserva_entity_1.Reserva)),
+    __metadata("design:paramtypes", [typeorm_2.Repository,
+        typeorm_2.Repository,
+        typeorm_2.Repository,
+        typeorm_2.Repository,
+        historial_reserva_service_1.HistorialReservaService])
 ], ReservaService);
 //# sourceMappingURL=reserva.service.js.map

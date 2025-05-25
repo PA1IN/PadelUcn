@@ -8,9 +8,7 @@ export declare class Reserva {
     hora_inicio: string;
     hora_termino: string;
     usuario: User;
-    idUsuario: number;
     cancha: Cancha;
-    idCancha: number;
     historial: HistorialReserva[];
     boletas: BoletaEquipamiento[];
 }

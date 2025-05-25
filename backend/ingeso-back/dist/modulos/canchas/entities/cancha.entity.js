@@ -43,7 +43,7 @@ __decorate([
     __metadata("design:type", Boolean)
 ], Cancha.prototype, "mantenimiento", void 0);
 __decorate([
-    (0, typeorm_1.Column)(),
+    (0, typeorm_1.Column)({ type: 'int', nullable: false }),
     __metadata("design:type", Number)
 ], Cancha.prototype, "valor", void 0);
 __decorate([

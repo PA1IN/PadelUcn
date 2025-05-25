@@ -21,9 +21,7 @@ let Reserva = class Reserva {
     hora_inicio;
     hora_termino;
     usuario;
-    idUsuario;
     cancha;
-    idCancha;
     historial;
     boletas;
 };
@@ -50,18 +48,10 @@ __decorate([
     __metadata("design:type", user_entity_1.User)
 ], Reserva.prototype, "usuario", void 0);
 __decorate([
-    (0, typeorm_1.Column)({ name: 'id_usuario' }),
-    __metadata("design:type", Number)
-], Reserva.prototype, "idUsuario", void 0);
-__decorate([
     (0, typeorm_1.ManyToOne)(() => cancha_entity_1.Cancha, cancha => cancha.reservas),
     (0, typeorm_1.JoinColumn)({ name: 'id_cancha' }),
     __metadata("design:type", cancha_entity_1.Cancha)
 ], Reserva.prototype, "cancha", void 0);
-__decorate([
-    (0, typeorm_1.Column)({ name: 'id_cancha' }),
-    __metadata("design:type", Number)
-], Reserva.prototype, "idCancha", void 0);
 __decorate([
     (0, typeorm_1.OneToMany)(() => historial_reserva_entity_1.HistorialReserva, historial => historial.reserva),
     __metadata("design:type", Array)
