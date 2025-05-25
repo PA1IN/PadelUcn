@@ -83,7 +83,31 @@ Check out a few resources that may come in handy when working with NestJS:
 - To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
 - Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
 
-## Support
+## API Endpoints
+
+### Reserva de Canchas
+
+El sistema ofrece los siguientes endpoints para la gestión de reservas de canchas:
+
+#### Endpoints Básicos
+- **POST /reservas** - Crear una nueva reserva de cancha
+- **GET /reservas** - Obtener todas las reservas
+- **GET /reservas/:id** - Obtener una reserva específica por ID
+- **PATCH /reservas/:id** - Actualizar una reserva existente
+- **DELETE /reservas/:id** - Cancelar/Eliminar una reserva
+
+#### Endpoints de Filtrado
+- **GET /reservas/usuario/:rut** - Obtener todas las reservas de un usuario por su RUT
+- **GET /reservas/cancha/:numero** - Obtener todas las reservas de una cancha específica
+
+#### Endpoints de Disponibilidad
+- **GET /reservas/disponibilidad/:numero/:fecha/:horaInicio/:horaTermino** - Verificar disponibilidad de una cancha en un horario específico
+- **GET /reservas/disponibilidad-dia/:numero/:fecha** - Obtener todos los horarios disponibles de una cancha en un día específico
+
+#### Estadísticas
+- **GET /reservas/estadisticas** - Obtener estadísticas de uso de las canchas
+
+### Support
 
 Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
 
