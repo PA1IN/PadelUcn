@@ -48,6 +48,19 @@ export class UserController {
     return this.userService.update(rut, updateUserDto);
   }
 
+  @Patch(':rut/ingresar-saldo')
+  @ApiOperation({ summary: 'Agergar saldo a la cuenta de un usuario' })
+  @SwaggerResponse({ status: 200, description: 'Saldo actualizado exitosamente' })
+  @SwaggerResponse({ status: 404, description: 'Usuario no encontrado' })
+  @SwaggerResponse({ status: 400, description: 'Datos invalidos' })
+  @SwaggerResponse({ status: 401, description: 'No autorizado' })
+  async ingresarSaldo(
+    @Param('rut') rut: string,
+    @Body('monto') monto: number
+  ){
+    return this.userService.ingresarSaldo(rut,monto);
+  }
+
   @Delete(':rut')
   @ApiOperation({ summary: 'Eliminar un usuario' })
   @SwaggerResponse({ status: 200, description: 'Usuario eliminado exitosamente' })

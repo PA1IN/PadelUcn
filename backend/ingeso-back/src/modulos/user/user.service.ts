@@ -156,4 +156,25 @@ export class UserService {
       );
     }
   }
+
+  //Función para ingresar el saldo al usuario
+  async ingresarSaldo(rut: string, monto: number): Promise<ApiResponse<User>>{
+    try{
+      const user = await this.userRepository.findOne({ where: { rut }}); // intenta buscar el rut
+      
+      if(!user){
+        throw new Error(`No se encontró un usuario con el RUT ${rut}`); // if por si no lo encuentra
+      }
+
+      user.saldo += monto; 
+      const updatedUser = await this.userRepository.save(user); //guardar el nuevo monto en el usuario correspondiente
+
+      return CreateResponse('Saldo actualizado existosamente', updatedUser, 'OK'); //MSG de confirmación
+    } catch (error){
+      throw new HttpException(
+        CreateResponse('Error al ingresasr saldo', null, 'BAD_REQUEST', error.message), // ERROR por si no se puede
+        HttpStatus.BAD_REQUEST
+      );
+    }
+  }
 }
