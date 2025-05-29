@@ -166,6 +166,10 @@ export class UserService {
         throw new Error(`No se encontró un usuario con el RUT ${rut}`); // if por si no lo encuentra
       }
 
+      if(monto<=0){
+        throw new Error(`Monto incorrecto. ${monto} Tiene que ser mayor a 0`);
+      }
+
       user.saldo += monto; 
       const updatedUser = await this.userRepository.save(user); //guardar el nuevo monto en el usuario correspondiente
 
