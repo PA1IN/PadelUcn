@@ -1,4 +1,4 @@
-import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
+import { Injectable, HttpException, HttpStatus } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { CreateCanchaDto } from './dto/create-cancha.dto';
@@ -13,23 +13,15 @@ export class CanchasService {
     @InjectRepository(Cancha)
     private canchaRepository: Repository<Cancha>,
   ) {}
+
   async create(createCanchaDto: CreateCanchaDto): Promise<ApiResponse<Cancha>> {
     try {
-      // Verificar si ya existe una cancha con el mismo número
-      const existingCancha = await this.canchaRepository.findOne({ 
-        where: { numero: createCanchaDto.numero } 
-      });
-      
-      if (existingCancha) {
-        throw new Error(`Ya existe una cancha con el número ${createCanchaDto.numero}`);
-      }
-      
-      const newCancha = this.canchaRepository.create(createCanchaDto);
-      const savedCancha = await this.canchaRepository.save(newCancha);
-      return CreateResponse('Cancha creada exitosamente', savedCancha, 'CREATED');
+      const cancha = this.canchaRepository.create(createCanchaDto);
+      const result = await this.canchaRepository.save(cancha);
+      return CreateResponse('Cancha creada exitosamente', result, 'CREATED');
     } catch (error) {
       throw new HttpException(
-        CreateResponse('Error al crear la cancha', null, 'BAD_REQUEST', error.message),
+        CreateResponse('Error al crear cancha', null, 'BAD_REQUEST', error.message),
         HttpStatus.BAD_REQUEST,
       );
     }
@@ -41,18 +33,18 @@ export class CanchasService {
       return CreateResponse('Canchas obtenidas exitosamente', canchas, 'OK');
     } catch (error) {
       throw new HttpException(
-        CreateResponse('Error al obtener las canchas', null, 'INTERNAL_SERVER_ERROR', error.message),
+        CreateResponse('Error al obtener canchas', null, 'INTERNAL_SERVER_ERROR', error.message),
         HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }
   }
 
-  async findOne(numero: number): Promise<ApiResponse<Cancha>> {
+  async findOne(id: number): Promise<ApiResponse<Cancha>> {
     try {
-      const cancha = await this.canchaRepository.findOne({ where: { numero } });
+      const cancha = await this.canchaRepository.findOne({ where: { id } });
       
       if (!cancha) {
-        throw new Error(`No se encontró una cancha con el número ${numero}`);
+        throw new Error(`No se encontró una cancha con el ID ${id}`);
       }
       
       return CreateResponse('Cancha obtenida exitosamente', cancha, 'OK');
@@ -65,25 +57,24 @@ export class CanchasService {
       }
       
       throw new HttpException(
-        CreateResponse('Error al obtener la cancha', null, 'INTERNAL_SERVER_ERROR', error.message),
+        CreateResponse('Error al obtener cancha', null, 'INTERNAL_SERVER_ERROR', error.message),
         HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }
   }
 
-  async update(numero: number, updateCanchaDto: UpdateCanchaDto): Promise<ApiResponse<Cancha>> {
+  async update(id: number, updateCanchaDto: UpdateCanchaDto): Promise<ApiResponse<Cancha>> {
     try {
-      const cancha = await this.canchaRepository.findOne({ where: { numero } });
+      const cancha = await this.canchaRepository.findOne({ where: { id } });
       
       if (!cancha) {
-        throw new Error(`No se encontró una cancha con el número ${numero}`);
+        throw new Error(`No se encontró una cancha con el ID ${id}`);
       }
       
-      // Actualizar los campos, manteniendo el número igual
-      const updatedCancha = this.canchaRepository.merge(cancha, updateCanchaDto);
-      const result = await this.canchaRepository.save(updatedCancha);
+      await this.canchaRepository.update(id, updateCanchaDto);
+      const updatedCancha = await this.canchaRepository.findOne({ where: { id } });
       
-      return CreateResponse('Cancha actualizada exitosamente', result, 'OK');
+      return CreateResponse('Cancha actualizada exitosamente', updatedCancha, 'OK');
     } catch (error) {
       if (error.message.includes('No se encontró')) {
         throw new HttpException(
@@ -93,21 +84,21 @@ export class CanchasService {
       }
       
       throw new HttpException(
-        CreateResponse('Error al actualizar la cancha', null, 'BAD_REQUEST', error.message),
+        CreateResponse('Error al actualizar cancha', null, 'BAD_REQUEST', error.message),
         HttpStatus.BAD_REQUEST,
       );
     }
   }
 
-  async remove(numero: number): Promise<ApiResponse<null>> {
+  async remove(id: number): Promise<ApiResponse<null>> {
     try {
-      const cancha = await this.canchaRepository.findOne({ where: { numero } });
+      const cancha = await this.canchaRepository.findOne({ where: { id } });
       
       if (!cancha) {
-        throw new Error(`No se encontró una cancha con el número ${numero}`);
+        throw new Error(`No se encontró una cancha con el ID ${id}`);
       }
       
-      await this.canchaRepository.remove(cancha);
+      await this.canchaRepository.delete(id);
       return CreateResponse('Cancha eliminada exitosamente', null, 'OK');
     } catch (error) {
       if (error.message.includes('No se encontró')) {
@@ -118,7 +109,7 @@ export class CanchasService {
       }
       
       throw new HttpException(
-        CreateResponse('Error al eliminar la cancha', null, 'INTERNAL_SERVER_ERROR', error.message),
+        CreateResponse('Error al eliminar cancha', null, 'INTERNAL_SERVER_ERROR', error.message),
         HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }

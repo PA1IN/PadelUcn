@@ -9,4 +9,5 @@ export declare class BoletaEquipamientoController {
     findOne(id: string): Promise<import("../../interface/Apiresponce").ApiResponse<import("./entities/boleta-equipamiento.entity").BoletaEquipamiento>>;
     update(id: string, updateBoletaEquipamientoDto: UpdateBoletaEquipamientoDto): Promise<import("../../interface/Apiresponce").ApiResponse<import("./entities/boleta-equipamiento.entity").BoletaEquipamiento>>;
     remove(id: string): Promise<import("../../interface/Apiresponce").ApiResponse<null>>;
+    findByReserva(id: string): Promise<import("../../interface/Apiresponce").ApiResponse<import("./entities/boleta-equipamiento.entity").BoletaEquipamiento[]>>;
 }

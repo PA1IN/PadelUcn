@@ -50,6 +50,7 @@ let AuthController = class AuthController {
         return this.authService.login(userWithoutPassword);
     }
     async register(createUserDto) {
+        console.log('Datos recibidos para registro:', createUserDto);
         return this.authService.register(createUserDto);
     }
     getProfile(req) {

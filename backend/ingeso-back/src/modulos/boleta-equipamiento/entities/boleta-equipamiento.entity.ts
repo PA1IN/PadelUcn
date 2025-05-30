@@ -1,28 +1,29 @@
-import { Entity, PrimaryGeneratedColumn, ManyToOne, Column, JoinColumn } from 'typeorm';
+import { Entity, Column, PrimaryGeneratedColumn, ManyToOne, JoinColumn } from 'typeorm';
 import { Reserva } from '../../reserva/entities/reserva.entity';
 import { Equipamiento } from '../../equipamiento/entities/equipamiento.entity';
 
-@Entity({ name: 'boleta_equipamiento' })
+@Entity({ name: 'BoletaEquipamiento' })
 export class BoletaEquipamiento {
   @PrimaryGeneratedColumn({ name: 'id_historial' })
   id: number;
-  @Column({ nullable: false })
+
+  @Column()
   cantidad: number;
-  
-  @Column({ name: 'monto_total', nullable: false })
+
+  @Column({ name: 'monto_total' })
   montoTotal: number;
 
-  @ManyToOne(() => Reserva, reserva => reserva.boletas)
+  @Column({ name: 'id_reserva' })
+  reservaId: number;
+
+  @Column({ name: 'id_equipamiento' })
+  equipamientoId: number;
+
+  @ManyToOne(() => Reserva, reserva => reserva.boletasEquipamiento)
   @JoinColumn({ name: 'id_reserva' })
   reserva: Reserva;
-  
-  @Column({ name: 'id_reserva', nullable: false })
-  idReserva: number;
 
   @ManyToOne(() => Equipamiento, equipamiento => equipamiento.boletas)
   @JoinColumn({ name: 'id_equipamiento' })
   equipamiento: Equipamiento;
-  
-  @Column({ name: 'id_equipamiento', nullable: false })
-  idEquipamiento: number;
 }

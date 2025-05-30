@@ -15,9 +15,9 @@ const boleta_equipamiento_entity_1 = require("../../boleta-equipamiento/entities
 let Equipamiento = class Equipamiento {
     id;
     tipo;
-    costo;
-    stock;
     nombre;
+    stock;
+    costo;
     boletas;
 };
 exports.Equipamiento = Equipamiento;
@@ -26,26 +26,26 @@ __decorate([
     __metadata("design:type", Number)
 ], Equipamiento.prototype, "id", void 0);
 __decorate([
-    (0, typeorm_1.Column)({ nullable: false }),
+    (0, typeorm_1.Column)(),
     __metadata("design:type", String)
 ], Equipamiento.prototype, "tipo", void 0);
 __decorate([
-    (0, typeorm_1.Column)({ nullable: false }),
-    __metadata("design:type", Number)
-], Equipamiento.prototype, "costo", void 0);
-__decorate([
-    (0, typeorm_1.Column)({ nullable: false }),
-    __metadata("design:type", Number)
-], Equipamiento.prototype, "stock", void 0);
-__decorate([
-    (0, typeorm_1.Column)({ nullable: false }),
+    (0, typeorm_1.Column)(),
     __metadata("design:type", String)
 ], Equipamiento.prototype, "nombre", void 0);
 __decorate([
-    (0, typeorm_1.OneToMany)(() => boleta_equipamiento_entity_1.BoletaEquipamiento, boletaEquipamiento => boletaEquipamiento.equipamiento),
+    (0, typeorm_1.Column)(),
+    __metadata("design:type", Number)
+], Equipamiento.prototype, "stock", void 0);
+__decorate([
+    (0, typeorm_1.Column)(),
+    __metadata("design:type", Number)
+], Equipamiento.prototype, "costo", void 0);
+__decorate([
+    (0, typeorm_1.OneToMany)(() => boleta_equipamiento_entity_1.BoletaEquipamiento, boleta => boleta.equipamiento),
     __metadata("design:type", Array)
 ], Equipamiento.prototype, "boletas", void 0);
 exports.Equipamiento = Equipamiento = __decorate([
-    (0, typeorm_1.Entity)({ name: 'equipamiento' })
+    (0, typeorm_1.Entity)({ name: 'Equipamiento' })
 ], Equipamiento);
 //# sourceMappingURL=equipamiento.entity.js.map

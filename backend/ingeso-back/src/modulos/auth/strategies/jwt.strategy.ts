@@ -5,6 +5,7 @@ import { UserService } from 'src/modulos/user/user.service';
 
 interface JwtPayload{
   rut: string;
+  isAdmin: boolean;
 }
 
 
@@ -20,6 +21,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
 
   async validate(payload: JwtPayload) {
     const user = await this.userService.findByRut(payload.rut);
-    return user;
+    // Incluir si el usuario es administrador
+    return { ...user, isAdmin: payload.isAdmin };
   }
 }

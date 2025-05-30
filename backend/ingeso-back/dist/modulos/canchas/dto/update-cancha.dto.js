@@ -22,23 +22,22 @@ class UpdateCanchaDto extends (0, mapped_types_1.PartialType)(create_cancha_dto_
 exports.UpdateCanchaDto = UpdateCanchaDto;
 __decorate([
     (0, class_validator_1.IsOptional)(),
-    (0, class_validator_1.IsString)({ message: 'El nombre debe ser un texto' }),
+    (0, class_validator_1.IsString)({ message: 'El nombre debe ser texto' }),
     __metadata("design:type", String)
 ], UpdateCanchaDto.prototype, "nombre", void 0);
 __decorate([
     (0, class_validator_1.IsOptional)(),
-    (0, class_validator_1.IsString)({ message: 'La descripción debe ser un texto' }),
+    (0, class_validator_1.IsString)({ message: 'La descripción debe ser texto' }),
     __metadata("design:type", String)
 ], UpdateCanchaDto.prototype, "descripcion", void 0);
 __decorate([
     (0, class_validator_1.IsOptional)(),
-    (0, class_validator_1.IsBoolean)({ message: 'El estado de mantenimiento debe ser un booleano' }),
+    (0, class_validator_1.IsBoolean)({ message: 'El estado de mantenimiento debe ser booleano' }),
     __metadata("design:type", Boolean)
 ], UpdateCanchaDto.prototype, "mantenimiento", void 0);
 __decorate([
     (0, class_validator_1.IsOptional)(),
-    (0, class_validator_1.IsNumber)({}, { message: 'El valor debe ser un valor numérico' }),
-    (0, class_validator_1.Min)(0, { message: 'El valor no puede ser negativo' }),
+    (0, class_validator_1.IsNumber)({}, { message: 'El valor debe ser un número' }),
     __metadata("design:type", Number)
 ], UpdateCanchaDto.prototype, "valor", void 0);
 //# sourceMappingURL=update-cancha.dto.js.map

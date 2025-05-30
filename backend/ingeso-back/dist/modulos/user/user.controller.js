@@ -17,6 +17,7 @@ const common_1 = require("@nestjs/common");
 const user_service_1 = require("./user.service");
 const create_user_dto_1 = require("./dto/create-user.dto");
 const update_user_dto_1 = require("./dto/update-user.dto");
+const jwt_auth_guard_1 = require("../auth/guards/jwt-auth.guard");
 const swagger_1 = require("@nestjs/swagger");
 let UserController = class UserController {
     userService;
@@ -37,6 +38,9 @@ let UserController = class UserController {
     }
     remove(rut) {
         return this.userService.remove(rut);
+    }
+    promoteToAdmin(rut) {
+        return this.userService.promoteToAdmin(rut);
     }
 };
 exports.UserController = UserController;
@@ -95,6 +99,18 @@ __decorate([
     __metadata("design:paramtypes", [String]),
     __metadata("design:returntype", void 0)
 ], UserController.prototype, "remove", null);
+__decorate([
+    (0, common_1.Patch)(':rut/promote-admin'),
+    (0, swagger_1.ApiOperation)({ summary: 'Promover un usuario a administrador' }),
+    (0, swagger_1.ApiResponse)({ status: 200, description: 'Usuario promovido exitosamente' }),
+    (0, swagger_1.ApiResponse)({ status: 404, description: 'Usuario no encontrado' }),
+    (0, swagger_1.ApiResponse)({ status: 400, description: 'Error al promover usuario' }),
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
+    __param(0, (0, common_1.Param)('rut')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String]),
+    __metadata("design:returntype", void 0)
+], UserController.prototype, "promoteToAdmin", null);
 exports.UserController = UserController = __decorate([
     (0, swagger_1.ApiTags)('users'),
     (0, common_1.Controller)(['users', 'user']),

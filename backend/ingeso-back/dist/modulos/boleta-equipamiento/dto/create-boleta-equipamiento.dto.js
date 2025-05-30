@@ -11,31 +11,30 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.CreateBoletaEquipamientoDto = void 0;
 const class_validator_1 = require("class-validator");
+const class_transformer_1 = require("class-transformer");
 class CreateBoletaEquipamientoDto {
-    rut_usuario;
-    id_reserva;
-    id_equipamiento;
     cantidad;
+    reservaId;
+    equipamientoId;
 }
 exports.CreateBoletaEquipamientoDto = CreateBoletaEquipamientoDto;
 __decorate([
-    (0, class_validator_1.IsNotEmpty)(),
-    (0, class_validator_1.IsString)(),
-    __metadata("design:type", String)
-], CreateBoletaEquipamientoDto.prototype, "rut_usuario", void 0);
-__decorate([
-    (0, class_validator_1.IsNotEmpty)(),
-    (0, class_validator_1.IsNumber)(),
-    __metadata("design:type", Number)
-], CreateBoletaEquipamientoDto.prototype, "id_reserva", void 0);
-__decorate([
-    (0, class_validator_1.IsNotEmpty)(),
-    (0, class_validator_1.IsNumber)(),
-    __metadata("design:type", Number)
-], CreateBoletaEquipamientoDto.prototype, "id_equipamiento", void 0);
-__decorate([
-    (0, class_validator_1.IsNotEmpty)(),
-    (0, class_validator_1.IsNumber)(),
+    (0, class_validator_1.IsNotEmpty)({ message: 'La cantidad es requerida' }),
+    (0, class_validator_1.IsInt)({ message: 'La cantidad debe ser un número entero' }),
+    (0, class_validator_1.Min)(1, { message: 'La cantidad debe ser al menos 1' }),
+    (0, class_transformer_1.Type)(() => Number),
     __metadata("design:type", Number)
 ], CreateBoletaEquipamientoDto.prototype, "cantidad", void 0);
+__decorate([
+    (0, class_validator_1.IsNotEmpty)({ message: 'El ID de la reserva es requerido' }),
+    (0, class_validator_1.IsInt)({ message: 'El ID de la reserva debe ser un número entero' }),
+    (0, class_transformer_1.Type)(() => Number),
+    __metadata("design:type", Number)
+], CreateBoletaEquipamientoDto.prototype, "reservaId", void 0);
+__decorate([
+    (0, class_validator_1.IsNotEmpty)({ message: 'El ID del equipamiento es requerido' }),
+    (0, class_validator_1.IsInt)({ message: 'El ID del equipamiento debe ser un número entero' }),
+    (0, class_transformer_1.Type)(() => Number),
+    __metadata("design:type", Number)
+], CreateBoletaEquipamientoDto.prototype, "equipamientoId", void 0);
 //# sourceMappingURL=create-boleta-equipamiento.dto.js.map

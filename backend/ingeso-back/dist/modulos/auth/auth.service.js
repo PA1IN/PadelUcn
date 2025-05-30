@@ -48,9 +48,23 @@ let AuthService = class AuthService {
     }
     async register(createUserDto) {
         try {
-            return await this.userService.create(createUserDto);
+            console.log('Registration request received for user:', { ...createUserDto, password: '[HIDDEN]' });
+            const userResponse = await this.userService.create(createUserDto);
+            console.log('User created successfully:', userResponse);
+            if (userResponse.data) {
+                const payload = { rut: userResponse.data.rut, isAdmin: userResponse.data.isAdmin };
+                const token = this.jwtService.sign(payload);
+                console.log('JWT token generated successfully');
+                return (0, api_response_util_1.CreateResponse)('Usuario registrado exitosamente', {
+                    ...userResponse.data,
+                    access_token: token
+                }, 'CREATED');
+            }
+            return userResponse;
         }
         catch (error) {
+            console.error('Error en auth.service.register:', error);
+            console.error('Stack trace:', error.stack);
             throw new common_1.UnauthorizedException((0, api_response_util_1.CreateResponse)('Error al registrar usuario', null, 'BAD_REQUEST', error.message));
         }
     }

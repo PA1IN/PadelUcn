@@ -1,0 +1,28 @@
+// Simple fetch-based test to check authentication
+fetch('http://localhost:8080/api/auth/login', {
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json'
+  },
+  body: JSON.stringify({
+    rut: '98765432-1',
+    password: 'usuario123'
+  })
+})
+.then(response => {
+  console.log('Status:', response.status);
+  return response.json();
+})
+.then(data => {
+  console.log('Response data:', JSON.stringify(data, null, 2));
+  
+  if (data.success === false || (data.statusCode && data.statusCode !== 200)) {
+    console.log('Login failed!');
+  } else {
+    console.log('Login successful!');
+    console.log('This confirms our fix for the password comparison worked!');
+  }
+})
+.catch(error => {
+  console.error('Fetch error:', error);
+});

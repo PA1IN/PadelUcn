@@ -1,5 +1,6 @@
 export declare class CreateEquipamientoDto {
     tipo: string;
-    costo: number;
+    nombre: string;
     stock: number;
+    costo: number;
 }

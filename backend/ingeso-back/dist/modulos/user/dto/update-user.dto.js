@@ -17,6 +17,9 @@ class UpdateUserDto extends (0, mapped_types_1.PartialType)(create_user_dto_1.Cr
     password;
     nombre;
     correo;
+    telefono;
+    saldo;
+    isAdmin;
 }
 exports.UpdateUserDto = UpdateUserDto;
 __decorate([
@@ -38,4 +41,19 @@ __decorate([
     }),
     __metadata("design:type", String)
 ], UpdateUserDto.prototype, "correo", void 0);
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], UpdateUserDto.prototype, "telefono", void 0);
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsNumber)(),
+    __metadata("design:type", Number)
+], UpdateUserDto.prototype, "saldo", void 0);
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsBoolean)(),
+    __metadata("design:type", Boolean)
+], UpdateUserDto.prototype, "isAdmin", void 0);
 //# sourceMappingURL=update-user.dto.js.map

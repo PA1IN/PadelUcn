@@ -1,4 +1,4 @@
-import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
+import { Injectable, HttpException, HttpStatus } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { CreateEquipamientoDto } from './dto/create-equipamiento.dto';
@@ -16,10 +16,9 @@ export class EquipamientoService {
 
   async create(createEquipamientoDto: CreateEquipamientoDto): Promise<ApiResponse<Equipamiento>> {
     try {
-      const newEquipamiento = this.equipamientoRepository.create(createEquipamientoDto);
-      const savedEquipamiento = await this.equipamientoRepository.save(newEquipamiento);
-      
-      return CreateResponse('Equipamiento creado exitosamente', savedEquipamiento, 'CREATED');
+      const equipamiento = this.equipamientoRepository.create(createEquipamientoDto);
+      const result = await this.equipamientoRepository.save(equipamiento);
+      return CreateResponse('Equipamiento creado exitosamente', result, 'CREATED');
     } catch (error) {
       throw new HttpException(
         CreateResponse('Error al crear equipamiento', null, 'BAD_REQUEST', error.message),
@@ -42,10 +41,7 @@ export class EquipamientoService {
 
   async findOne(id: number): Promise<ApiResponse<Equipamiento>> {
     try {
-      const equipamiento = await this.equipamientoRepository.findOne({ 
-        where: { id: id },
-        relations: ['boletas'],
-      });
+      const equipamiento = await this.equipamientoRepository.findOne({ where: { id } });
       
       if (!equipamiento) {
         throw new Error(`No se encontró un equipamiento con el ID ${id}`);
@@ -61,7 +57,7 @@ export class EquipamientoService {
       }
       
       throw new HttpException(
-        CreateResponse('Error al obtener el equipamiento', null, 'INTERNAL_SERVER_ERROR', error.message),
+        CreateResponse('Error al obtener equipamiento', null, 'INTERNAL_SERVER_ERROR', error.message),
         HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }
@@ -69,18 +65,14 @@ export class EquipamientoService {
 
   async update(id: number, updateEquipamientoDto: UpdateEquipamientoDto): Promise<ApiResponse<Equipamiento>> {
     try {
-      const equipamiento = await this.equipamientoRepository.findOne({ where: { id: id } });
+      const equipamiento = await this.equipamientoRepository.findOne({ where: { id } });
       
       if (!equipamiento) {
         throw new Error(`No se encontró un equipamiento con el ID ${id}`);
       }
       
       await this.equipamientoRepository.update(id, updateEquipamientoDto);
-      const updatedEquipamiento = await this.equipamientoRepository.findOne({ where: { id: id } });
-      
-      if (!updatedEquipamiento) {
-        throw new Error(`Error al obtener equipamiento actualizado con ID ${id}`);
-      }
+      const updatedEquipamiento = await this.equipamientoRepository.findOne({ where: { id } });
       
       return CreateResponse('Equipamiento actualizado exitosamente', updatedEquipamiento, 'OK');
     } catch (error) {
@@ -92,7 +84,7 @@ export class EquipamientoService {
       }
       
       throw new HttpException(
-        CreateResponse('Error al actualizar el equipamiento', null, 'BAD_REQUEST', error.message),
+        CreateResponse('Error al actualizar equipamiento', null, 'BAD_REQUEST', error.message),
         HttpStatus.BAD_REQUEST,
       );
     }
@@ -100,7 +92,7 @@ export class EquipamientoService {
 
   async remove(id: number): Promise<ApiResponse<null>> {
     try {
-      const equipamiento = await this.equipamientoRepository.findOne({ where: { id: id } });
+      const equipamiento = await this.equipamientoRepository.findOne({ where: { id } });
       
       if (!equipamiento) {
         throw new Error(`No se encontró un equipamiento con el ID ${id}`);
@@ -117,45 +109,48 @@ export class EquipamientoService {
       }
       
       throw new HttpException(
-        CreateResponse('Error al eliminar el equipamiento', null, 'INTERNAL_SERVER_ERROR', error.message),
+        CreateResponse('Error al eliminar equipamiento', null, 'INTERNAL_SERVER_ERROR', error.message),
         HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }
   }
 
-  async actualizarStock(id: number, cantidad: number): Promise<ApiResponse<Equipamiento>> {
+  async updateStock(id: number, cantidad: number): Promise<ApiResponse<Equipamiento>> {
     try {
-      const equipamiento = await this.equipamientoRepository.findOne({ where: { id: id } });
+      const equipamiento = await this.equipamientoRepository.findOne({ where: { id } });
       
       if (!equipamiento) {
         throw new Error(`No se encontró un equipamiento con el ID ${id}`);
       }
-      
+
       if (equipamiento.stock < cantidad && cantidad < 0) {
-        throw new Error(`Stock insuficiente para el equipamiento ${equipamiento.tipo}`);
+        throw new Error(`Stock insuficiente para el equipamiento ${equipamiento.nombre}`);
       }
       
-      equipamiento.stock += cantidad;
-      await this.equipamientoRepository.save(equipamiento);
+      const nuevoStock = equipamiento.stock + cantidad;
+      if (nuevoStock < 0) {
+        throw new Error(`El stock resultante no puede ser negativo`);
+      }
       
-      return CreateResponse('Stock actualizado exitosamente', equipamiento, 'OK');
+      await this.equipamientoRepository.update(id, { stock: nuevoStock });
+      const updatedEquipamiento = await this.equipamientoRepository.findOne({ where: { id } });
+      
+      return CreateResponse('Stock de equipamiento actualizado exitosamente', updatedEquipamiento, 'OK');
     } catch (error) {
       if (error.message.includes('No se encontró')) {
         throw new HttpException(
           CreateResponse('Equipamiento no encontrado', null, 'NOT_FOUND', error.message),
           HttpStatus.NOT_FOUND,
         );
-      }
-      
-      if (error.message.includes('Stock insuficiente')) {
+      } else if (error.message.includes('Stock insuficiente') || error.message.includes('no puede ser negativo')) {
         throw new HttpException(
-          CreateResponse('Stock insuficiente', null, 'BAD_REQUEST', error.message),
+          CreateResponse('Error de stock', null, 'BAD_REQUEST', error.message),
           HttpStatus.BAD_REQUEST,
         );
       }
       
       throw new HttpException(
-        CreateResponse('Error al actualizar el stock', null, 'INTERNAL_SERVER_ERROR', error.message),
+        CreateResponse('Error al actualizar stock de equipamiento', null, 'INTERNAL_SERVER_ERROR', error.message),
         HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }

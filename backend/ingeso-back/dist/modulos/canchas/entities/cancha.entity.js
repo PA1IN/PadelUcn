@@ -14,7 +14,6 @@ const typeorm_1 = require("typeorm");
 const reserva_entity_1 = require("../../reserva/entities/reserva.entity");
 let Cancha = class Cancha {
     id;
-    numero;
     nombre;
     descripcion;
     mantenimiento;
@@ -26,10 +25,6 @@ __decorate([
     (0, typeorm_1.PrimaryGeneratedColumn)({ name: 'id_cancha' }),
     __metadata("design:type", Number)
 ], Cancha.prototype, "id", void 0);
-__decorate([
-    (0, typeorm_1.Column)({ unique: true }),
-    __metadata("design:type", Number)
-], Cancha.prototype, "numero", void 0);
 __decorate([
     (0, typeorm_1.Column)(),
     __metadata("design:type", String)
@@ -51,6 +46,6 @@ __decorate([
     __metadata("design:type", Array)
 ], Cancha.prototype, "reservas", void 0);
 exports.Cancha = Cancha = __decorate([
-    (0, typeorm_1.Entity)({ name: 'cancha' })
+    (0, typeorm_1.Entity)({ name: 'Cancha' })
 ], Cancha);
 //# sourceMappingURL=cancha.entity.js.map

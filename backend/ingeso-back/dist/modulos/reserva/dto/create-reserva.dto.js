@@ -11,43 +11,50 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.CreateReservaDto = void 0;
 const class_validator_1 = require("class-validator");
+const class_transformer_1 = require("class-transformer");
 class CreateReservaDto {
     fecha;
-    hora_inicio;
-    hora_termino;
-    rut_usuario;
-    numero_cancha;
-    id_admin;
+    horaInicio;
+    horaTermino;
+    canchaId;
+    usuarioId;
+    rutUsuario;
 }
 exports.CreateReservaDto = CreateReservaDto;
 __decorate([
-    (0, class_validator_1.IsNotEmpty)(),
-    (0, class_validator_1.IsDateString)(),
+    (0, class_validator_1.IsNotEmpty)({ message: 'La fecha de la reserva es requerida' }),
+    (0, class_validator_1.IsDateString)({}, { message: 'Formato de fecha inválido, use YYYY-MM-DD' }),
     __metadata("design:type", String)
 ], CreateReservaDto.prototype, "fecha", void 0);
 __decorate([
-    (0, class_validator_1.IsNotEmpty)(),
-    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.IsNotEmpty)({ message: 'La hora de inicio es requerida' }),
+    (0, class_validator_1.Matches)(/^([01]\d|2[0-3]):([0-5]\d):([0-5]\d)$/, {
+        message: 'Formato de hora inválido, use HH:MM:SS',
+    }),
     __metadata("design:type", String)
-], CreateReservaDto.prototype, "hora_inicio", void 0);
+], CreateReservaDto.prototype, "horaInicio", void 0);
 __decorate([
-    (0, class_validator_1.IsNotEmpty)(),
-    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.IsNotEmpty)({ message: 'La hora de término es requerida' }),
+    (0, class_validator_1.Matches)(/^([01]\d|2[0-3]):([0-5]\d):([0-5]\d)$/, {
+        message: 'Formato de hora inválido, use HH:MM:SS',
+    }),
     __metadata("design:type", String)
-], CreateReservaDto.prototype, "hora_termino", void 0);
+], CreateReservaDto.prototype, "horaTermino", void 0);
 __decorate([
-    (0, class_validator_1.IsNotEmpty)(),
-    (0, class_validator_1.IsString)(),
-    __metadata("design:type", String)
-], CreateReservaDto.prototype, "rut_usuario", void 0);
-__decorate([
-    (0, class_validator_1.IsNotEmpty)(),
-    (0, class_validator_1.IsNumber)(),
+    (0, class_validator_1.IsNotEmpty)({ message: 'El ID de la cancha es requerido' }),
+    (0, class_validator_1.IsNumber)({}, { message: 'El ID de la cancha debe ser un número' }),
+    (0, class_transformer_1.Type)(() => Number),
     __metadata("design:type", Number)
-], CreateReservaDto.prototype, "numero_cancha", void 0);
+], CreateReservaDto.prototype, "canchaId", void 0);
 __decorate([
     (0, class_validator_1.IsOptional)(),
-    (0, class_validator_1.IsNumber)(),
+    (0, class_validator_1.IsNumber)({}, { message: 'El ID del usuario debe ser un número' }),
+    (0, class_transformer_1.Type)(() => Number),
     __metadata("design:type", Number)
-], CreateReservaDto.prototype, "id_admin", void 0);
+], CreateReservaDto.prototype, "usuarioId", void 0);
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsString)({ message: 'El RUT del usuario debe ser texto' }),
+    __metadata("design:type", String)
+], CreateReservaDto.prototype, "rutUsuario", void 0);
 //# sourceMappingURL=create-reserva.dto.js.map

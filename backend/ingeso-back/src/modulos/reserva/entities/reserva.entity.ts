@@ -1,10 +1,10 @@
-import { Entity, Column, PrimaryGeneratedColumn, ManyToOne, OneToMany, JoinColumn } from 'typeorm';
+import { Entity, Column, PrimaryGeneratedColumn, ManyToOne, JoinColumn, OneToMany } from 'typeorm';
 import { User } from '../../user/entities/user.entity';
 import { Cancha } from '../../canchas/entities/cancha.entity';
-import { BoletaEquipamiento } from '../../boleta-equipamiento/entities/boleta-equipamiento.entity';
 import { HistorialReserva } from './historial-reserva.entity';
+import { BoletaEquipamiento } from '../../boleta-equipamiento/entities/boleta-equipamiento.entity';
 
-@Entity({ name: 'reserva' })
+@Entity({ name: 'Reserva' })
 export class Reserva {
   @PrimaryGeneratedColumn({ name: 'id_reserva' })
   id: number;
@@ -12,23 +12,29 @@ export class Reserva {
   @Column({ type: 'date' })
   fecha: Date;
 
-  @Column({ type: 'time' })
-  hora_inicio: string;
+  @Column({ name: 'hora_inicio', type: 'time' })
+  horaInicio: Date;
 
-  @Column({ type: 'time' })
-  hora_termino: string;
+  @Column({ name: 'hora_termino', type: 'time' })
+  horaTermino: Date;
 
-  @ManyToOne(() => User, usuario => usuario.reservas)
-  @JoinColumn({ name: 'id_usuario' })
-  usuario: User;
+  @Column({ name: 'id_cancha' })
+  canchaId: number;
+
+  @Column({ name: 'id_usuario' })
+  usuarioId: number;
 
   @ManyToOne(() => Cancha, cancha => cancha.reservas)
   @JoinColumn({ name: 'id_cancha' })
   cancha: Cancha;
 
+  @ManyToOne(() => User, usuario => usuario.reservas)
+  @JoinColumn({ name: 'id_usuario' })
+  usuario: User;
+
   @OneToMany(() => HistorialReserva, historial => historial.reserva)
-  historial: HistorialReserva[];
+  historialReservas: HistorialReserva[];
 
   @OneToMany(() => BoletaEquipamiento, boleta => boleta.reserva)
-  boletas: BoletaEquipamiento[];
+  boletasEquipamiento: BoletaEquipamiento[];
 }

@@ -9,10 +9,12 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.BoletaEquipamientoModule = void 0;
 const common_1 = require("@nestjs/common");
 const typeorm_1 = require("@nestjs/typeorm");
-const boleta_equipamiento_service_1 = require("./boleta-equipamiento.service");
 const boleta_equipamiento_controller_1 = require("./boleta-equipamiento.controller");
+const boleta_equipamiento_service_1 = require("./boleta-equipamiento.service");
 const boleta_equipamiento_entity_1 = require("./entities/boleta-equipamiento.entity");
+const reserva_module_1 = require("../reserva/reserva.module");
 const equipamiento_module_1 = require("../equipamiento/equipamiento.module");
+const user_module_1 = require("../user/user.module");
 let BoletaEquipamientoModule = class BoletaEquipamientoModule {
 };
 exports.BoletaEquipamientoModule = BoletaEquipamientoModule;
@@ -20,7 +22,9 @@ exports.BoletaEquipamientoModule = BoletaEquipamientoModule = __decorate([
     (0, common_1.Module)({
         imports: [
             typeorm_1.TypeOrmModule.forFeature([boleta_equipamiento_entity_1.BoletaEquipamiento]),
+            reserva_module_1.ReservaModule,
             equipamiento_module_1.EquipamientoModule,
+            user_module_1.UserModule
         ],
         controllers: [boleta_equipamiento_controller_1.BoletaEquipamientoController],
         providers: [boleta_equipamiento_service_1.BoletaEquipamientoService],

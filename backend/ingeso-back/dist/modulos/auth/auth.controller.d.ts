@@ -11,6 +11,6 @@ export declare class AuthController {
         message: string;
         success: boolean;
     }>;
-    register(createUserDto: CreateUserDto): Promise<import("../../interface/Apiresponce").ApiResponse<import("../user/entities/user.entity").User>>;
+    register(createUserDto: CreateUserDto): Promise<import("../../interface/Apiresponce").ApiResponse<any>>;
     getProfile(req: any): Promise<import("../../interface/Apiresponce").ApiResponse<import("../user/entities/user.entity").User>>;
 }

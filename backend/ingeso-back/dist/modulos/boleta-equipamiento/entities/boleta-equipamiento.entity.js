@@ -17,10 +17,10 @@ let BoletaEquipamiento = class BoletaEquipamiento {
     id;
     cantidad;
     montoTotal;
+    reservaId;
+    equipamientoId;
     reserva;
-    idReserva;
     equipamiento;
-    idEquipamiento;
 };
 exports.BoletaEquipamiento = BoletaEquipamiento;
 __decorate([
@@ -28,32 +28,32 @@ __decorate([
     __metadata("design:type", Number)
 ], BoletaEquipamiento.prototype, "id", void 0);
 __decorate([
-    (0, typeorm_1.Column)({ nullable: false }),
+    (0, typeorm_1.Column)(),
     __metadata("design:type", Number)
 ], BoletaEquipamiento.prototype, "cantidad", void 0);
 __decorate([
-    (0, typeorm_1.Column)({ name: 'monto_total', nullable: false }),
+    (0, typeorm_1.Column)({ name: 'monto_total' }),
     __metadata("design:type", Number)
 ], BoletaEquipamiento.prototype, "montoTotal", void 0);
 __decorate([
-    (0, typeorm_1.ManyToOne)(() => reserva_entity_1.Reserva, reserva => reserva.boletas),
+    (0, typeorm_1.Column)({ name: 'id_reserva' }),
+    __metadata("design:type", Number)
+], BoletaEquipamiento.prototype, "reservaId", void 0);
+__decorate([
+    (0, typeorm_1.Column)({ name: 'id_equipamiento' }),
+    __metadata("design:type", Number)
+], BoletaEquipamiento.prototype, "equipamientoId", void 0);
+__decorate([
+    (0, typeorm_1.ManyToOne)(() => reserva_entity_1.Reserva, reserva => reserva.boletasEquipamiento),
     (0, typeorm_1.JoinColumn)({ name: 'id_reserva' }),
     __metadata("design:type", reserva_entity_1.Reserva)
 ], BoletaEquipamiento.prototype, "reserva", void 0);
-__decorate([
-    (0, typeorm_1.Column)({ name: 'id_reserva', nullable: false }),
-    __metadata("design:type", Number)
-], BoletaEquipamiento.prototype, "idReserva", void 0);
 __decorate([
     (0, typeorm_1.ManyToOne)(() => equipamiento_entity_1.Equipamiento, equipamiento => equipamiento.boletas),
     (0, typeorm_1.JoinColumn)({ name: 'id_equipamiento' }),
     __metadata("design:type", equipamiento_entity_1.Equipamiento)
 ], BoletaEquipamiento.prototype, "equipamiento", void 0);
-__decorate([
-    (0, typeorm_1.Column)({ name: 'id_equipamiento', nullable: false }),
-    __metadata("design:type", Number)
-], BoletaEquipamiento.prototype, "idEquipamiento", void 0);
 exports.BoletaEquipamiento = BoletaEquipamiento = __decorate([
-    (0, typeorm_1.Entity)({ name: 'boleta_equipamiento' })
+    (0, typeorm_1.Entity)({ name: 'BoletaEquipamiento' })
 ], BoletaEquipamiento);
 //# sourceMappingURL=boleta-equipamiento.entity.js.map

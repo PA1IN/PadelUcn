@@ -16,6 +16,9 @@ class CreateUserDto {
     password;
     nombre;
     correo;
+    telefono;
+    saldo;
+    isAdmin;
 }
 exports.CreateUserDto = CreateUserDto;
 __decorate([
@@ -43,4 +46,19 @@ __decorate([
     }),
     __metadata("design:type", String)
 ], CreateUserDto.prototype, "correo", void 0);
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], CreateUserDto.prototype, "telefono", void 0);
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsNumber)(),
+    __metadata("design:type", Number)
+], CreateUserDto.prototype, "saldo", void 0);
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsBoolean)(),
+    __metadata("design:type", Boolean)
+], CreateUserDto.prototype, "isAdmin", void 0);
 //# sourceMappingURL=create-user.dto.js.map

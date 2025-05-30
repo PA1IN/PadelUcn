@@ -1,6 +1,6 @@
 import { PartialType } from '@nestjs/mapped-types';
 import { CreateUserDto } from './create-user.dto';
-import { IsString, MinLength, IsOptional, IsEmail, Matches } from 'class-validator';
+import { IsString, MinLength, IsOptional, IsEmail, Matches, IsNumber, IsBoolean } from 'class-validator';
 
 export class UpdateUserDto extends PartialType(CreateUserDto) {
   @IsOptional()
@@ -18,4 +18,16 @@ export class UpdateUserDto extends PartialType(CreateUserDto) {
     message: 'El correo debe ser de un dominio válido (gmail.com, hotmail.com, ucn.cl, etc.)',
   })
   correo?: string;
+  
+  @IsOptional()
+  @IsString()
+  telefono?: string;
+  
+  @IsOptional()
+  @IsNumber()
+  saldo?: number;
+  
+  @IsOptional()
+  @IsBoolean()
+  isAdmin?: boolean;
 }

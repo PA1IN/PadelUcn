@@ -9,4 +9,5 @@ export declare class UserController {
     findOne(rut: string): Promise<import("../../interface/Apiresponce").ApiResponse<import("./entities/user.entity").User>>;
     update(rut: string, updateUserDto: UpdateUserDto): Promise<import("../../interface/Apiresponce").ApiResponse<import("./entities/user.entity").User>>;
     remove(rut: string): Promise<import("../../interface/Apiresponce").ApiResponse<null>>;
+    promoteToAdmin(rut: string): Promise<import("../../interface/Apiresponce").ApiResponse<import("./entities/user.entity").User>>;
 }

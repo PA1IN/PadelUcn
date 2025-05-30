@@ -21,29 +21,27 @@ class CreateCanchaDto {
 exports.CreateCanchaDto = CreateCanchaDto;
 __decorate([
     (0, class_validator_1.IsNotEmpty)({ message: 'El número de la cancha es requerido' }),
-    (0, class_validator_1.IsNumber)({}, { message: 'El número de la cancha debe ser un valor numérico' }),
-    (0, class_validator_1.Min)(1, { message: 'El número de la cancha debe ser mayor a 0' }),
+    (0, class_validator_1.IsNumber)({}, { message: 'El número debe ser un valor numérico' }),
     __metadata("design:type", Number)
 ], CreateCanchaDto.prototype, "numero", void 0);
 __decorate([
     (0, class_validator_1.IsNotEmpty)({ message: 'El nombre de la cancha es requerido' }),
-    (0, class_validator_1.IsString)({ message: 'El nombre debe ser un texto' }),
+    (0, class_validator_1.IsString)({ message: 'El nombre debe ser texto' }),
     __metadata("design:type", String)
 ], CreateCanchaDto.prototype, "nombre", void 0);
 __decorate([
     (0, class_validator_1.IsOptional)(),
-    (0, class_validator_1.IsString)({ message: 'La descripción debe ser un texto' }),
+    (0, class_validator_1.IsString)({ message: 'La descripción debe ser texto' }),
     __metadata("design:type", String)
 ], CreateCanchaDto.prototype, "descripcion", void 0);
 __decorate([
     (0, class_validator_1.IsOptional)(),
-    (0, class_validator_1.IsBoolean)({ message: 'El estado de mantenimiento debe ser un booleano' }),
+    (0, class_validator_1.IsBoolean)({ message: 'El estado de mantenimiento debe ser booleano' }),
     __metadata("design:type", Boolean)
 ], CreateCanchaDto.prototype, "mantenimiento", void 0);
 __decorate([
     (0, class_validator_1.IsNotEmpty)({ message: 'El valor de la cancha es requerido' }),
-    (0, class_validator_1.IsNumber)({}, { message: 'El valor debe ser un valor numérico' }),
-    (0, class_validator_1.Min)(0, { message: 'El valor no puede ser negativo' }),
+    (0, class_validator_1.IsNumber)({}, { message: 'El valor debe ser un número' }),
     __metadata("design:type", Number)
 ], CreateCanchaDto.prototype, "valor", void 0);
 //# sourceMappingURL=create-cancha.dto.js.map

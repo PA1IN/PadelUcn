@@ -9,8 +9,8 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.CanchasModule = void 0;
 const common_1 = require("@nestjs/common");
 const typeorm_1 = require("@nestjs/typeorm");
-const canchas_service_1 = require("./canchas.service");
 const canchas_controller_1 = require("./canchas.controller");
+const canchas_service_1 = require("./canchas.service");
 const cancha_entity_1 = require("./entities/cancha.entity");
 let CanchasModule = class CanchasModule {
 };

@@ -11,5 +11,5 @@ export declare class EquipamientoService {
     findOne(id: number): Promise<ApiResponse<Equipamiento>>;
     update(id: number, updateEquipamientoDto: UpdateEquipamientoDto): Promise<ApiResponse<Equipamiento>>;
     remove(id: number): Promise<ApiResponse<null>>;
-    actualizarStock(id: number, cantidad: number): Promise<ApiResponse<Equipamiento>>;
+    updateStock(id: number, cantidad: number): Promise<ApiResponse<Equipamiento>>;
 }

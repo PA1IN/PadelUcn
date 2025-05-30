@@ -2,32 +2,28 @@ import { Entity, Column, PrimaryGeneratedColumn, ManyToOne, JoinColumn } from 't
 import { User } from '../../user/entities/user.entity';
 import { Reserva } from './reserva.entity';
 
-@Entity({ name: 'historial_reserva' })
+@Entity({ name: 'HistorialReserva' })
 export class HistorialReserva {
   @PrimaryGeneratedColumn({ name: 'id_historial' })
   id: number;
 
-  @Column({
-    name: 'estado',
-    type: 'varchar',
-    nullable: false
-  })
+  @Column()
   estado: string;
 
   @Column({ name: 'fecha_estado', type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
   fechaEstado: Date;
 
-  @ManyToOne(() => Reserva, reserva => reserva.historial)
+  @Column({ name: 'id_reserva' })
+  reservaId: number;
+
+  @Column({ name: 'id_usuario' })
+  usuarioId: number;
+
+  @ManyToOne(() => Reserva, reserva => reserva.historialReservas)
   @JoinColumn({ name: 'id_reserva' })
   reserva: Reserva;
-
-  @Column({ name: 'id_reserva' })
-  idReserva: number;
 
   @ManyToOne(() => User, usuario => usuario.historialReservas)
   @JoinColumn({ name: 'id_usuario' })
   usuario: User;
-
-  @Column({ name: 'id_usuario' })
-  idUsuario: number;
 }

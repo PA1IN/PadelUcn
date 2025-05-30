@@ -17,38 +17,43 @@ const common_1 = require("@nestjs/common");
 const canchas_service_1 = require("./canchas.service");
 const create_cancha_dto_1 = require("./dto/create-cancha.dto");
 const update_cancha_dto_1 = require("./dto/update-cancha.dto");
+const jwt_auth_guard_1 = require("../auth/guards/jwt-auth.guard");
+const admin_guard_1 = require("../auth/guards/admin.guard");
 const swagger_1 = require("@nestjs/swagger");
 let CanchasController = class CanchasController {
     canchasService;
     constructor(canchasService) {
         this.canchasService = canchasService;
     }
-    async create(createCanchaDto) {
-        return await this.canchasService.create(createCanchaDto);
+    create(createCanchaDto) {
+        return this.canchasService.create(createCanchaDto);
     }
-    async findAll() {
-        return await this.canchasService.findAll();
+    findAll() {
+        return this.canchasService.findAll();
     }
-    async findOne(numero) {
-        return await this.canchasService.findOne(+numero);
+    findOne(id) {
+        return this.canchasService.findOne(+id);
     }
-    async update(numero, updateCanchaDto) {
-        return await this.canchasService.update(+numero, updateCanchaDto);
+    update(id, updateCanchaDto) {
+        return this.canchasService.update(+id, updateCanchaDto);
     }
-    async remove(numero) {
-        return await this.canchasService.remove(+numero);
+    remove(id) {
+        return this.canchasService.remove(+id);
     }
 };
 exports.CanchasController = CanchasController;
 __decorate([
     (0, common_1.Post)(),
-    (0, swagger_1.ApiOperation)({ summary: 'Crear una nueva cancha' }),
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, admin_guard_1.AdminGuard),
+    (0, swagger_1.ApiOperation)({ summary: 'Crear una nueva cancha (solo administradores)' }),
     (0, swagger_1.ApiResponse)({ status: 201, description: 'Cancha creada exitosamente' }),
-    (0, swagger_1.ApiResponse)({ status: 400, description: 'Datos inválidos o cancha ya existente' }),
+    (0, swagger_1.ApiResponse)({ status: 400, description: 'Datos inválidos' }),
+    (0, swagger_1.ApiResponse)({ status: 401, description: 'No autorizado' }),
+    (0, swagger_1.ApiResponse)({ status: 403, description: 'Permisos insuficientes' }),
     __param(0, (0, common_1.Body)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [create_cancha_dto_1.CreateCanchaDto]),
-    __metadata("design:returntype", Promise)
+    __metadata("design:returntype", void 0)
 ], CanchasController.prototype, "create", null);
 __decorate([
     (0, common_1.Get)(),
@@ -56,39 +61,45 @@ __decorate([
     (0, swagger_1.ApiResponse)({ status: 200, description: 'Lista de canchas obtenida exitosamente' }),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", []),
-    __metadata("design:returntype", Promise)
+    __metadata("design:returntype", void 0)
 ], CanchasController.prototype, "findAll", null);
 __decorate([
-    (0, common_1.Get)(':numero'),
-    (0, swagger_1.ApiOperation)({ summary: 'Obtener una cancha por su número' }),
+    (0, common_1.Get)(':id'),
+    (0, swagger_1.ApiOperation)({ summary: 'Obtener una cancha por su ID' }),
     (0, swagger_1.ApiResponse)({ status: 200, description: 'Cancha obtenida exitosamente' }),
     (0, swagger_1.ApiResponse)({ status: 404, description: 'Cancha no encontrada' }),
-    __param(0, (0, common_1.Param)('numero')),
+    __param(0, (0, common_1.Param)('id')),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String]),
-    __metadata("design:returntype", Promise)
+    __metadata("design:returntype", void 0)
 ], CanchasController.prototype, "findOne", null);
 __decorate([
-    (0, common_1.Patch)(':numero'),
-    (0, swagger_1.ApiOperation)({ summary: 'Actualizar una cancha existente' }),
+    (0, common_1.Patch)(':id'),
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, admin_guard_1.AdminGuard),
+    (0, swagger_1.ApiOperation)({ summary: 'Actualizar una cancha existente (solo administradores)' }),
     (0, swagger_1.ApiResponse)({ status: 200, description: 'Cancha actualizada exitosamente' }),
     (0, swagger_1.ApiResponse)({ status: 404, description: 'Cancha no encontrada' }),
     (0, swagger_1.ApiResponse)({ status: 400, description: 'Datos inválidos' }),
-    __param(0, (0, common_1.Param)('numero')),
+    (0, swagger_1.ApiResponse)({ status: 401, description: 'No autorizado' }),
+    (0, swagger_1.ApiResponse)({ status: 403, description: 'Permisos insuficientes' }),
+    __param(0, (0, common_1.Param)('id')),
     __param(1, (0, common_1.Body)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String, update_cancha_dto_1.UpdateCanchaDto]),
-    __metadata("design:returntype", Promise)
+    __metadata("design:returntype", void 0)
 ], CanchasController.prototype, "update", null);
 __decorate([
-    (0, common_1.Delete)(':numero'),
-    (0, swagger_1.ApiOperation)({ summary: 'Eliminar una cancha' }),
+    (0, common_1.Delete)(':id'),
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, admin_guard_1.AdminGuard),
+    (0, swagger_1.ApiOperation)({ summary: 'Eliminar una cancha (solo administradores)' }),
     (0, swagger_1.ApiResponse)({ status: 200, description: 'Cancha eliminada exitosamente' }),
     (0, swagger_1.ApiResponse)({ status: 404, description: 'Cancha no encontrada' }),
-    __param(0, (0, common_1.Param)('numero')),
+    (0, swagger_1.ApiResponse)({ status: 401, description: 'No autorizado' }),
+    (0, swagger_1.ApiResponse)({ status: 403, description: 'Permisos insuficientes' }),
+    __param(0, (0, common_1.Param)('id')),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String]),
-    __metadata("design:returntype", Promise)
+    __metadata("design:returntype", void 0)
 ], CanchasController.prototype, "remove", null);
 exports.CanchasController = CanchasController = __decorate([
     (0, swagger_1.ApiTags)('canchas'),

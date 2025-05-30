@@ -9,8 +9,8 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.EquipamientoModule = void 0;
 const common_1 = require("@nestjs/common");
 const typeorm_1 = require("@nestjs/typeorm");
-const equipamiento_service_1 = require("./equipamiento.service");
 const equipamiento_controller_1 = require("./equipamiento.controller");
+const equipamiento_service_1 = require("./equipamiento.service");
 const equipamiento_entity_1 = require("./entities/equipamiento.entity");
 let EquipamientoModule = class EquipamientoModule {
 };

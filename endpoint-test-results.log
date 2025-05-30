@@ -1,0 +1,204 @@
+
+🚀 STARTING COMPREHENSIVE API ENDPOINT TESTING
+===========================================
+
+Time: 2025-05-30T02:33:48.636Z
+API URL: http://localhost:8080/api
+
+
+📌 AUTH MODULE
+
+🔍 TESTING: Register
+==================
+Testing user registration...
+❌ Register: Registration failed: Request failed with status code 400
+
+🔍 TESTING: Admin Login
+=====================
+Testing admin login...
+Login response status: 201
+❌ Admin Login: Could not extract token from response
+
+🔍 TESTING: User Login
+====================
+Testing regular user login...
+Login response status: 201
+❌ User Login: Could not extract token from response
+
+🔍 TESTING: Get Profile
+=====================
+Testing user profile endpoint...
+❌ Get Profile: No user token available for profile test
+
+📌 USER MODULE
+
+🔍 TESTING: Get All Users
+=======================
+Testing get all users endpoint...
+❌ Get All Users: No admin token available
+
+🔍 TESTING: Get User by RUT
+=========================
+Testing get user by RUT endpoint...
+❌ Get User by RUT: No admin token available
+
+🔍 TESTING: Update User
+=====================
+Testing update user endpoint...
+❌ Update User: No admin token available
+
+🔍 TESTING: Add Balance
+=====================
+Testing add balance endpoint...
+❌ Add Balance: No admin token available
+
+📌 COURTS MODULE
+
+🔍 TESTING: Create Court
+======================
+Testing create court endpoint...
+❌ Create Court: No admin token available
+
+🔍 TESTING: Get All Courts
+========================
+Testing get all courts endpoint...
+❌ Get All Courts: No user token available
+
+🔍 TESTING: Get Court by ID
+=========================
+Testing get court by ID endpoint...
+❌ Get Court by ID: No user token available
+
+🔍 TESTING: Update Court
+======================
+Testing update court endpoint...
+❌ Update Court: No admin token available
+
+📌 EQUIPMENT MODULE
+
+🔍 TESTING: Create Equipment
+==========================
+Testing create equipment endpoint...
+❌ Create Equipment: No admin token available
+
+🔍 TESTING: Get All Equipment
+===========================
+Testing get all equipment endpoint...
+❌ Get All Equipment: No user token available
+
+🔍 TESTING: Get Equipment by ID
+=============================
+Testing get equipment by ID endpoint...
+❌ Get Equipment by ID: No user token available
+
+🔍 TESTING: Update Equipment
+==========================
+Testing update equipment endpoint...
+❌ Update Equipment: No admin token available
+
+📌 RESERVATIONS MODULE
+
+🔍 TESTING: Create Reservation
+============================
+Testing create reservation endpoint...
+❌ Create Reservation: No user token available
+
+🔍 TESTING: Get All Reservations
+==============================
+Testing get all reservations endpoint...
+❌ Get All Reservations: No user token available
+
+🔍 TESTING: Get Reservation by ID
+===============================
+Testing get reservation by ID endpoint...
+❌ Get Reservation by ID: No user token available
+
+🔍 TESTING: Check Court Availability
+==================================
+Testing check court availability endpoint...
+❌ Check Court Availability: No user token available
+
+🔍 TESTING: Get Available Hours
+=============================
+Testing get available hours endpoint...
+❌ Get Available Hours: No user token available
+
+📌 EQUIPMENT RECEIPTS MODULE
+
+🔍 TESTING: Create Equipment Receipt
+==================================
+Testing create equipment receipt endpoint...
+❌ Create Equipment Receipt: No user token available
+
+🔍 TESTING: Get All Equipment Receipts
+====================================
+Testing get all equipment receipts endpoint...
+❌ Get All Equipment Receipts: No user token available
+
+🔍 TESTING: Get Equipment Receipt by ID
+=====================================
+Testing get equipment receipt by ID endpoint...
+❌ Get Equipment Receipt by ID: No user token available
+
+📌 RESERVATION HISTORY MODULE
+
+🔍 TESTING: Get All Reservation History
+=====================================
+Testing get all reservation history endpoint...
+❌ Get All Reservation History: No admin token available
+
+🔍 TESTING: Get Reservation History by ID
+=======================================
+Testing get reservation history by ID endpoint...
+❌ Get Reservation History by ID: No user token available
+
+📊 TEST SUMMARY
+==============
+
+AUTH:
+  ❌ register
+  ❌ adminLogin
+  ❌ userLogin
+  ❌ profile
+
+USER:
+  ❌ getAllUsers
+  ❌ getUserByRut
+  ❌ updateUser
+  ❌ addBalance
+
+COURTS:
+  ❌ createCourt
+  ❌ getAllCourts
+  ❌ getCourtById
+  ❌ updateCourt
+
+EQUIPMENT:
+  ❌ createEquipment
+  ❌ getAllEquipment
+  ❌ getEquipmentById
+  ❌ updateEquipment
+
+RESERVATIONS:
+  ❌ createReservation
+  ❌ getAllReservations
+  ❌ getReservationById
+  ❌ checkAvailability
+  ❌ getAvailableHours
+
+EQUIPMENTRECEIPTS:
+  ❌ createReceipt
+  ❌ getAllReceipts
+  ❌ getReceiptById
+
+RESERVATIONHISTORY:
+  ❌ getAllHistory
+  ❌ getHistoryById
+
+Overall Result: 0/26 tests passed (0%)
+
+⚠️ SOME TESTS FAILED. See details above for more information.
+
+Test completed at 2025-05-30T02:33:48.991Z
+
+Detailed results are saved in: endpoint-test-results.log

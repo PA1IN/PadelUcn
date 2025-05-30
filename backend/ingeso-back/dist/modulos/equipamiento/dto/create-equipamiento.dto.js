@@ -13,23 +13,31 @@ exports.CreateEquipamientoDto = void 0;
 const class_validator_1 = require("class-validator");
 class CreateEquipamientoDto {
     tipo;
-    costo;
+    nombre;
     stock;
+    costo;
 }
 exports.CreateEquipamientoDto = CreateEquipamientoDto;
 __decorate([
-    (0, class_validator_1.IsNotEmpty)(),
-    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.IsNotEmpty)({ message: 'El tipo de equipamiento es requerido' }),
+    (0, class_validator_1.IsString)({ message: 'El tipo debe ser texto' }),
     __metadata("design:type", String)
 ], CreateEquipamientoDto.prototype, "tipo", void 0);
 __decorate([
-    (0, class_validator_1.IsNotEmpty)(),
-    (0, class_validator_1.IsNumber)(),
-    __metadata("design:type", Number)
-], CreateEquipamientoDto.prototype, "costo", void 0);
+    (0, class_validator_1.IsNotEmpty)({ message: 'El nombre del equipamiento es requerido' }),
+    (0, class_validator_1.IsString)({ message: 'El nombre debe ser texto' }),
+    __metadata("design:type", String)
+], CreateEquipamientoDto.prototype, "nombre", void 0);
 __decorate([
-    (0, class_validator_1.IsNotEmpty)(),
-    (0, class_validator_1.IsNumber)(),
+    (0, class_validator_1.IsNotEmpty)({ message: 'El stock es requerido' }),
+    (0, class_validator_1.IsNumber)({}, { message: 'El stock debe ser un número' }),
+    (0, class_validator_1.Min)(0, { message: 'El stock no puede ser negativo' }),
     __metadata("design:type", Number)
 ], CreateEquipamientoDto.prototype, "stock", void 0);
+__decorate([
+    (0, class_validator_1.IsNotEmpty)({ message: 'El costo es requerido' }),
+    (0, class_validator_1.IsNumber)({}, { message: 'El costo debe ser un número' }),
+    (0, class_validator_1.Min)(0, { message: 'El costo no puede ser negativo' }),
+    __metadata("design:type", Number)
+], CreateEquipamientoDto.prototype, "costo", void 0);
 //# sourceMappingURL=create-equipamiento.dto.js.map

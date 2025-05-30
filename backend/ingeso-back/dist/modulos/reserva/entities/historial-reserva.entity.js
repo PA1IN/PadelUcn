@@ -17,10 +17,10 @@ let HistorialReserva = class HistorialReserva {
     id;
     estado;
     fechaEstado;
+    reservaId;
+    usuarioId;
     reserva;
-    idReserva;
     usuario;
-    idUsuario;
 };
 exports.HistorialReserva = HistorialReserva;
 __decorate([
@@ -28,11 +28,7 @@ __decorate([
     __metadata("design:type", Number)
 ], HistorialReserva.prototype, "id", void 0);
 __decorate([
-    (0, typeorm_1.Column)({
-        name: 'estado',
-        type: 'varchar',
-        nullable: false
-    }),
+    (0, typeorm_1.Column)(),
     __metadata("design:type", String)
 ], HistorialReserva.prototype, "estado", void 0);
 __decorate([
@@ -40,24 +36,24 @@ __decorate([
     __metadata("design:type", Date)
 ], HistorialReserva.prototype, "fechaEstado", void 0);
 __decorate([
-    (0, typeorm_1.ManyToOne)(() => reserva_entity_1.Reserva, reserva => reserva.historial),
+    (0, typeorm_1.Column)({ name: 'id_reserva' }),
+    __metadata("design:type", Number)
+], HistorialReserva.prototype, "reservaId", void 0);
+__decorate([
+    (0, typeorm_1.Column)({ name: 'id_usuario' }),
+    __metadata("design:type", Number)
+], HistorialReserva.prototype, "usuarioId", void 0);
+__decorate([
+    (0, typeorm_1.ManyToOne)(() => reserva_entity_1.Reserva, reserva => reserva.historialReservas),
     (0, typeorm_1.JoinColumn)({ name: 'id_reserva' }),
     __metadata("design:type", reserva_entity_1.Reserva)
 ], HistorialReserva.prototype, "reserva", void 0);
-__decorate([
-    (0, typeorm_1.Column)({ name: 'id_reserva' }),
-    __metadata("design:type", Number)
-], HistorialReserva.prototype, "idReserva", void 0);
 __decorate([
     (0, typeorm_1.ManyToOne)(() => user_entity_1.User, usuario => usuario.historialReservas),
     (0, typeorm_1.JoinColumn)({ name: 'id_usuario' }),
     __metadata("design:type", user_entity_1.User)
 ], HistorialReserva.prototype, "usuario", void 0);
-__decorate([
-    (0, typeorm_1.Column)({ name: 'id_usuario' }),
-    __metadata("design:type", Number)
-], HistorialReserva.prototype, "idUsuario", void 0);
 exports.HistorialReserva = HistorialReserva = __decorate([
-    (0, typeorm_1.Entity)({ name: 'historial_reserva' })
+    (0, typeorm_1.Entity)({ name: 'HistorialReserva' })
 ], HistorialReserva);
 //# sourceMappingURL=historial-reserva.entity.js.map

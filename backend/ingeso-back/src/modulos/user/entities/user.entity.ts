@@ -2,15 +2,17 @@ import { Entity, Column, PrimaryGeneratedColumn, OneToMany } from 'typeorm';
 import { Reserva } from '../../reserva/entities/reserva.entity';
 import { HistorialReserva } from '../../reserva/entities/historial-reserva.entity';
 
-@Entity({ name: 'usuario' })
-export class User {
-  @PrimaryGeneratedColumn({ name: 'id_usuario' })
-  id: number;
-  
-  @Column({ unique: true })
-  rut: string;
+// Adding a debug message to track entity registration
+console.log('Loading User entity...');
 
-  @Column({ name: 'contraseña' })
+@Entity({ name: 'usuario' }) // Use lowercase table name to match PostgreSQL defaults
+export class User {  
+  @PrimaryGeneratedColumn({ name: 'id_usuario' })
+  id: number;    @Column({ unique: true })
+  rut: string;
+    
+  // Uso de la notación especial \u00F1 para la letra ñ
+  @Column('text', { name: 'contrase\u00F1a' })
   password: string;
 
   @Column({ name: 'nombre_usuario' })
@@ -30,6 +32,7 @@ export class User {
 
   @OneToMany(() => Reserva, reserva => reserva.usuario)
   reservas: Reserva[];
+  
   @OneToMany(() => HistorialReserva, historial => historial.usuario)
   historialReservas: HistorialReserva[];
 }

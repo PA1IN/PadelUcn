@@ -1,7 +1,7 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { CanchasService } from './canchas.service';
 import { CanchasController } from './canchas.controller';
+import { CanchasService } from './canchas.service';
 import { Cancha } from './entities/cancha.entity';
 
 @Module({

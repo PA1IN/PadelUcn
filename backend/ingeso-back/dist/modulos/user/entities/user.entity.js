@@ -13,6 +13,7 @@ exports.User = void 0;
 const typeorm_1 = require("typeorm");
 const reserva_entity_1 = require("../../reserva/entities/reserva.entity");
 const historial_reserva_entity_1 = require("../../reserva/entities/historial-reserva.entity");
+console.log('Loading User entity...');
 let User = class User {
     id;
     rut;
@@ -35,7 +36,7 @@ __decorate([
     __metadata("design:type", String)
 ], User.prototype, "rut", void 0);
 __decorate([
-    (0, typeorm_1.Column)({ name: 'contraseña' }),
+    (0, typeorm_1.Column)({ name: 'contrase\u00F1a' }),
     __metadata("design:type", String)
 ], User.prototype, "password", void 0);
 __decorate([

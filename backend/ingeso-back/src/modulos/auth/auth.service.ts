@@ -48,12 +48,38 @@ export class AuthService {
         )
       );
     }
-  }
-
-  async register(createUserDto: CreateUserDto): Promise<ApiResponse<User>> {
+  }  async register(createUserDto: CreateUserDto): Promise<ApiResponse<any>> {
     try {
-      return await this.userService.create(createUserDto);
+      console.log('Registration request received for user:', { ...createUserDto, password: '[HIDDEN]' });
+      
+      const userResponse = await this.userService.create(createUserDto);
+      
+      console.log('User created successfully:', userResponse);
+      
+      // Si se registra exitosamente, generamos un token JWT para el usuario
+      if (userResponse.data) {
+        const payload = { rut: userResponse.data.rut, isAdmin: userResponse.data.isAdmin };
+        const token = this.jwtService.sign(payload);
+        
+        console.log('JWT token generated successfully');
+        
+        // Crear una nueva respuesta que incluya el token
+        return CreateResponse(
+          'Usuario registrado exitosamente',
+          { 
+            ...userResponse.data, 
+            access_token: token 
+          },
+          'CREATED'
+        );
+      }
+      
+      return userResponse;
     } catch (error) {
+      console.error('Error en auth.service.register:', error);
+      console.error('Stack trace:', error.stack);
+      
+      // Usar BadRequestException en lugar de UnauthorizedException para errores de registro
       throw new UnauthorizedException(
         CreateResponse(
           'Error al registrar usuario',

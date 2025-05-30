@@ -1,15 +1,18 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { BoletaEquipamientoService } from './boleta-equipamiento.service';
 import { BoletaEquipamientoController } from './boleta-equipamiento.controller';
+import { BoletaEquipamientoService } from './boleta-equipamiento.service';
 import { BoletaEquipamiento } from './entities/boleta-equipamiento.entity';
+import { ReservaModule } from '../reserva/reserva.module';
 import { EquipamientoModule } from '../equipamiento/equipamiento.module';
-import { Reserva } from '../reserva/entities/reserva.entity';
+import { UserModule } from '../user/user.module';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([BoletaEquipamiento, Reserva]),
-    EquipamientoModule, // Importar el módulo de equipamiento para usar su servicio
+    TypeOrmModule.forFeature([BoletaEquipamiento]),
+    ReservaModule,
+    EquipamientoModule,
+    UserModule
   ],
   controllers: [BoletaEquipamientoController],
   providers: [BoletaEquipamientoService],

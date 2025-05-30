@@ -1,4 +1,4 @@
-import { IsNotEmpty, IsString, MinLength, Matches, IsEmail, IsOptional } from 'class-validator';
+import { IsNotEmpty, IsString, MinLength, Matches, IsEmail, IsOptional, IsNumber, IsBoolean } from 'class-validator';
 
 export class CreateUserDto {
   @IsNotEmpty({ message: 'El RUT es requerido' })
@@ -21,4 +21,16 @@ export class CreateUserDto {
     message: 'El correo debe ser de un dominio válido (gmail.com, hotmail.com, ucn.cl, etc.)',
   })
   correo?: string;
+  
+  @IsOptional()
+  @IsString()
+  telefono?: string;
+  
+  @IsOptional()
+  @IsNumber()
+  saldo?: number;
+  
+  @IsOptional()
+  @IsBoolean()
+  isAdmin?: boolean;
 }

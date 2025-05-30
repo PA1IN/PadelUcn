@@ -1,0 +1,141 @@
+{
+	"info": {
+		"_postman_id": "postman-id",
+		"name": "PadelUcn Auth Tests",
+		"description": "Colección para probar los endpoints de autenticación",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Registro de Usuario",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"rut\": \"11222333-4\",\n    \"password\": \"contraseña123\",\n    \"nombre\": \"Usuario Prueba\",\n    \"correo\": \"prueba@gmail.com\",\n    \"telefono\": \"912345678\"\n}"
+				},
+				"url": {
+					"raw": "http://localhost:8080/api/auth/register",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"api",
+						"auth",
+						"register"
+					]
+				},
+				"description": "Registra un nuevo usuario en el sistema"
+			},
+			"response": []
+		},
+		{
+			"name": "Login de Usuario",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"rut\": \"11222333-4\",\n    \"password\": \"contraseña123\"\n}"
+				},
+				"url": {
+					"raw": "http://localhost:8080/api/auth/login",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"api",
+						"auth",
+						"login"
+					]
+				},
+				"description": "Inicia sesión con un usuario existente"
+			},
+			"response": []
+		},
+		{
+			"name": "Perfil de Usuario",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{token}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:8080/api/auth/profile",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"api",
+						"auth",
+						"profile"
+					]
+				},
+				"description": "Obtiene el perfil del usuario autenticado"
+			},
+			"response": []
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"id": "prerequest-script",
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"id": "test-script",
+				"type": "text/javascript",
+				"exec": [
+					"if (pm.response.code === 200 || pm.response.code === 201) {",
+					"    var jsonData = pm.response.json();",
+					"    if (jsonData && jsonData.data && jsonData.data.token) {",
+					"        pm.environment.set(\"token\", jsonData.data.token);",
+					"        console.log(\"Token guardado en la variable de entorno\");",
+					"    } else if (jsonData && jsonData.data && jsonData.data.access_token) {",
+					"        pm.environment.set(\"token\", jsonData.data.access_token);",
+					"        console.log(\"Access token guardado en la variable de entorno\");",
+					"    }",
+					"}"
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "token",
+			"value": ""
+		}
+	]
+}

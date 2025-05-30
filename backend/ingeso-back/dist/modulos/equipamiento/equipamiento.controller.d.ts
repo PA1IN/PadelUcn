@@ -9,4 +9,5 @@ export declare class EquipamientoController {
     findOne(id: string): Promise<import("../../interface/Apiresponce").ApiResponse<import("./entities/equipamiento.entity").Equipamiento>>;
     update(id: string, updateEquipamientoDto: UpdateEquipamientoDto): Promise<import("../../interface/Apiresponce").ApiResponse<import("./entities/equipamiento.entity").Equipamiento>>;
     remove(id: string): Promise<import("../../interface/Apiresponce").ApiResponse<null>>;
+    updateStock(id: string, cantidad: string): Promise<import("../../interface/Apiresponce").ApiResponse<import("./entities/equipamiento.entity").Equipamiento>>;
 }

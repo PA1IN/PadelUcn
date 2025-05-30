@@ -1,60 +1,48 @@
--- Datos de ejemplo para el nuevo esquema de PadelUCN
--- Este script inserta datos de muestra en todas las tablas del sistema
+-- Insertar datos de ejemplo en la tabla Usuario
+INSERT INTO "Usuario" (rut, nombre_usuario, correo, contraseña, telefono, saldo, is_admin)
+VALUES 
+    ('12345678-9', 'Administrador', 'admin@padelucn.cl', '$2a$10$XgoWDfZ3zOZsK5IqWBjiE.GpWSIw39zC7ZUzJGtj7Cpa0YZ3TQ6S2', '+56912345678', 100000, TRUE), -- Contraseña: admin123
+    ('98765432-1', 'Usuario Normal', 'usuario@padelucn.cl', '$2a$10$Fr2OskMBwFFcmCLtpE9A7.lYUOZEUpgh5H.JC5QvzvnGMXG9ZkZj.', '+56998765432', 50000, FALSE), -- Contraseña: usuario123
+    ('11111111-1', 'Juan Pérez', 'juan@example.com', '$2a$10$43JE8Nq.X6Z8pweXvbO0HOTenLpHnf4P9YbcJpqN8DZI1l/quoLa6', '+56911111111', 75000, FALSE), -- Contraseña: juanperez
+    ('22222222-2', 'María González', 'maria@example.com', '$2a$10$IPJl1E8v9OEQwQwVPMAu8eJxhHm15XW0YspjqGy5Z5AouboeKYXoC', '+56922222222', 60000, FALSE); -- Contraseña: mariagonzalez
 
--- Insertar usuarios (algunos con privilegios de admin)
-INSERT INTO "usuario" ("rut", "nombre_usuario", "correo", "contraseña", "telefono", "saldo", "is_admin") 
-VALUES
-    ('11111111-1', 'Admin Principal', 'admin@padelucn.cl', '$2a$10$6j7wuOXZT5lKO.hUkyyxEu9AUqDbdPTOwrKVdvNw2m5.6aGH89Hqu', '+56912345678', 0, TRUE),
-    ('22222222-2', 'Usuario Normal', 'usuario@padelucn.cl', '$2a$10$6j7wuOXZT5lKO.hUkyyxEu9AUqDbdPTOwrKVdvNw2m5.6aGH89Hqu', '+56912345677', 5000, FALSE),
-    ('33333333-3', 'Admin Secundario', 'admin2@padelucn.cl', '$2a$10$6j7wuOXZT5lKO.hUkyyxEu9AUqDbdPTOwrKVdvNw2m5.6aGH89Hqu', '+56912345676', 0, TRUE),
-    ('44444444-4', 'Usuario Premium', 'premium@padelucn.cl', '$2a$10$6j7wuOXZT5lKO.hUkyyxEu9AUqDbdPTOwrKVdvNw2m5.6aGH89Hqu', '+56912345675', 10000, FALSE),
-    ('55555555-5', 'Usuario Regular', 'regular@padelucn.cl', '$2a$10$6j7wuOXZT5lKO.hUkyyxEu9AUqDbdPTOwrKVdvNw2m5.6aGH89Hqu', '+56912345674', 2000, FALSE);
+-- Insertar datos de ejemplo en la tabla Cancha
+INSERT INTO "Cancha" (nombre, descripcion, mantenimiento, valor)
+VALUES 
+    ('Cancha Principal', 'Cancha de alta competencia con iluminación LED', FALSE, 15000),
+    ('Cancha Secundaria', 'Cancha con piso de última generación', FALSE, 12000),
+    ('Cancha Exterior', 'Cancha al aire libre con vista panorámica', FALSE, 10000),
+    ('Cancha VIP', 'Cancha exclusiva con servicios premium', FALSE, 20000);
 
--- Nota: Las contraseñas están hasheadas, todas son "password123"
+-- Insertar datos de ejemplo en la tabla Equipamiento
+INSERT INTO "Equipamiento" (tipo, nombre, stock, costo)
+VALUES 
+    ('Paleta', 'Paleta Profesional', 20, 5000),
+    ('Paleta', 'Paleta Intermedia', 30, 3000),
+    ('Pelota', 'Pack 3 Pelotas', 50, 1500),
+    ('Indumentaria', 'Camiseta Oficial', 25, 2000),
+    ('Indumentaria', 'Short Deportivo', 25, 1800);
 
--- Insertar canchas (algunas en mantenimiento)
-INSERT INTO "cancha" ("numero", "nombre", "descripcion", "mantenimiento", "valor") 
-VALUES
-    (1, 'Cancha Principal', 'Cancha principal con iluminación premium', FALSE, 5000),
-    (2, 'Cancha Secundaria', 'Cancha con vista a las montañas', FALSE, 4000),
-    (3, 'Cancha Cubierta', 'Cancha techada para días lluviosos', FALSE, 6000),
-    (4, 'Cancha de Exhibición', 'Cancha con graderías para torneos', TRUE, 8000),
-    (5, 'Cancha de Entrenamiento', 'Cancha para clases y entrenamientos', FALSE, 3500);
+-- Insertar datos de ejemplo en la tabla Reserva (fechas actuales para pruebas)
+INSERT INTO "Reserva" (fecha, hora_inicio, hora_termino, id_cancha, id_usuario)
+VALUES 
+    ('2025-05-30', '10:00:00', '11:00:00', 1, 2),
+    ('2025-05-30', '16:00:00', '17:00:00', 2, 3),
+    ('2025-06-01', '18:00:00', '19:00:00', 3, 4),
+    ('2025-06-02', '09:00:00', '10:00:00', 4, 2);
 
--- Insertar equipamiento
-INSERT INTO "equipamiento" ("tipo", "nombre", "stock", "costo") 
-VALUES
-    ('Raqueta', 'Raqueta Profesional', 10, 2000),
-    ('Raqueta', 'Raqueta Intermedia', 15, 1500),
-    ('Pelota', 'Pelotas (Pack 3)', 30, 500),
-    ('Complemento', 'Muñequera', 20, 300),
-    ('Complemento', 'Visera', 15, 400),
-    ('Complemento', 'Grip', 25, 250);
+-- Insertar datos de ejemplo en la tabla HistorialReserva
+INSERT INTO "HistorialReserva" (estado, fecha_estado, id_reserva, id_usuario)
+VALUES 
+    ('Pendiente', '2025-05-25 14:30:00', 1, 2),
+    ('Pendiente', '2025-05-26 10:15:00', 2, 3),
+    ('Pendiente', '2025-05-27 09:45:00', 3, 4),
+    ('Pendiente', '2025-05-28 16:20:00', 4, 2);
 
--- Insertar reservas
-INSERT INTO "reserva" ("fecha", "hora_inicio", "hora_termino", "id_cancha", "id_usuario") 
-VALUES
-    ('2025-05-20', '09:00:00', '10:30:00', 1, 2),  -- Usuario Normal en Cancha Principal
-    ('2025-05-20', '11:00:00', '12:30:00', 2, 4),  -- Usuario Premium en Cancha Secundaria
-    ('2025-05-21', '16:00:00', '17:30:00', 3, 5),  -- Usuario Regular en Cancha Cubierta
-    ('2025-05-22', '18:00:00', '19:30:00', 5, 2),  -- Usuario Normal en Cancha de Entrenamiento
-    ('2025-05-23', '14:00:00', '15:30:00', 1, 4);  -- Usuario Premium en Cancha Principal
-
--- Insertar historial de reservas
-INSERT INTO "historial_reserva" ("estado", "fecha_estado", "id_reserva", "id_usuario") 
-VALUES
-    ('Pendiente', '2025-05-18 08:30:00', 1, 2),     -- Reserva 1: creación inicial
-    ('Modificado', '2025-05-18 09:15:00', 1, 2),    -- Reserva 1: modificación
-    ('Pendiente', '2025-05-18 10:00:00', 2, 4),     -- Reserva 2: creación inicial
-    ('Cancelado', '2025-05-18 12:30:00', 3, 5),     -- Reserva 3: cancelación
-    ('Pendiente', '2025-05-18 14:45:00', 4, 2),     -- Reserva 4: creación inicial
-    ('Completado', '2025-05-18 15:20:00', 5, 4);    -- Reserva 5: completada
-
--- Insertar boletas de equipamiento
-INSERT INTO "boleta_equipamiento" ("cantidad", "monto_total", "id_reserva", "id_equipamiento") 
-VALUES
-    (1, 2000, 1, 1),    -- Reserva 1: Raqueta Profesional
-    (2, 1000, 1, 3),    -- Reserva 1: 2 packs de Pelotas
-    (1, 1500, 2, 2),    -- Reserva 2: Raqueta Intermedia
-    (3, 750, 4, 6),     -- Reserva 4: 3 Grips
-    (1, 400, 5, 5);     -- Reserva 5: Visera
+-- Insertar datos de ejemplo en la tabla BoletaEquipamiento
+INSERT INTO "BoletaEquipamiento" (cantidad, monto_total, id_reserva, id_equipamiento)
+VALUES 
+    (2, 10000, 1, 1),
+    (1, 3000, 2, 2),
+    (2, 3000, 3, 3),
+    (1, 2000, 4, 4);

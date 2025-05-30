@@ -4,8 +4,8 @@ export declare class HistorialReserva {
     id: number;
     estado: string;
     fechaEstado: Date;
+    reservaId: number;
+    usuarioId: number;
     reserva: Reserva;
-    idReserva: number;
     usuario: User;
-    idUsuario: number;
 }

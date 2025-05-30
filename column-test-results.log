@@ -1,0 +1,50 @@
+PRUEBA DE CORRECCIÓN DE MAPEO DE COLUMNA DE CONTRASEÑA
+==================================================
+Fecha: 2025-05-30T04:05:36.677Z
+API URL: http://localhost:8080/api
+
+🚀 INICIANDO PRUEBAS DE CORRECCIÓN DE MAPEO DE COLUMNA
+
+===== Prueba 1: Administrador predefinido =====
+
+=== Probando login con usuario: 12345678-9 ===
+Status: 201
+Respuesta: {
+  "statusCode": 401,
+  "message": "Credenciales inválidas: Usuario no encontrado",
+  "success": false
+}
+❌ Login fallido: Credenciales inválidas: Usuario no encontrado
+
+===== Prueba 2: Usuario regular predefinido =====
+
+=== Probando login con usuario: 98765432-1 ===
+Status: 201
+Respuesta: {
+  "statusCode": 401,
+  "message": "Credenciales inválidas: Usuario no encontrado",
+  "success": false
+}
+❌ Login fallido: Credenciales inválidas: Usuario no encontrado
+
+===== Prueba 3: Nuevo usuario generado =====
+
+=== Registrando nuevo usuario: 2835763-1 ===
+❌ Error: Request failed with status code 400
+Status: 400
+Data: {
+  "message": [
+    "El correo debe ser de un dominio válido (gmail.com, hotmail.com, ucn.cl, etc.)"
+  ],
+  "error": "Bad Request",
+  "statusCode": 400
+}
+
+===== RESUMEN DE RESULTADOS =====
+❌ 1. Login con Administrador predefinido: Credenciales inválidas: Usuario no encontrado
+❌ 2. Login con Usuario regular predefinido: Credenciales inválidas: Usuario no encontrado
+❌ 3.a. Registro de Nuevo usuario generado: Request failed with status code 400
+
+❌ CONCLUSIÓN: Persisten problemas con el mapeo de columna
+
+Resultados detallados guardados en: column-test-results.log

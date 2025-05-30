@@ -8,7 +8,7 @@ export declare class CanchasService {
     constructor(canchaRepository: Repository<Cancha>);
     create(createCanchaDto: CreateCanchaDto): Promise<ApiResponse<Cancha>>;
     findAll(): Promise<ApiResponse<Cancha[]>>;
-    findOne(numero: number): Promise<ApiResponse<Cancha>>;
-    update(numero: number, updateCanchaDto: UpdateCanchaDto): Promise<ApiResponse<Cancha>>;
-    remove(numero: number): Promise<ApiResponse<null>>;
+    findOne(id: number): Promise<ApiResponse<Cancha>>;
+    update(id: number, updateCanchaDto: UpdateCanchaDto): Promise<ApiResponse<Cancha>>;
+    remove(id: number): Promise<ApiResponse<null>>;
 }

@@ -56,4 +56,14 @@ export class UserController {
   remove(@Param('rut') rut: string) {
     return this.userService.remove(rut);
   }
+
+  @Patch(':rut/promote-admin')
+  @ApiOperation({ summary: 'Promover un usuario a administrador' })
+  @SwaggerResponse({ status: 200, description: 'Usuario promovido exitosamente' })
+  @SwaggerResponse({ status: 404, description: 'Usuario no encontrado' })
+  @SwaggerResponse({ status: 400, description: 'Error al promover usuario' })
+  @UseGuards(JwtAuthGuard)
+  promoteToAdmin(@Param('rut') rut: string) {
+    return this.userService.promoteToAdmin(rut);
+  }
 }

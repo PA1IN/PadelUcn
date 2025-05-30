@@ -10,6 +10,9 @@ export declare class UserService {
     findAll(): Promise<ApiResponse<User[]>>;
     findOne(rut: string): Promise<ApiResponse<User>>;
     findByRut(rut: string): Promise<User | null>;
+    findById(id: number): Promise<ApiResponse<User>>;
+    updateSaldo(userId: number, monto: number): Promise<ApiResponse<User>>;
     update(rut: string, updateUserDto: UpdateUserDto): Promise<ApiResponse<User>>;
     remove(rut: string): Promise<ApiResponse<null>>;
+    promoteToAdmin(rut: string): Promise<ApiResponse<User>>;
 }

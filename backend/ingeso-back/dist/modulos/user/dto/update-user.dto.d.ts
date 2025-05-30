@@ -4,5 +4,8 @@ export declare class UpdateUserDto extends UpdateUserDto_base {
     password?: string;
     nombre?: string;
     correo?: string;
+    telefono?: string;
+    saldo?: number;
+    isAdmin?: boolean;
 }
 export {};
