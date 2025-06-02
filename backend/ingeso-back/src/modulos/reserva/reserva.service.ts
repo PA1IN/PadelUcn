@@ -491,4 +491,31 @@ export class ReservaService {
       );
     }
   }
+
+  async reservarCancha(reserva: Reserva) {
+    // 🔥 1️⃣ Verificar si la cancha existe
+    const cancha = await this.canchaRepository.findOne({ where: { id_cancha: reserva.id_cancha } });
+    if (!cancha) throw new NotFoundException('Cancha no encontrada');
+
+    // 🔥 2️⃣ Validar que la fecha de reserva sea al menos 7 días después
+    const fechaActual = new Date();
+    const fechaReserva = new Date(reserva.fecha);
+    const diferenciaDias = (fechaReserva.getTime() - fechaActual.getTime()) / (1000 * 60 * 60 * 24);
+
+    if (diferenciaDias < 7) throw new BadRequestException('La reserva debe hacerse con al menos 7 días de anticipación.');
+
+    // 🔥 3️⃣ Calcular el costo total de la reserva
+    const costoTotal = cancha.valor;
+
+    // 🔥 4️⃣ Descontar saldo y guardar la reserva
+    if (reserva.usuario.saldo < costoTotal) throw new BadRequestException('Saldo insuficiente para la reserva.');
+    reserva.usuario.saldo -= costoTotal;
+    await this.userRepository.save(reserva.usuario);
+
+    // 🔥 5️⃣ Guardar reserva en la tabla `reserva`
+    const nuevaReserva = this.reservaRepository.create(reserva);
+    await this.reservaRepository.save(nuevaReserva);
+
+    return { mensaje: 'Reserva realizada exitosamente', reserva: nuevaReserva };
+  }
 }
