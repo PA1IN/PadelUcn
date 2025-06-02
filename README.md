@@ -1,15 +1,4 @@
 # Padel UCN
-
-Sistema de gestión para canchas de pádel de la Universidad Católica del Norte.
-
-> **NOTA IMPORTANTE: Sistema en Reestructuración**
-> 
-> El sistema ha sido actualizado con una nueva estructura de base de datos. Se han aplicado los siguientes cambios:
-> - Eliminación del módulo Admin (reemplazado por un flag `isAdmin` en la entidad User)
-> - Actualización de entidades para mapear correctamente a la nueva base de datos
-> - Añadido seguimiento de historial de reservas
-> - Ver detalles completos en [ENTITY_UPDATES.md](ENTITY_UPDATES.md)
-
 ## Endpoints API
 
 Todos los endpoints están prefijados con `/api`. Por ejemplo, para acceder al endpoint de canchas, debes usar `/api/canchas`.
@@ -41,11 +30,6 @@ En caso de error:
 
 ## Módulo de Canchas
 
-El sistema permite la gestión completa de canchas con sus respectivos atributos:
-- **Número**: Identificador único de la cancha (Primary Key)
-- **Costo**: Valor por hora de la cancha en la moneda local
-- **Mantenimiento**: Indica si la cancha está en mantenimiento (no disponible para reservas)
-
 ### Endpoints de la API para Canchas
 
 | Método HTTP | Endpoint | Descripción |
@@ -63,9 +47,10 @@ El sistema permite la gestión completa de canchas con sus respectivos atributos
 {
   "numero": 1,
   "nombre": "Cancha Principal",
-  "descripcion": "Cancha techada con iluminación nocturna",
-  "valor": 50000,
-  "mantenimiento": false
+  "descripcion": "Cancha de pádel profesional con paredes de cristal",
+  "valor": 15000,
+  "mantenimiento": false,
+  "cantidad_max_jugador": 4
 }
 ```
 
@@ -86,12 +71,31 @@ El sistema permite la gestión completa de canchas con sus respectivos atributos
   "message": "Canchas obtenidas exitosamente",
   "data": [
     {
-      "id": 1,
+      "id_cancha": 1,
       "numero": 1,
       "nombre": "Cancha Principal",
-      "descripcion": "Cancha techada con iluminación nocturna",
+      "descripcion": "Cancha de pádel profesional con paredes de cristal",
       "mantenimiento": false,
-      "valor": 50000
+      "cantidad_max_jugador": 4,
+      "valor": 15000
+    },
+    {
+      "id_cancha": 2,
+      "numero": 2,
+      "nombre": "Cancha Secundaria",
+      "descripcion": "Cancha de pádel estándar",
+      "mantenimiento": false,
+      "cantidad_max_jugador": 4,
+      "valor": 12000
+    },
+    {
+      "id_cancha": 3,
+      "numero": 3,
+      "nombre": "Cancha Techada",
+      "descripcion": "Cancha de pádel techada para uso en días lluviosos",
+      "mantenimiento": false,
+      "cantidad_max_jugador": 4,
+      "valor": 18000
     }
   ],
   "success": true
@@ -127,21 +131,23 @@ El sistema ahora maneja un modelo unificado para usuarios, donde se distinguen u
 #### Registro de usuario (POST `/api/auth/register`)
 ```json
 {
-  "rut": "12345678-9",
-  "nombre": "Juan Pérez",
-  "correo": "juan.perez@example.com",
-  "password": "contraseña123",
-  "telefono": "+56912345678"
+  "rut": "22222222-2",
+  "nombre_usuario": "Juan Pérez",
+  "correo": "juan@example.com",
+  "contraseña": "usuario123",
+  "telefono": "+56922222222"
 }
 ```
 
 #### Inicio de sesión (POST `/api/auth/login`)
 ```json
 {
-  "rut": "12345678-9",
-  "password": "contraseña123"
+  "rut": "11111111-1",
+  "password": "admin123"
 }
 ```
+
+> **Nota importante:** Aunque en la base de datos el campo se llama "contraseña", la API espera recibir "password" debido a cómo están configurados los DTOs en el backend. Se ha configurado el mapeo en la entidad TypeORM para que funcione correctamente.
 
 #### Actualización de usuario (PATCH `/api/users/:rut`)
 ```json
@@ -159,14 +165,75 @@ El sistema ahora maneja un modelo unificado para usuarios, donde se distinguen u
   "statusCode": 200,
   "message": "Usuario obtenido exitosamente",
   "data": {
-    "id": 1,
-    "rut": "12345678-9",
-    "nombre": "Juan Pérez",
-    "correo": "juan.perez@example.com",
-    "telefono": "+56912345678",
-    "saldo": 0,
-    "isAdmin": false
+    "id_usuario": 2,
+    "rut": "22222222-2",
+    "nombre_usuario": "Juan Pérez",
+    "correo": "juan@example.com",
+    "telefono": "+56922222222",
+    "saldo": 50000,
+    "is_admin": false
   },
+  "success": true
+}
+```
+
+## Módulo de Bloques de Tiempo
+
+El sistema maneja bloques de tiempo predefinidos para facilitar la reserva de canchas:
+
+### Atributos de Bloque
+- **ID**: Identificador único del bloque de tiempo
+- **Fecha**: Fecha del bloque
+- **Hora Inicio**: Hora de inicio del bloque
+- **Hora Fin**: Hora de término del bloque
+
+### Endpoints de la API para Bloques
+
+| Método HTTP | Endpoint | Descripción |
+|-------------|----------|-------------|
+| GET | `/api/bloque` | Obtiene todos los bloques disponibles |
+| GET | `/api/bloque/:id` | Obtiene la información de un bloque específico |
+| GET | `/api/bloque/fecha/:fecha` | Obtiene todos los bloques de una fecha específica |
+| POST | `/api/bloque` | Crea un nuevo bloque de tiempo |
+| PATCH | `/api/bloque/:id` | Actualiza la información de un bloque existente |
+| DELETE | `/api/bloque/:id` | Elimina un bloque de tiempo |
+
+### Formato de datos
+
+#### Creación de bloque (POST `/api/bloque`)
+```json
+{
+  "fecha_date": "2025-06-02",
+  "hora_inicio": "08:00:00",
+  "hora_fin": "09:00:00"
+}
+```
+
+#### Respuesta al obtener bloques por fecha (GET `/api/bloque/fecha/:fecha`)
+```json
+{
+  "statusCode": 200,
+  "message": "Bloques obtenidos exitosamente",
+  "data": [
+    {
+      "id_bloque": 1,
+      "fecha_date": "2025-06-02",
+      "hora_inicio": "08:00:00",
+      "hora_fin": "09:00:00"
+    },
+    {
+      "id_bloque": 2,
+      "fecha_date": "2025-06-02",
+      "hora_inicio": "09:00:00",
+      "hora_fin": "10:00:00"
+    },
+    {
+      "id_bloque": 3,
+      "fecha_date": "2025-06-02",
+      "hora_inicio": "10:00:00",
+      "hora_fin": "11:00:00"
+    }
+  ],
   "success": true
 }
 ```
@@ -211,11 +278,12 @@ El sistema permite la gestión de reservas de canchas con su respectivo historia
 #### Creación de reserva (POST `/api/reservas`)
 ```json
 {
-  "fecha": "2025-06-01",
-  "hora_inicio": "18:00",
-  "hora_termino": "19:00",
-  "rut_usuario": "12345678-9",
-  "numero_cancha": 1
+  "fecha": "2025-06-09",
+  "hora_inicio": "09:00:00",
+  "hora_termino": "10:30:00",
+  "rut_usuario": "22222222-2",
+  "numero_cancha": 2,
+  "id_bloque": 2
 }
 ```
 
@@ -232,25 +300,26 @@ El sistema permite la gestión de reservas de canchas con su respectivo historia
 ```json
 {
   "statusCode": 201,
-  "message": "Reserva #1 creada exitosamente para la cancha #1",
+  "message": "Reserva #1 creada exitosamente para la cancha #2",
   "data": {
-    "id": 1,
-    "fecha": "2025-06-01",
-    "hora_inicio": "18:00",
-    "hora_termino": "19:00",
-    "idCancha": 1,
-    "idUsuario": 1,
+    "id_reserva": 1,
+    "fecha": "2025-06-09",
+    "hora_inicio": "09:00:00",
+    "hora_termino": "10:30:00",
+    "id_cancha": 2,
+    "id_usuario": 2,
+    "id_bloque": 2,
     "usuario": {
-      "id": 1,
-      "rut": "12345678-9",
-      "nombre": "Juan Pérez",
-      "correo": "juan.perez@example.com"
+      "id_usuario": 2,
+      "rut": "22222222-2",
+      "nombre_usuario": "Juan Pérez",
+      "correo": "juan@example.com"
     },
     "cancha": {
-      "id": 1,
-      "numero": 1,
-      "nombre": "Cancha Principal",
-      "valor": 50000
+      "id_cancha": 2,
+      "numero": 2,
+      "nombre": "Cancha Secundaria",
+      "valor": 12000
     }
   },
   "success": true
@@ -273,14 +342,39 @@ El sistema permite la gestión de reservas de canchas con su respectivo historia
 ```json
 {
   "statusCode": 200,
-  "message": "Horarios disponibles para la cancha #1 en la fecha 2025-06-01",
+  "message": "Horarios disponibles para la cancha #1 en la fecha 2025-06-02",
   "data": {
     "horariosDisponibles": [
-      { "inicio": "08:00", "fin": "09:00" },
-      { "inicio": "09:00", "fin": "10:00" },
-      { "inicio": "10:00", "fin": "11:00" },
-      { "inicio": "17:00", "fin": "18:00" },
-      { "inicio": "19:00", "fin": "20:00" }
+      { 
+        "id_bloque": 1,
+        "fecha_date": "2025-06-02",
+        "hora_inicio": "08:00:00", 
+        "hora_fin": "09:00:00" 
+      },
+      { 
+        "id_bloque": 2,
+        "fecha_date": "2025-06-02",
+        "hora_inicio": "09:00:00", 
+        "hora_fin": "10:00:00" 
+      },
+      { 
+        "id_bloque": 3,
+        "fecha_date": "2025-06-02",
+        "hora_inicio": "10:00:00", 
+        "hora_fin": "11:00:00" 
+      },
+      { 
+        "id_bloque": 11,
+        "fecha_date": "2025-06-02",
+        "hora_inicio": "18:00:00", 
+        "hora_fin": "19:00:00" 
+      },
+      { 
+        "id_bloque": 12,
+        "fecha_date": "2025-06-02",
+        "hora_inicio": "19:00:00", 
+        "hora_fin": "20:00:00" 
+      }
     ]
   },
   "success": true
@@ -294,17 +388,18 @@ El sistema permite la gestión de reservas de canchas con su respectivo historia
   "message": "Reservas del usuario obtenidas exitosamente",
   "data": [
     {
-      "id": 1,
-      "fecha": "2025-06-01",
-      "hora_inicio": "18:00",
-      "hora_termino": "19:00",
-      "idCancha": 1,
-      "idUsuario": 1,
+      "id_reserva": 1,
+      "fecha": "2025-06-09",
+      "hora_inicio": "09:00:00",
+      "hora_termino": "10:30:00",
+      "id_cancha": 2,
+      "id_usuario": 2,
+      "id_bloque": 2,
       "cancha": {
-        "id": 1,
-        "numero": 1,
-        "nombre": "Cancha Principal",
-        "valor": 50000
+        "id_cancha": 2,
+        "numero": 2,
+        "nombre": "Cancha Secundaria",
+        "valor": 12000
       }
     }
   ],
@@ -319,11 +414,18 @@ El sistema permite la gestión de reservas de canchas con su respectivo historia
   "message": "Historial de la reserva obtenido exitosamente",
   "data": [
     {
-      "id": 1,
+      "id_historial": 1,
       "estado": "Pendiente",
-      "fechaEstado": "2025-05-18T23:30:00.000Z",
-      "idReserva": 1,
-      "idUsuario": 1
+      "fecha_estado": "2025-06-02",
+      "id_reserva": 1,
+      "id_usuario": 2
+    },
+    {
+      "id_historial": 2,
+      "estado": "Confirmada",
+      "fecha_estado": "2025-06-03",
+      "id_reserva": 1,
+      "id_usuario": 1
     }
   ],
   "success": true
@@ -386,9 +488,9 @@ El sistema mantiene un registro detallado del historial de cambios de estado de 
 #### Creación de registro de historial (POST `/api/historial-reservas`)
 ```json
 {
-  "estado": "Modificado",
-  "idReserva": 1,
-  "idUsuario": 2
+  "estado": "Confirmada",
+  "id_reserva": 1,
+  "id_usuario": 1
 }
 ```
 
@@ -434,29 +536,29 @@ El sistema mantiene un registro detallado del historial de cambios de estado de 
   "message": "Historiales de reserva obtenidos exitosamente",
   "data": [
     {
-      "id": 1,
+      "id_historial": 1,
       "estado": "Pendiente",
-      "fechaEstado": "2025-05-18T12:00:00.000Z",
-      "idReserva": 1,
-      "idUsuario": 1,
+      "fecha_estado": "2025-06-02",
+      "id_reserva": 1,
+      "id_usuario": 2,
       "reserva": {
-        "id": 1,
-        "fecha": "2025-06-01",
-        "hora_inicio": "18:00",
-        "hora_termino": "19:00"
+        "id_reserva": 1,
+        "fecha": "2025-06-09",
+        "hora_inicio": "09:00:00",
+        "hora_termino": "10:30:00"
       }
     },
     {
-      "id": 3,
-      "estado": "Cancelado",
-      "fechaEstado": "2025-05-20T09:15:00.000Z",
-      "idReserva": 2,
-      "idUsuario": 1,
+      "id_historial": 3,
+      "estado": "Pendiente",
+      "fecha_estado": "2025-06-02",
+      "id_reserva": 2,
+      "id_usuario": 3,
       "reserva": {
-        "id": 2,
-        "fecha": "2025-06-03",
-        "hora_inicio": "10:00",
-        "hora_termino": "11:00"
+        "id_reserva": 2,
+        "fecha": "2025-06-10",
+        "hora_inicio": "10:00:00",
+        "hora_termino": "11:30:00"
       }
     }
   ],
@@ -490,10 +592,10 @@ El sistema permite la gestión de equipamiento deportivo disponible para alquile
 #### Creación de equipamiento (POST `/api/equipamiento`)
 ```json
 {
-  "tipo": "Paleta",
-  "nombre": "Paleta Profesional",
+  "tipo": "Raquetas",
+  "nombre": "Raqueta Pro",
   "stock": 10,
-  "costo": 5000
+  "costo": 2000
 }
 ```
 
@@ -513,18 +615,32 @@ El sistema permite la gestión de equipamiento deportivo disponible para alquile
   "message": "Equipamientos obtenidos exitosamente",
   "data": [
     {
-      "id": 1,
-      "tipo": "Paleta",
-      "nombre": "Paleta Profesional",
+      "id_equipamiento": 1,
+      "nombre": "Raqueta Pro",
+      "tipo": "Raquetas",
       "stock": 10,
-      "costo": 5000
+      "costo": 2000
     },
     {
-      "id": 2,
-      "tipo": "Pelota",
-      "nombre": "Set de Pelotas",
+      "id_equipamiento": 2,
+      "tipo": "Accesorios",
+      "nombre": "Cinta grip",
+      "stock": 30,
+      "costo": 800
+    },
+    {
+      "id_equipamiento": 3,
+      "tipo": "Pelotas",
+      "nombre": "Pelotas (pack)",
       "stock": 20,
-      "costo": 2000
+      "costo": 500
+    },
+    {
+      "id_equipamiento": 4,
+      "tipo": "Protección",
+      "nombre": "Protector facial",
+      "stock": 15,
+      "costo": 1500
     }
   ],
   "success": true
@@ -558,8 +674,8 @@ El sistema permite la gestión de boletas de alquiler de equipamiento asociadas 
 ```json
 {
   "id_reserva": 1,
-  "id_equipamiento": 2,
-  "cantidad": 3
+  "id_equipamiento": 1,
+  "cantidad": 2
 }
 ```
 
@@ -576,15 +692,15 @@ El sistema permite la gestión de boletas de alquiler de equipamiento asociadas 
   "statusCode": 201,
   "message": "Boleta de equipamiento creada exitosamente",
   "data": {
-    "id": 1,
-    "cantidad": 3,
-    "montoTotal": 6000,
-    "idReserva": 1,
-    "idEquipamiento": 2,
+    "id_boleta": 1,
+    "cantidad": 2,
+    "monto_total": 4000,
+    "id_reserva": 1,
+    "id_equipamiento": 1,
     "equipamiento": {
-      "id": 2,
-      "tipo": "Pelota",
-      "nombre": "Set de Pelotas",
+      "id_equipamiento": 1,
+      "tipo": "Raquetas",
+      "nombre": "Raqueta Pro",
       "costo": 2000
     }
   },
@@ -599,16 +715,156 @@ El sistema permite la gestión de boletas de alquiler de equipamiento asociadas 
   "message": "Boletas de equipamiento por reserva obtenidas exitosamente",
   "data": [
     {
-      "id": 1,
-      "cantidad": 3,
-      "montoTotal": 6000,
-      "idReserva": 1,
-      "idEquipamiento": 2,
+      "id_boleta": 1,
+      "cantidad": 2,
+      "monto_total": 4000,
+      "id_reserva": 1,
+      "id_equipamiento": 1,
       "equipamiento": {
-        "id": 2,
-        "tipo": "Pelota",
-        "nombre": "Set de Pelotas",
+        "id_equipamiento": 1,
+        "tipo": "Raquetas",
+        "nombre": "Raqueta Pro",
         "costo": 2000
+      }
+    },
+    {
+      "id_boleta": 2,
+      "cantidad": 1,
+      "monto_total": 800,
+      "id_reserva": 1,
+      "id_equipamiento": 2,
+      "equipamiento": {
+        "id_equipamiento": 2,
+        "tipo": "Accesorios",
+        "nombre": "Cinta grip",
+        "costo": 800
+      }
+    }
+  ],
+  "success": true
+}
+```
+
+## Módulo de Jugador
+
+El sistema permite registrar jugadores asociados a una reserva:
+
+### Atributos de Jugador
+- **ID**: Identificador único del jugador
+- **Nombre**: Nombre del jugador
+- **Apellido**: Apellido del jugador
+- **RUT**: RUT del jugador
+- **Edad**: Edad del jugador
+- **ID Reserva**: ID de la reserva a la que está asociado
+
+### Endpoints de la API para Jugador
+
+| Método HTTP | Endpoint | Descripción |
+|-------------|----------|-------------|
+| GET | `/api/jugador` | Obtiene todos los jugadores registrados |
+| GET | `/api/jugador/:id` | Obtiene la información de un jugador específico |
+| GET | `/api/jugador/reserva/:id` | Obtiene todos los jugadores de una reserva específica |
+| POST | `/api/jugador` | Crea un nuevo registro de jugador |
+| PATCH | `/api/jugador/:id` | Actualiza la información de un jugador existente |
+| DELETE | `/api/jugador/:id` | Elimina un registro de jugador |
+
+### Formato de datos
+
+#### Creación de jugador (POST `/api/jugador`)
+```json
+{
+  "nombre": "Pedro",
+  "apellido": "Gómez",
+  "rut": "55555555-5",
+  "edad": 30,
+  "id_reserva": 1
+}
+```
+
+#### Respuesta al obtener jugadores de una reserva (GET `/api/jugador/reserva/:id`)
+```json
+{
+  "statusCode": 200,
+  "message": "Jugadores obtenidos exitosamente",
+  "data": [
+    {
+      "id_jugador": 1,
+      "nombre": "Pedro",
+      "apellido": "Gómez",
+      "rut": "55555555-5",
+      "edad": 30,
+      "id_reserva": 1
+    },
+    {
+      "id_jugador": 2,
+      "nombre": "Laura",
+      "apellido": "Martínez",
+      "rut": "66666666-6",
+      "edad": 28,
+      "id_reserva": 1
+    }
+  ],
+  "success": true
+}
+```
+
+## Módulo de Transacciones
+
+El sistema registra transacciones asociadas a boletas de equipamiento:
+
+### Atributos de Transaccion
+- **ID**: Identificador único de la transacción
+- **Fecha**: Fecha de la transacción
+- **ID Boleta Equipamiento**: ID de la boleta de equipamiento asociada
+
+### Endpoints de la API para Transaccion
+
+| Método HTTP | Endpoint | Descripción |
+|-------------|----------|-------------|
+| GET | `/api/transaccion` | Obtiene todas las transacciones |
+| GET | `/api/transaccion/:id` | Obtiene la información de una transacción específica |
+| GET | `/api/transaccion/boleta/:id` | Obtiene la transacción asociada a una boleta específica |
+| POST | `/api/transaccion` | Crea una nueva transacción |
+| DELETE | `/api/transaccion/:id` | Elimina una transacción |
+
+### Formato de datos
+
+#### Creación de transacción (POST `/api/transaccion`)
+```json
+{
+  "fecha": "2025-06-02",
+  "id_boleta_equipamiento": 1
+}
+```
+
+#### Respuesta al obtener transacciones (GET `/api/transaccion`)
+```json
+{
+  "statusCode": 200,
+  "message": "Transacciones obtenidas exitosamente",
+  "data": [
+    {
+      "id_transaccion": 1,
+      "fecha": "2025-06-02",
+      "id_boleta_equipamiento": 1,
+      "boleta": {
+        "id_boleta": 1,
+        "cantidad": 2,
+        "monto_total": 4000,
+        "id_reserva": 1,
+        "id_equipamiento": 1
+      }
+    },
+    {
+      "id_transaccion": 2,
+      "fecha": "2025-06-02",
+      "id_boleta_equipamiento": 2,
+      "boleta": {
+        "id_boleta": 2,
+        "cantidad": 1,
+        "monto_total": 800,
+        "id_reserva": 1,
+        "id_equipamiento": 2
       }
     }
   ],
