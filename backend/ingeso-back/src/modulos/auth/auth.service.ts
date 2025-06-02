@@ -1,86 +1,78 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { Injectable, UnauthorizedException, ConflictException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
-import { UserService } from '../user/user.service';
-import * as bcrypt from 'bcryptjs';
-import { CreateUserDto } from '../user/dto/create-user.dto';
-import { ApiResponse } from '../../interface/Apiresponce';
-import { User } from '../user/entities/user.entity';
-import { CreateResponse } from '../../utils/api-response.util';
+import { Repository } from 'typeorm';
+import { InjectRepository } from '@nestjs/typeorm';
+import * as bcrypt from 'bcrypt';
+import { Usuario } from '../usuario/entities/usuario.entity';
+import { CreateUsuarioDto, LoginUsuarioDto } from '../usuario/dto/usuario.dto';
 
 @Injectable()
 export class AuthService {
   constructor(
-    private userService: UserService,
+    @InjectRepository(Usuario)
+    private usuarioRepository: Repository<Usuario>,
     private jwtService: JwtService,
   ) {}
 
   async validateUser(rut: string, password: string): Promise<any> {
-    const user = await this.userService.findByRut(rut);
-    if (user && await bcrypt.compare(password, user.password)) {
-      const { password, ...result } = user;
+    const usuario = await this.usuarioRepository.findOne({ where: { rut } });
+    if (usuario && await bcrypt.compare(password, usuario.password)) {
+      const { password, ...result } = usuario;
       return result;
     }
     return null;
-  }  async login(user: any): Promise<ApiResponse<any>> {
-    try {
-      const payload = { rut: user.rut, isAdmin: user.isAdmin };
-      const token = this.jwtService.sign(payload);
-      
-      // El nuevo formato requerido {rut, nombre, correo, rol, token}
-      return CreateResponse(
-        'Inicio de sesión exitoso',
-        { 
-          rut: user.rut,
-          nombre: user.nombre,
-          correo: user.correo,
-          rol: user.isAdmin ? 'admin' : 'usuario',
-          token: token 
-        },
-        'OK'
-      );
-    } catch (error) {
-      throw new UnauthorizedException(
-        CreateResponse(
-          'Error al iniciar sesión',
-          null,
-          'UNAUTHORIZED',
-          error.message
-        )
-      );
+  }
+  async login(loginDto: LoginUsuarioDto) {
+    const usuario = await this.validateUser(loginDto.rut, loginDto.password);
+    
+    if (!usuario) {
+      throw new UnauthorizedException('Credenciales inválidas');
     }
+    
+    const payload = { 
+      sub: usuario.id, 
+      rut: usuario.rut, 
+      nombre: usuario.nombre,
+      isAdmin: usuario.isAdmin 
+    };
+    
+    return {
+      usuario,
+      access_token: this.jwtService.sign(payload, { expiresIn: '24h' }),
+    };
   }
 
-  async register(createUserDto: CreateUserDto): Promise<ApiResponse<User>> {
-    try {
-      return await this.userService.create(createUserDto);
-    } catch (error) {
-      throw new UnauthorizedException(
-        CreateResponse(
-          'Error al registrar usuario',
-          null,
-          'BAD_REQUEST',
-          error.message
-        )
-      );
+  async register(createUsuarioDto: CreateUsuarioDto) {
+    // Verificar si el usuario ya existe
+    const existingUser = await this.usuarioRepository.findOne({ 
+      where: { rut: createUsuarioDto.rut } 
+    });
+    
+    if (existingUser) {
+      throw new ConflictException('El usuario ya existe');
     }
-  }
 
-  async getProfile(rut: string): Promise<ApiResponse<User>> {
-    try {
-      const userResponse = await this.userService.findOne(rut);
-      if (!userResponse.data) {
-        throw new Error('Usuario no encontrado');
-      }
-      return userResponse;
-    } catch (error) {
-      throw new UnauthorizedException(
-        CreateResponse(
-          'Error al obtener perfil',
-          null,
-          'NOT_FOUND',
-          error.message
-        )
-      );
-    }
+    // Crear nuevo usuario con contraseña encriptada
+    const hashedPassword = await bcrypt.hash(createUsuarioDto.password, 10);
+    const newUser = this.usuarioRepository.create({
+      ...createUsuarioDto,
+      password: hashedPassword,
+      isAdmin: false,
+    });
+
+    const savedUser = await this.usuarioRepository.save(newUser);
+    const { password, ...result } = savedUser;
+    
+    const payload = { 
+      sub: result.id, 
+      rut: result.rut, 
+      nombre: result.nombre,
+      isAdmin: result.isAdmin 
+    };
+    
+    return {
+      usuario: result,
+      access_token: this.jwtService.sign(payload, { expiresIn: '24h' }),
+    };
   }
 }

@@ -12,11 +12,38 @@ var __param = (this && this.__param) || function (paramIndex, decorator) {
     return function (target, key) { decorator(target, key, paramIndex); }
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.BoletaEquipamientoController = void 0;
+exports.BoletaEquipamientoController = exports.UpdateBoletaEquipamientoDto = void 0;
 const common_1 = require("@nestjs/common");
 const boleta_equipamiento_service_1 = require("./boleta-equipamiento.service");
 const create_boleta_equipamiento_dto_1 = require("./dto/create-boleta-equipamiento.dto");
-const update_boleta_equipamiento_dto_1 = require("./dto/update-boleta-equipamiento.dto");
+const class_validator_1 = require("class-validator");
+class UpdateBoletaEquipamientoDto {
+    cantidad;
+    monto_total;
+    id_reserva;
+    id_equipamiento;
+}
+exports.UpdateBoletaEquipamientoDto = UpdateBoletaEquipamientoDto;
+__decorate([
+    (0, class_validator_1.IsNumber)(),
+    (0, class_validator_1.IsOptional)(),
+    __metadata("design:type", Number)
+], UpdateBoletaEquipamientoDto.prototype, "cantidad", void 0);
+__decorate([
+    (0, class_validator_1.IsNumber)(),
+    (0, class_validator_1.IsOptional)(),
+    __metadata("design:type", Number)
+], UpdateBoletaEquipamientoDto.prototype, "monto_total", void 0);
+__decorate([
+    (0, class_validator_1.IsNumber)(),
+    (0, class_validator_1.IsOptional)(),
+    __metadata("design:type", Number)
+], UpdateBoletaEquipamientoDto.prototype, "id_reserva", void 0);
+__decorate([
+    (0, class_validator_1.IsNumber)(),
+    (0, class_validator_1.IsOptional)(),
+    __metadata("design:type", Number)
+], UpdateBoletaEquipamientoDto.prototype, "id_equipamiento", void 0);
 let BoletaEquipamientoController = class BoletaEquipamientoController {
     boletaEquipamientoService;
     constructor(boletaEquipamientoService) {
@@ -64,7 +91,7 @@ __decorate([
     __param(0, (0, common_1.Param)('id')),
     __param(1, (0, common_1.Body)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String, update_boleta_equipamiento_dto_1.UpdateBoletaEquipamientoDto]),
+    __metadata("design:paramtypes", [String, UpdateBoletaEquipamientoDto]),
     __metadata("design:returntype", void 0)
 ], BoletaEquipamientoController.prototype, "update", null);
 __decorate([

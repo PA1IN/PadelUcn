@@ -1,14 +1,28 @@
 import { JwtService } from '@nestjs/jwt';
-import { UserService } from '../user/user.service';
-import { CreateUserDto } from '../user/dto/create-user.dto';
-import { ApiResponse } from '../../interface/Apiresponce';
-import { User } from '../user/entities/user.entity';
+import { Repository } from 'typeorm';
+import { Usuario } from '../usuario/entities/usuario.entity';
+import { CreateUsuarioDto, LoginUsuarioDto } from '../usuario/dto/usuario.dto';
 export declare class AuthService {
-    private userService;
+    private usuarioRepository;
     private jwtService;
-    constructor(userService: UserService, jwtService: JwtService);
+    constructor(usuarioRepository: Repository<Usuario>, jwtService: JwtService);
     validateUser(rut: string, password: string): Promise<any>;
-    login(user: any): Promise<ApiResponse<any>>;
-    register(createUserDto: CreateUserDto): Promise<ApiResponse<User>>;
-    getProfile(rut: string): Promise<ApiResponse<User>>;
+    login(loginDto: LoginUsuarioDto): Promise<{
+        usuario: any;
+        access_token: string;
+    }>;
+    register(createUsuarioDto: CreateUsuarioDto): Promise<{
+        usuario: {
+            id: number;
+            rut: string;
+            nombre: string;
+            correo: string;
+            telefono: string;
+            saldo: number;
+            isAdmin: boolean;
+            reservas: import("../reserva/entities/reserva.entity").Reserva[];
+            historiales: import("../historial-reserva/entities/historial-reserva.entity").HistorialReserva[];
+        };
+        access_token: string;
+    }>;
 }

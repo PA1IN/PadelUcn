@@ -1,25 +1,34 @@
-import { ExtractJwt, Strategy } from 'passport-jwt';
-import { PassportStrategy } from '@nestjs/passport';
 import { Injectable } from '@nestjs/common';
-import { UserService } from 'src/modulos/user/user.service';
-
-interface JwtPayload{
-  rut: string;
-}
-
+import { PassportStrategy } from '@nestjs/passport';
+import { ExtractJwt, Strategy } from 'passport-jwt';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import { Usuario } from '../../usuario/entities/usuario.entity';
 
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {
-  constructor(private userService: UserService) {
+  constructor(
+    @InjectRepository(Usuario)
+    private usuarioRepository: Repository<Usuario>,
+  ) {
     super({
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
       ignoreExpiration: false,
-      secretOrKey: 'padelucn-secret-key', // En producción, usar variables de entorno
+      secretOrKey: process.env.JWT_SECRET || 'padelunicket', // Cambiar en producción
     });
   }
 
-  async validate(payload: JwtPayload) {
-    const user = await this.userService.findByRut(payload.rut);
-    return user;
+  async validate(payload: any) {
+    const usuario = await this.usuarioRepository.findOne({
+      where: { id: payload.sub },
+    });
+    
+    // Excluimos la contraseña por seguridad
+    if (usuario) {
+      const { password, ...result } = usuario;
+      return result;
+    }
+    
+    return null;
   }
 }

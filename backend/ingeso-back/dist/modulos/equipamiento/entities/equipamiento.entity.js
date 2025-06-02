@@ -11,41 +11,35 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.Equipamiento = void 0;
 const typeorm_1 = require("typeorm");
-const boleta_equipamiento_entity_1 = require("../../boleta-equipamiento/entities/boleta-equipamiento.entity");
 let Equipamiento = class Equipamiento {
     id;
     tipo;
-    costo;
-    stock;
     nombre;
-    boletas;
+    stock;
+    costo;
 };
 exports.Equipamiento = Equipamiento;
 __decorate([
-    (0, typeorm_1.PrimaryGeneratedColumn)({ name: 'id_equipamiento' }),
+    (0, typeorm_1.PrimaryGeneratedColumn)(),
     __metadata("design:type", Number)
 ], Equipamiento.prototype, "id", void 0);
 __decorate([
-    (0, typeorm_1.Column)({ nullable: false }),
+    (0, typeorm_1.Column)(),
     __metadata("design:type", String)
 ], Equipamiento.prototype, "tipo", void 0);
 __decorate([
-    (0, typeorm_1.Column)({ nullable: false }),
-    __metadata("design:type", Number)
-], Equipamiento.prototype, "costo", void 0);
-__decorate([
-    (0, typeorm_1.Column)({ nullable: false }),
-    __metadata("design:type", Number)
-], Equipamiento.prototype, "stock", void 0);
-__decorate([
-    (0, typeorm_1.Column)({ nullable: false }),
+    (0, typeorm_1.Column)(),
     __metadata("design:type", String)
 ], Equipamiento.prototype, "nombre", void 0);
 __decorate([
-    (0, typeorm_1.OneToMany)(() => boleta_equipamiento_entity_1.BoletaEquipamiento, boletaEquipamiento => boletaEquipamiento.equipamiento),
-    __metadata("design:type", Array)
-], Equipamiento.prototype, "boletas", void 0);
+    (0, typeorm_1.Column)(),
+    __metadata("design:type", Number)
+], Equipamiento.prototype, "stock", void 0);
+__decorate([
+    (0, typeorm_1.Column)(),
+    __metadata("design:type", Number)
+], Equipamiento.prototype, "costo", void 0);
 exports.Equipamiento = Equipamiento = __decorate([
-    (0, typeorm_1.Entity)({ name: 'equipamiento' })
+    (0, typeorm_1.Entity)()
 ], Equipamiento);
 //# sourceMappingURL=equipamiento.entity.js.map

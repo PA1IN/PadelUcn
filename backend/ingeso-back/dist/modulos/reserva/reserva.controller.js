@@ -15,161 +15,218 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.ReservaController = void 0;
 const common_1 = require("@nestjs/common");
 const reserva_service_1 = require("./reserva.service");
-const create_reserva_dto_1 = require("./dto/create-reserva.dto");
-const update_reserva_dto_1 = require("./dto/update-reserva.dto");
-const swagger_1 = require("@nestjs/swagger");
+const reserva_dto_1 = require("./dto/reserva.dto");
+const jwt_auth_guard_1 = require("../auth/guards/jwt-auth.guard");
+const roles_guard_1 = require("../auth/guards/roles.guard");
+const roles_decorator_1 = require("../auth/decorators/roles.decorator");
+const api_response_util_1 = require("../../utils/api-response.util");
 let ReservaController = class ReservaController {
     reservaService;
     constructor(reservaService) {
         this.reservaService = reservaService;
     }
-    create(createReservaDto) {
-        return this.reservaService.create(createReservaDto);
+    async create(createReservaDto, req) {
+        try {
+            const isAdmin = req.user.isAdmin;
+            const reserva = await this.reservaService.create(createReservaDto, isAdmin);
+            return (0, api_response_util_1.CreateResponse)('Reserva creada exitosamente', reserva, 'CREATED');
+        }
+        catch (error) {
+            return (0, api_response_util_1.CreateResponse)('Error al crear la reserva', null, 'BAD_REQUEST', error.message, false);
+        }
     }
-    findAll() {
-        return this.reservaService.findAll();
+    async findAll() {
+        try {
+            const reservas = await this.reservaService.findAll();
+            return (0, api_response_util_1.CreateResponse)('Reservas obtenidas exitosamente', reservas, 'OK');
+        }
+        catch (error) {
+            return (0, api_response_util_1.CreateResponse)('Error al obtener reservas', null, 'BAD_REQUEST', error.message, false);
+        }
     }
-    findByUsuario(rut) {
-        return this.reservaService.findByUsuario(rut);
+    async findOne(id, req) {
+        try {
+            const response = await this.reservaService.findOne(+id);
+            const reserva = response.data;
+            if (!reserva) {
+                return (0, api_response_util_1.CreateResponse)('Reserva no encontrada', null, 'NOT_FOUND', 'La reserva solicitada no existe', false);
+            }
+            if (!req.user.isAdmin && reserva.idUsuario !== req.user.id) {
+                return (0, api_response_util_1.CreateResponse)('No tienes permisos para ver esta reserva', null, 'FORBIDDEN', 'Acceso denegado', false);
+            }
+            return (0, api_response_util_1.CreateResponse)('Reserva obtenida exitosamente', reserva, 'OK');
+        }
+        catch (error) {
+            return (0, api_response_util_1.CreateResponse)('Error al obtener la reserva', null, 'BAD_REQUEST', error.message, false);
+        }
     }
-    findByCancha(numero) {
-        return this.reservaService.findByCancha(+numero);
+    async update(id, updateReservaDto, req) {
+        try {
+            const isAdmin = req.user.isAdmin;
+            if (!isAdmin) {
+                const reservaResponse = await this.reservaService.findOne(+id);
+                if (reservaResponse.data && reservaResponse.data.idUsuario !== req.user.id) {
+                    return (0, api_response_util_1.CreateResponse)('No tienes permisos para modificar esta reserva', null, 'FORBIDDEN', 'Acceso denegado', false);
+                }
+            }
+            const reserva = await this.reservaService.update(+id, updateReservaDto, isAdmin);
+            return (0, api_response_util_1.CreateResponse)('Reserva actualizada exitosamente', reserva, 'OK');
+        }
+        catch (error) {
+            return (0, api_response_util_1.CreateResponse)('Error al actualizar la reserva', null, 'BAD_REQUEST', error.message, false);
+        }
     }
-    findOne(id) {
-        return this.reservaService.findOne(+id);
+    async remove(id, req) {
+        try {
+            const isAdmin = req.user.isAdmin;
+            if (!isAdmin) {
+                const reservaResponse = await this.reservaService.findOne(+id);
+                if (reservaResponse.data && reservaResponse.data.idUsuario !== req.user.id) {
+                    return (0, api_response_util_1.CreateResponse)('No tienes permisos para cancelar esta reserva', null, 'FORBIDDEN', 'Acceso denegado', false);
+                }
+            }
+            await this.reservaService.remove(+id, isAdmin);
+            return (0, api_response_util_1.CreateResponse)('Reserva cancelada exitosamente', null, 'OK');
+        }
+        catch (error) {
+            return (0, api_response_util_1.CreateResponse)('Error al cancelar la reserva', null, 'BAD_REQUEST', error.message, false);
+        }
     }
-    update(id, updateReservaDto) {
-        return this.reservaService.update(+id, updateReservaDto);
+    async findByUsuario(rut, req) {
+        try {
+            if (!req.user.isAdmin && req.user.rut !== rut) {
+                return (0, api_response_util_1.CreateResponse)('No tienes permisos para ver estas reservas', null, 'FORBIDDEN', 'Acceso denegado', false);
+            }
+            const reservas = await this.reservaService.findByUsuario(rut);
+            return (0, api_response_util_1.CreateResponse)('Reservas del usuario obtenidas exitosamente', reservas, 'OK');
+        }
+        catch (error) {
+            return (0, api_response_util_1.CreateResponse)('Error al obtener las reservas del usuario', null, 'BAD_REQUEST', error.message, false);
+        }
     }
-    remove(id) {
-        return this.reservaService.remove(+id);
+    async findByCancha(numero) {
+        try {
+            const reservas = await this.reservaService.findByCancha(+numero);
+            return (0, api_response_util_1.CreateResponse)('Reservas de la cancha obtenidas exitosamente', reservas, 'OK');
+        }
+        catch (error) {
+            return (0, api_response_util_1.CreateResponse)('Error al obtener las reservas de la cancha', null, 'BAD_REQUEST', error.message, false);
+        }
     }
-    verificarDisponibilidad(numero, fecha, horaInicio, horaTermino) {
-        return this.reservaService.verificarDisponibilidad(+numero, fecha, horaInicio, horaTermino);
+    async verificarDisponibilidad(numero, fecha, horaInicio, horaTermino) {
+        try {
+            const disponibilidad = await this.reservaService.verificarDisponibilidad(+numero, fecha, horaInicio, horaTermino);
+            return (0, api_response_util_1.CreateResponse)(disponibilidad.data && disponibilidad.data.disponible
+                ? `La cancha #${numero} está disponible en el horario solicitado`
+                : `La cancha #${numero} no está disponible en el horario solicitado`, { disponible: disponibilidad.data ? disponibilidad.data.disponible : false }, 'OK');
+        }
+        catch (error) {
+            return (0, api_response_util_1.CreateResponse)('Error al verificar disponibilidad', null, 'BAD_REQUEST', error.message, false);
+        }
     }
-    obtenerHorariosDisponibles(numero, fecha) {
-        return this.reservaService.obtenerHorariosDisponibles(+numero, fecha);
+    async obtenerHorariosDisponibles(numero, fecha) {
+        try {
+            const horarios = await this.reservaService.obtenerHorariosDisponibles(+numero, fecha);
+            return (0, api_response_util_1.CreateResponse)(`Horarios disponibles para la cancha #${numero} en la fecha ${fecha}`, { horariosDisponibles: horarios }, 'OK');
+        }
+        catch (error) {
+            return (0, api_response_util_1.CreateResponse)('Error al obtener horarios disponibles', null, 'BAD_REQUEST', error.message, false);
+        }
     }
-    obtenerEstadisticas() {
-        return this.reservaService.obtenerEstadisticas();
+    async obtenerEstadisticas() {
+        try {
+            const estadisticas = await this.reservaService.obtenerEstadisticas();
+            return (0, api_response_util_1.CreateResponse)('Estadísticas obtenidas exitosamente', estadisticas, 'OK');
+        }
+        catch (error) {
+            return (0, api_response_util_1.CreateResponse)('Error al obtener estadísticas', null, 'BAD_REQUEST', error.message, false);
+        }
     }
 };
 exports.ReservaController = ReservaController;
 __decorate([
     (0, common_1.Post)(),
-    (0, swagger_1.ApiOperation)({ summary: 'Crear una nueva reserva de cancha' }),
-    (0, swagger_1.ApiResponse)({ status: 201, description: 'Reserva creada exitosamente' }),
-    (0, swagger_1.ApiResponse)({ status: 400, description: 'Datos inválidos o cancha no disponible' }),
-    (0, swagger_1.ApiResponse)({ status: 401, description: 'No autorizado' }),
     __param(0, (0, common_1.Body)()),
+    __param(1, (0, common_1.Request)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [create_reserva_dto_1.CreateReservaDto]),
-    __metadata("design:returntype", void 0)
+    __metadata("design:paramtypes", [reserva_dto_1.CreateReservaDto, Object]),
+    __metadata("design:returntype", Promise)
 ], ReservaController.prototype, "create", null);
 __decorate([
     (0, common_1.Get)(),
-    (0, swagger_1.ApiOperation)({ summary: 'Obtener todas las reservas' }),
-    (0, swagger_1.ApiResponse)({ status: 200, description: 'Lista de reservas obtenida exitosamente' }),
-    (0, swagger_1.ApiResponse)({ status: 401, description: 'No autorizado' }),
+    (0, roles_decorator_1.Roles)('admin'),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", []),
-    __metadata("design:returntype", void 0)
+    __metadata("design:returntype", Promise)
 ], ReservaController.prototype, "findAll", null);
 __decorate([
-    (0, common_1.Get)('usuario/:rut'),
-    (0, swagger_1.ApiOperation)({ summary: 'Obtener reservas de un usuario por su RUT' }),
-    (0, swagger_1.ApiResponse)({ status: 200, description: 'Reservas del usuario obtenidas exitosamente' }),
-    (0, swagger_1.ApiResponse)({ status: 404, description: 'Usuario no encontrado' }),
-    (0, swagger_1.ApiResponse)({ status: 401, description: 'No autorizado' }),
-    __param(0, (0, common_1.Param)('rut')),
-    __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String]),
-    __metadata("design:returntype", void 0)
-], ReservaController.prototype, "findByUsuario", null);
-__decorate([
-    (0, common_1.Get)('cancha/:numero'),
-    (0, swagger_1.ApiOperation)({ summary: 'Obtener reservas de una cancha por su número' }),
-    (0, swagger_1.ApiResponse)({ status: 200, description: 'Reservas de la cancha obtenidas exitosamente' }),
-    (0, swagger_1.ApiResponse)({ status: 404, description: 'Cancha no encontrada' }),
-    (0, swagger_1.ApiResponse)({ status: 401, description: 'No autorizado' }),
-    __param(0, (0, common_1.Param)('numero')),
-    __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String]),
-    __metadata("design:returntype", void 0)
-], ReservaController.prototype, "findByCancha", null);
-__decorate([
     (0, common_1.Get)(':id'),
-    (0, swagger_1.ApiOperation)({ summary: 'Obtener una reserva por su ID' }),
-    (0, swagger_1.ApiResponse)({ status: 200, description: 'Reserva obtenida exitosamente' }),
-    (0, swagger_1.ApiResponse)({ status: 404, description: 'Reserva no encontrada' }),
-    (0, swagger_1.ApiResponse)({ status: 401, description: 'No autorizado' }),
     __param(0, (0, common_1.Param)('id')),
+    __param(1, (0, common_1.Request)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String]),
-    __metadata("design:returntype", void 0)
+    __metadata("design:paramtypes", [String, Object]),
+    __metadata("design:returntype", Promise)
 ], ReservaController.prototype, "findOne", null);
 __decorate([
     (0, common_1.Patch)(':id'),
-    (0, swagger_1.ApiOperation)({ summary: 'Actualizar una reserva existente' }),
-    (0, swagger_1.ApiResponse)({ status: 200, description: 'Reserva actualizada exitosamente' }),
-    (0, swagger_1.ApiResponse)({ status: 404, description: 'Reserva no encontrada' }),
-    (0, swagger_1.ApiResponse)({ status: 400, description: 'Datos inválidos' }),
-    (0, swagger_1.ApiResponse)({ status: 401, description: 'No autorizado' }),
     __param(0, (0, common_1.Param)('id')),
     __param(1, (0, common_1.Body)()),
+    __param(2, (0, common_1.Request)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String, update_reserva_dto_1.UpdateReservaDto]),
-    __metadata("design:returntype", void 0)
+    __metadata("design:paramtypes", [String, reserva_dto_1.UpdateReservaDto, Object]),
+    __metadata("design:returntype", Promise)
 ], ReservaController.prototype, "update", null);
 __decorate([
     (0, common_1.Delete)(':id'),
-    (0, swagger_1.ApiOperation)({ summary: 'Cancelar/Eliminar una reserva' }),
-    (0, swagger_1.ApiResponse)({ status: 200, description: 'Reserva eliminada exitosamente' }),
-    (0, swagger_1.ApiResponse)({ status: 404, description: 'Reserva no encontrada' }),
-    (0, swagger_1.ApiResponse)({ status: 401, description: 'No autorizado' }),
     __param(0, (0, common_1.Param)('id')),
+    __param(1, (0, common_1.Request)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String]),
-    __metadata("design:returntype", void 0)
+    __metadata("design:paramtypes", [String, Object]),
+    __metadata("design:returntype", Promise)
 ], ReservaController.prototype, "remove", null);
 __decorate([
+    (0, common_1.Get)('usuario/:rut'),
+    __param(0, (0, common_1.Param)('rut')),
+    __param(1, (0, common_1.Request)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, Object]),
+    __metadata("design:returntype", Promise)
+], ReservaController.prototype, "findByUsuario", null);
+__decorate([
+    (0, common_1.Get)('cancha/:numero'),
+    __param(0, (0, common_1.Param)('numero')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String]),
+    __metadata("design:returntype", Promise)
+], ReservaController.prototype, "findByCancha", null);
+__decorate([
     (0, common_1.Get)('disponibilidad/:numero/:fecha/:horaInicio/:horaTermino'),
-    (0, swagger_1.ApiOperation)({ summary: 'Verificar disponibilidad de una cancha en un horario específico' }),
-    (0, swagger_1.ApiResponse)({ status: 200, description: 'Disponibilidad verificada' }),
-    (0, swagger_1.ApiResponse)({ status: 400, description: 'Datos inválidos' }),
-    (0, swagger_1.ApiResponse)({ status: 401, description: 'No autorizado' }),
     __param(0, (0, common_1.Param)('numero')),
     __param(1, (0, common_1.Param)('fecha')),
     __param(2, (0, common_1.Param)('horaInicio')),
     __param(3, (0, common_1.Param)('horaTermino')),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String, String, String, String]),
-    __metadata("design:returntype", void 0)
+    __metadata("design:returntype", Promise)
 ], ReservaController.prototype, "verificarDisponibilidad", null);
 __decorate([
     (0, common_1.Get)('disponibilidad-dia/:numero/:fecha'),
-    (0, swagger_1.ApiOperation)({ summary: 'Obtener todos los horarios disponibles de una cancha en un día' }),
-    (0, swagger_1.ApiResponse)({ status: 200, description: 'Horarios disponibles obtenidos exitosamente' }),
-    (0, swagger_1.ApiResponse)({ status: 400, description: 'Datos inválidos' }),
-    (0, swagger_1.ApiResponse)({ status: 401, description: 'No autorizado' }),
     __param(0, (0, common_1.Param)('numero')),
     __param(1, (0, common_1.Param)('fecha')),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String, String]),
-    __metadata("design:returntype", void 0)
+    __metadata("design:returntype", Promise)
 ], ReservaController.prototype, "obtenerHorariosDisponibles", null);
 __decorate([
     (0, common_1.Get)('estadisticas'),
-    (0, swagger_1.ApiOperation)({ summary: 'Obtener estadísticas de uso de canchas' }),
-    (0, swagger_1.ApiResponse)({ status: 200, description: 'Estadísticas obtenidas exitosamente' }),
-    (0, swagger_1.ApiResponse)({ status: 401, description: 'No autorizado' }),
+    (0, roles_decorator_1.Roles)('admin'),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", []),
-    __metadata("design:returntype", void 0)
+    __metadata("design:returntype", Promise)
 ], ReservaController.prototype, "obtenerEstadisticas", null);
 exports.ReservaController = ReservaController = __decorate([
-    (0, swagger_1.ApiTags)('reservas'),
-    (0, common_1.Controller)(['reservas', 'reserva']),
+    (0, common_1.Controller)('reservas'),
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),
     __metadata("design:paramtypes", [reserva_service_1.ReservaService])
 ], ReservaController);
 //# sourceMappingURL=reserva.controller.js.map

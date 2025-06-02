@@ -1,19 +1,19 @@
-import { IsNotEmpty, IsNumber } from 'class-validator';
+import { IsNotEmpty, IsNumber, IsString, IsOptional } from 'class-validator';
 
 export class CreateBoletaEquipamientoDto {
-  @IsNotEmpty()
   @IsNumber()
-  id_reserva: number;
-
   @IsNotEmpty()
-  @IsNumber()
-  id_equipamiento: number;
-
-  @IsNotEmpty()
-  @IsNumber()
   cantidad: number;
 
-  @IsNotEmpty()
   @IsNumber()
+  @IsNotEmpty()
   monto_total: number;
+
+  @IsNumber()
+  @IsNotEmpty()
+  id_reserva: number;
+
+  @IsNumber()
+  @IsNotEmpty()
+  id_equipamiento: number;
 }

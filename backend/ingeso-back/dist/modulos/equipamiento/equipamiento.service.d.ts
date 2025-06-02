@@ -10,6 +10,6 @@ export declare class EquipamientoService {
     findAll(): Promise<ApiResponse<Equipamiento[]>>;
     findOne(id: number): Promise<ApiResponse<Equipamiento>>;
     update(id: number, updateEquipamientoDto: UpdateEquipamientoDto): Promise<ApiResponse<Equipamiento>>;
-    remove(id: number): Promise<ApiResponse<null>>;
+    remove(id: number): Promise<ApiResponse<Equipamiento>>;
     actualizarStock(id: number, cantidad: number): Promise<ApiResponse<Equipamiento>>;
 }

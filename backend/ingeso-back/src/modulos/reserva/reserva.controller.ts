@@ -1,111 +1,313 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards } from '@nestjs/common';
+import { 
+  Controller, 
+  Get, 
+  Post, 
+  Body, 
+  Patch, 
+  Param, 
+  Delete, 
+  UseGuards,
+  Request
+} from '@nestjs/common';
 import { ReservaService } from './reserva.service';
-import { CreateReservaDto } from './dto/create-reserva.dto';
-import { UpdateReservaDto } from './dto/update-reserva.dto';
-import { ApiTags, ApiOperation, ApiResponse as SwaggerResponse } from '@nestjs/swagger';
+import { CreateReservaDto, UpdateReservaDto } from './dto/reserva.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { RolesGuard } from '../auth/guards/roles.guard';
+import { Roles } from '../auth/decorators/roles.decorator';
+import { CreateResponse } from '../../utils/api-response.util';
 
-@ApiTags('reservas')
-@Controller(['reservas', 'reserva']) // Aceptar tanto 'reservas' como 'reserva' como rutas
-// Comentamos temporalmente la protección JWT para pruebas
-// @UseGuards(JwtAuthGuard) // Protegemos todas las rutas con JWT
+@Controller('reservas')
+@UseGuards(JwtAuthGuard, RolesGuard)
 export class ReservaController {
   constructor(private readonly reservaService: ReservaService) {}
 
   @Post()
-  @ApiOperation({ summary: 'Crear una nueva reserva de cancha' })
-  @SwaggerResponse({ status: 201, description: 'Reserva creada exitosamente' })
-  @SwaggerResponse({ status: 400, description: 'Datos inválidos o cancha no disponible' })
-  @SwaggerResponse({ status: 401, description: 'No autorizado' })
-  create(@Body() createReservaDto: CreateReservaDto) {
-    return this.reservaService.create(createReservaDto);
+  async create(@Body() createReservaDto: CreateReservaDto, @Request() req) {
+    try {
+      // Verificar si el usuario es administrador
+      const isAdmin = req.user.isAdmin;
+      
+      const reserva = await this.reservaService.create(createReservaDto, isAdmin);
+      return CreateResponse(
+        'Reserva creada exitosamente',
+        reserva,
+        'CREATED'
+      );
+    } catch (error) {
+      return CreateResponse(
+        'Error al crear la reserva',
+        null,
+        'BAD_REQUEST',
+        error.message,
+        false
+      );
+    }
   }
 
   @Get()
-  @ApiOperation({ summary: 'Obtener todas las reservas' })
-  @SwaggerResponse({ status: 200, description: 'Lista de reservas obtenida exitosamente' })
-  @SwaggerResponse({ status: 401, description: 'No autorizado' })
-  findAll() {
-    return this.reservaService.findAll();
-  }
-
-  @Get('usuario/:rut')
-  @ApiOperation({ summary: 'Obtener reservas de un usuario por su RUT' })
-  @SwaggerResponse({ status: 200, description: 'Reservas del usuario obtenidas exitosamente' })
-  @SwaggerResponse({ status: 404, description: 'Usuario no encontrado' })
-  @SwaggerResponse({ status: 401, description: 'No autorizado' })
-  findByUsuario(@Param('rut') rut: string) {
-    return this.reservaService.findByUsuario(rut);
-  }
-
-  @Get('cancha/:numero')
-  @ApiOperation({ summary: 'Obtener reservas de una cancha por su número' })
-  @SwaggerResponse({ status: 200, description: 'Reservas de la cancha obtenidas exitosamente' })
-  @SwaggerResponse({ status: 404, description: 'Cancha no encontrada' })
-  @SwaggerResponse({ status: 401, description: 'No autorizado' })
-  findByCancha(@Param('numero') numero: string) {
-    return this.reservaService.findByCancha(+numero);
+  @Roles('admin')
+  async findAll() {
+    try {
+      const reservas = await this.reservaService.findAll();
+      return CreateResponse(
+        'Reservas obtenidas exitosamente',
+        reservas,
+        'OK'
+      );
+    } catch (error) {
+      return CreateResponse(
+        'Error al obtener reservas',
+        null,
+        'BAD_REQUEST',
+        error.message,
+        false
+      );
+    }
   }
 
   @Get(':id')
-  @ApiOperation({ summary: 'Obtener una reserva por su ID' })
-  @SwaggerResponse({ status: 200, description: 'Reserva obtenida exitosamente' })
-  @SwaggerResponse({ status: 404, description: 'Reserva no encontrada' })
-  @SwaggerResponse({ status: 401, description: 'No autorizado' })
-  findOne(@Param('id') id: string) {
-    return this.reservaService.findOne(+id);
+  async findOne(@Param('id') id: string, @Request() req) {
+    try {      const response = await this.reservaService.findOne(+id);
+      const reserva = response.data;
+      
+      // Solo permitir acceso a la reserva si es admin o es el propietario
+      if (!reserva) {
+        return CreateResponse(
+          'Reserva no encontrada',
+          null,
+          'NOT_FOUND',
+          'La reserva solicitada no existe',
+          false
+        );
+      }
+      
+      if (!req.user.isAdmin && reserva.idUsuario !== req.user.id) {
+        return CreateResponse(
+          'No tienes permisos para ver esta reserva',
+          null,
+          'FORBIDDEN',
+          'Acceso denegado',
+          false
+        );
+      }
+      
+      return CreateResponse(
+        'Reserva obtenida exitosamente',
+        reserva,
+        'OK'
+      );
+    } catch (error) {
+      return CreateResponse(
+        'Error al obtener la reserva',
+        null,
+        'BAD_REQUEST',
+        error.message,
+        false
+      );
+    }
   }
 
   @Patch(':id')
-  @ApiOperation({ summary: 'Actualizar una reserva existente' })
-  @SwaggerResponse({ status: 200, description: 'Reserva actualizada exitosamente' })
-  @SwaggerResponse({ status: 404, description: 'Reserva no encontrada' })
-  @SwaggerResponse({ status: 400, description: 'Datos inválidos' })
-  @SwaggerResponse({ status: 401, description: 'No autorizado' })
-  update(@Param('id') id: string, @Body() updateReservaDto: UpdateReservaDto) {
-    return this.reservaService.update(+id, updateReservaDto);
+  async update(
+    @Param('id') id: string, 
+    @Body() updateReservaDto: UpdateReservaDto,
+    @Request() req
+  ) {
+    try {
+      // Verificar si el usuario es administrador
+      const isAdmin = req.user.isAdmin;
+      
+      // Si no es admin, verificar que el usuario sea dueño de la reserva
+      if (!isAdmin) {
+        const reservaResponse = await this.reservaService.findOne(+id);
+        if (reservaResponse.data && reservaResponse.data.idUsuario !== req.user.id) {
+          return CreateResponse(
+            'No tienes permisos para modificar esta reserva',
+            null,
+            'FORBIDDEN',
+            'Acceso denegado',
+            false
+          );
+        }
+      }
+      
+      const reserva = await this.reservaService.update(+id, updateReservaDto, isAdmin);
+      return CreateResponse(
+        'Reserva actualizada exitosamente',
+        reserva,
+        'OK'
+      );
+    } catch (error) {
+      return CreateResponse(
+        'Error al actualizar la reserva',
+        null,
+        'BAD_REQUEST',
+        error.message,
+        false
+      );
+    }
   }
 
   @Delete(':id')
-  @ApiOperation({ summary: 'Cancelar/Eliminar una reserva' })
-  @SwaggerResponse({ status: 200, description: 'Reserva eliminada exitosamente' })
-  @SwaggerResponse({ status: 404, description: 'Reserva no encontrada' })
-  @SwaggerResponse({ status: 401, description: 'No autorizado' })
-  remove(@Param('id') id: string) {
-    return this.reservaService.remove(+id);
+  async remove(@Param('id') id: string, @Request() req) {
+    try {
+      // Verificar si el usuario es administrador
+      const isAdmin = req.user.isAdmin;
+      
+      // Si no es admin, verificar que el usuario sea dueño de la reserva
+      if (!isAdmin) {
+        const reservaResponse = await this.reservaService.findOne(+id);
+        if (reservaResponse.data && reservaResponse.data.idUsuario !== req.user.id) {
+          return CreateResponse(
+            'No tienes permisos para cancelar esta reserva',
+            null,
+            'FORBIDDEN',
+            'Acceso denegado',
+            false
+          );
+        }
+      }
+      
+      await this.reservaService.remove(+id, isAdmin);
+      return CreateResponse(
+        'Reserva cancelada exitosamente',
+        null,
+        'OK'
+      );
+    } catch (error) {
+      return CreateResponse(
+        'Error al cancelar la reserva',
+        null,
+        'BAD_REQUEST',
+        error.message,
+        false
+      );
+    }
   }
 
+  @Get('usuario/:rut')
+  async findByUsuario(@Param('rut') rut: string, @Request() req) {
+    try {
+      // Solo permitir ver las reservas si es admin o es el mismo usuario
+      if (!req.user.isAdmin && req.user.rut !== rut) {
+        return CreateResponse(
+          'No tienes permisos para ver estas reservas',
+          null,
+          'FORBIDDEN',
+          'Acceso denegado',
+          false
+        );
+      }
+      
+      const reservas = await this.reservaService.findByUsuario(rut);
+      return CreateResponse(
+        'Reservas del usuario obtenidas exitosamente',
+        reservas,
+        'OK'
+      );
+    } catch (error) {
+      return CreateResponse(
+        'Error al obtener las reservas del usuario',
+        null,
+        'BAD_REQUEST',
+        error.message,
+        false
+      );
+    }
+  }
+
+  @Get('cancha/:numero')
+  async findByCancha(@Param('numero') numero: string) {
+    try {
+      const reservas = await this.reservaService.findByCancha(+numero);
+      return CreateResponse(
+        'Reservas de la cancha obtenidas exitosamente',
+        reservas,
+        'OK'
+      );
+    } catch (error) {
+      return CreateResponse(
+        'Error al obtener las reservas de la cancha',
+        null,
+        'BAD_REQUEST',
+        error.message,
+        false
+      );
+    }
+  }
   @Get('disponibilidad/:numero/:fecha/:horaInicio/:horaTermino')
-  @ApiOperation({ summary: 'Verificar disponibilidad de una cancha en un horario específico' })
-  @SwaggerResponse({ status: 200, description: 'Disponibilidad verificada' })
-  @SwaggerResponse({ status: 400, description: 'Datos inválidos' })
-  @SwaggerResponse({ status: 401, description: 'No autorizado' })
-  verificarDisponibilidad(
+  async verificarDisponibilidad(
     @Param('numero') numero: string,
     @Param('fecha') fecha: string,
     @Param('horaInicio') horaInicio: string,
-    @Param('horaTermino') horaTermino: string,
+    @Param('horaTermino') horaTermino: string
   ) {
-    return this.reservaService.verificarDisponibilidad(+numero, fecha, horaInicio, horaTermino);
+    try {
+      const disponibilidad = await this.reservaService.verificarDisponibilidad(
+        +numero, 
+        fecha, 
+        horaInicio, 
+        horaTermino
+      );
+      return CreateResponse(
+        disponibilidad.data && disponibilidad.data.disponible
+          ? `La cancha #${numero} está disponible en el horario solicitado`
+          : `La cancha #${numero} no está disponible en el horario solicitado`,
+        { disponible: disponibilidad.data ? disponibilidad.data.disponible : false },
+        'OK'
+      );
+    } catch (error) {
+      return CreateResponse(
+        'Error al verificar disponibilidad',
+        null,
+        'BAD_REQUEST',
+        error.message,
+        false
+      );
+    }
   }
 
   @Get('disponibilidad-dia/:numero/:fecha')
-  @ApiOperation({ summary: 'Obtener todos los horarios disponibles de una cancha en un día' })
-  @SwaggerResponse({ status: 200, description: 'Horarios disponibles obtenidos exitosamente' })
-  @SwaggerResponse({ status: 400, description: 'Datos inválidos' })
-  @SwaggerResponse({ status: 401, description: 'No autorizado' })
-  obtenerHorariosDisponibles(
+  async obtenerHorariosDisponibles(
     @Param('numero') numero: string,
     @Param('fecha') fecha: string
   ) {
-    return this.reservaService.obtenerHorariosDisponibles(+numero, fecha);
+    try {
+      const horarios = await this.reservaService.obtenerHorariosDisponibles(+numero, fecha);
+      return CreateResponse(
+        `Horarios disponibles para la cancha #${numero} en la fecha ${fecha}`,
+        { horariosDisponibles: horarios },
+        'OK'
+      );
+    } catch (error) {
+      return CreateResponse(
+        'Error al obtener horarios disponibles',
+        null,
+        'BAD_REQUEST',
+        error.message,
+        false
+      );
+    }
   }
 
   @Get('estadisticas')
-  @ApiOperation({ summary: 'Obtener estadísticas de uso de canchas' })
-  @SwaggerResponse({ status: 200, description: 'Estadísticas obtenidas exitosamente' })
-  @SwaggerResponse({ status: 401, description: 'No autorizado' })
-  obtenerEstadisticas() {
-    return this.reservaService.obtenerEstadisticas();
+  @Roles('admin')
+  async obtenerEstadisticas() {
+    try {
+      const estadisticas = await this.reservaService.obtenerEstadisticas();
+      return CreateResponse(
+        'Estadísticas obtenidas exitosamente',
+        estadisticas,
+        'OK'
+      );
+    } catch (error) {
+      return CreateResponse(
+        'Error al obtener estadísticas',
+        null,
+        'BAD_REQUEST',
+        error.message,
+        false
+      );
+    }
   }
 }

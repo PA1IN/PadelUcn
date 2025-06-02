@@ -15,83 +15,53 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.AuthController = void 0;
 const common_1 = require("@nestjs/common");
 const auth_service_1 = require("./auth.service");
-const create_user_dto_1 = require("../user/dto/create-user.dto");
-const swagger_1 = require("@nestjs/swagger");
-const jwt_auth_guard_1 = require("./guards/jwt-auth.guard");
-const login_dto_1 = require("./dto/login.dto");
-const user_service_1 = require("../user/user.service");
-const bcrypt = require("bcryptjs");
+const usuario_dto_1 = require("../usuario/dto/usuario.dto");
+const usuario_service_1 = require("../usuario/usuario.service");
+const api_response_util_1 = require("../../utils/api-response.util");
 let AuthController = class AuthController {
     authService;
-    userService;
-    constructor(authService, userService) {
+    usuarioService;
+    constructor(authService, usuarioService) {
         this.authService = authService;
-        this.userService = userService;
+        this.usuarioService = usuarioService;
     }
     async login(loginDto) {
-        const { rut, password } = loginDto;
-        const user = await this.userService.findByRut(rut);
-        if (!user) {
-            return {
-                statusCode: 401,
-                message: 'Credenciales inválidas: Usuario no encontrado',
-                success: false
-            };
+        try {
+            const result = await this.authService.login(loginDto);
+            return (0, api_response_util_1.CreateResponse)('Inicio de sesión exitoso', result, 'OK');
         }
-        const isPasswordValid = await bcrypt.compare(password, user.password);
-        if (!isPasswordValid) {
-            return {
-                statusCode: 401,
-                message: 'Credenciales inválidas: Contraseña incorrecta',
-                success: false
-            };
+        catch (error) {
+            return (0, api_response_util_1.CreateResponse)('Error al iniciar sesión', null, 'UNAUTHORIZED', error.message, false);
         }
-        const { password: _, ...userWithoutPassword } = user;
-        return this.authService.login(userWithoutPassword);
     }
     async register(createUserDto) {
-        return this.authService.register(createUserDto);
-    }
-    getProfile(req) {
-        return this.authService.getProfile(req.user.rut);
+        try {
+            const result = await this.authService.register(createUserDto);
+            return (0, api_response_util_1.CreateResponse)('Usuario registrado exitosamente', result, 'CREATED');
+        }
+        catch (error) {
+            return (0, api_response_util_1.CreateResponse)('Error al registrar usuario', null, 'BAD_REQUEST', error.message, false);
+        }
     }
 };
 exports.AuthController = AuthController;
 __decorate([
     (0, common_1.Post)('login'),
-    (0, swagger_1.ApiOperation)({ summary: 'Iniciar sesión' }),
-    (0, swagger_1.ApiResponse)({ status: 200, description: 'Usuario autenticado correctamente' }),
-    (0, swagger_1.ApiResponse)({ status: 401, description: 'Credenciales inválidas' }),
     __param(0, (0, common_1.Body)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [login_dto_1.LoginDto]),
+    __metadata("design:paramtypes", [usuario_dto_1.LoginUsuarioDto]),
     __metadata("design:returntype", Promise)
 ], AuthController.prototype, "login", null);
 __decorate([
     (0, common_1.Post)('register'),
-    (0, swagger_1.ApiOperation)({ summary: 'Registrar un nuevo usuario' }),
-    (0, swagger_1.ApiResponse)({ status: 201, description: 'Usuario registrado correctamente' }),
-    (0, swagger_1.ApiResponse)({ status: 400, description: 'Datos inválidos o usuario ya existente' }),
     __param(0, (0, common_1.Body)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [create_user_dto_1.CreateUserDto]),
+    __metadata("design:paramtypes", [usuario_dto_1.CreateUsuarioDto]),
     __metadata("design:returntype", Promise)
 ], AuthController.prototype, "register", null);
-__decorate([
-    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
-    (0, common_1.Get)('profile'),
-    (0, swagger_1.ApiOperation)({ summary: 'Obtener perfil del usuario autenticado' }),
-    (0, swagger_1.ApiResponse)({ status: 200, description: 'Perfil obtenido correctamente' }),
-    (0, swagger_1.ApiResponse)({ status: 401, description: 'No autorizado' }),
-    __param(0, (0, common_1.Request)()),
-    __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Object]),
-    __metadata("design:returntype", void 0)
-], AuthController.prototype, "getProfile", null);
 exports.AuthController = AuthController = __decorate([
-    (0, swagger_1.ApiTags)('auth'),
     (0, common_1.Controller)('auth'),
     __metadata("design:paramtypes", [auth_service_1.AuthService,
-        user_service_1.UserService])
+        usuario_service_1.UsuarioService])
 ], AuthController);
 //# sourceMappingURL=auth.controller.js.map

@@ -1,22 +1,24 @@
 import { Module } from '@nestjs/common';
 import { JwtModule } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
-import { UserModule } from '../user/user.module';
+import { TypeOrmModule } from '@nestjs/typeorm';
 import { AuthService } from './auth.service';
-import { AuthController } from './auth.controller';
 import { JwtStrategy } from './strategies/jwt.strategy';
-import { LocalStrategy } from './strategies/local.strategy';
+import { AuthController } from './auth.controller';
+import { Usuario } from '../usuario/entities/usuario.entity';
+import { UsuarioModule } from '../usuario/usuario.module';
 
 @Module({
   imports: [
-    UserModule,
     PassportModule,
     JwtModule.register({
-      secret: 'padelucn-secret-key', // En producción, usar variables de entorno
-      signOptions: { expiresIn: '24h' }, // Token válido por 24 horas
+      secret: process.env.JWT_SECRET || 'padelunicket', // Cambiar en producción
+      signOptions: { expiresIn: '24h' },
     }),
+    TypeOrmModule.forFeature([Usuario]),
+    UsuarioModule,
   ],
-  providers: [AuthService, LocalStrategy, JwtStrategy],
+  providers: [AuthService, JwtStrategy],
   controllers: [AuthController],
   exports: [AuthService],
 })

@@ -24,36 +24,36 @@ let BoletaEquipamiento = class BoletaEquipamiento {
 };
 exports.BoletaEquipamiento = BoletaEquipamiento;
 __decorate([
-    (0, typeorm_1.PrimaryGeneratedColumn)({ name: 'id_historial' }),
+    (0, typeorm_1.PrimaryGeneratedColumn)(),
     __metadata("design:type", Number)
 ], BoletaEquipamiento.prototype, "id", void 0);
 __decorate([
-    (0, typeorm_1.Column)({ nullable: false }),
+    (0, typeorm_1.Column)(),
     __metadata("design:type", Number)
 ], BoletaEquipamiento.prototype, "cantidad", void 0);
 __decorate([
-    (0, typeorm_1.Column)({ name: 'monto_total', nullable: false }),
+    (0, typeorm_1.Column)(),
     __metadata("design:type", Number)
 ], BoletaEquipamiento.prototype, "montoTotal", void 0);
 __decorate([
-    (0, typeorm_1.ManyToOne)(() => reserva_entity_1.Reserva, reserva => reserva.boletas),
-    (0, typeorm_1.JoinColumn)({ name: 'id_reserva' }),
+    (0, typeorm_1.ManyToOne)(() => reserva_entity_1.Reserva, (reserva) => reserva.boletas),
+    (0, typeorm_1.JoinColumn)({ name: 'idReserva' }),
     __metadata("design:type", reserva_entity_1.Reserva)
 ], BoletaEquipamiento.prototype, "reserva", void 0);
 __decorate([
-    (0, typeorm_1.Column)({ name: 'id_reserva', nullable: false }),
+    (0, typeorm_1.Column)(),
     __metadata("design:type", Number)
 ], BoletaEquipamiento.prototype, "idReserva", void 0);
 __decorate([
-    (0, typeorm_1.ManyToOne)(() => equipamiento_entity_1.Equipamiento, equipamiento => equipamiento.boletas),
-    (0, typeorm_1.JoinColumn)({ name: 'id_equipamiento' }),
+    (0, typeorm_1.ManyToOne)(() => equipamiento_entity_1.Equipamiento),
+    (0, typeorm_1.JoinColumn)({ name: 'idEquipamiento' }),
     __metadata("design:type", equipamiento_entity_1.Equipamiento)
 ], BoletaEquipamiento.prototype, "equipamiento", void 0);
 __decorate([
-    (0, typeorm_1.Column)({ name: 'id_equipamiento', nullable: false }),
+    (0, typeorm_1.Column)(),
     __metadata("design:type", Number)
 ], BoletaEquipamiento.prototype, "idEquipamiento", void 0);
 exports.BoletaEquipamiento = BoletaEquipamiento = __decorate([
-    (0, typeorm_1.Entity)({ name: 'boleta_equipamiento' })
+    (0, typeorm_1.Entity)()
 ], BoletaEquipamiento);
 //# sourceMappingURL=boleta-equipamiento.entity.js.map

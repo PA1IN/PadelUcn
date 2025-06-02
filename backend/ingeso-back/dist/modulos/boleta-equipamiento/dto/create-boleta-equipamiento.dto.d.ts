@@ -1,6 +1,6 @@
 export declare class CreateBoletaEquipamientoDto {
-    rut_usuario: string;
+    cantidad: number;
+    monto_total: number;
     id_reserva: number;
     id_equipamiento: number;
-    cantidad: number;
 }

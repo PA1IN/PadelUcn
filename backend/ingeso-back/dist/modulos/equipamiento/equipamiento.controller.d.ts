@@ -8,5 +8,5 @@ export declare class EquipamientoController {
     findAll(): Promise<import("../../interface/Apiresponce").ApiResponse<import("./entities/equipamiento.entity").Equipamiento[]>>;
     findOne(id: string): Promise<import("../../interface/Apiresponce").ApiResponse<import("./entities/equipamiento.entity").Equipamiento>>;
     update(id: string, updateEquipamientoDto: UpdateEquipamientoDto): Promise<import("../../interface/Apiresponce").ApiResponse<import("./entities/equipamiento.entity").Equipamiento>>;
-    remove(id: string): Promise<import("../../interface/Apiresponce").ApiResponse<null>>;
+    remove(id: string): Promise<import("../../interface/Apiresponce").ApiResponse<import("./entities/equipamiento.entity").Equipamiento>>;
 }

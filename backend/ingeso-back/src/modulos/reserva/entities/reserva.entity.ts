@@ -1,12 +1,13 @@
-import { Entity, Column, PrimaryGeneratedColumn, ManyToOne, OneToMany, JoinColumn } from 'typeorm';
-import { User } from '../../user/entities/user.entity';
-import { Cancha } from '../../canchas/entities/cancha.entity';
+import { Column, Entity, JoinColumn, ManyToOne, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
+import { Usuario } from '../../usuario/entities/usuario.entity';
+import { Cancha } from '../../cancha/entities/cancha.entity';
+import { HistorialReserva } from '../../historial-reserva/entities/historial-reserva.entity';
 import { BoletaEquipamiento } from '../../boleta-equipamiento/entities/boleta-equipamiento.entity';
-import { HistorialReserva } from './historial-reserva.entity';
+import { Jugador } from '../../jugador/entities/jugador.entity';
 
-@Entity({ name: 'reserva' })
+@Entity()
 export class Reserva {
-  @PrimaryGeneratedColumn({ name: 'id_reserva' })
+  @PrimaryGeneratedColumn()
   id: number;
 
   @Column({ type: 'date' })
@@ -17,18 +18,26 @@ export class Reserva {
 
   @Column({ type: 'time' })
   hora_termino: string;
+  @ManyToOne(() => Usuario, (usuario) => usuario.reservas)
+  @JoinColumn({ name: 'idUsuario' })
+  usuario: Usuario;
 
-  @ManyToOne(() => User, usuario => usuario.reservas)
-  @JoinColumn({ name: 'id_usuario' })
-  usuario: User;
+  @Column()
+  idUsuario: number;
 
-  @ManyToOne(() => Cancha, cancha => cancha.reservas)
-  @JoinColumn({ name: 'id_cancha' })
+  @ManyToOne(() => Cancha, (cancha) => cancha.reservas)
+  @JoinColumn({ name: 'idCancha' })
   cancha: Cancha;
 
-  @OneToMany(() => HistorialReserva, historial => historial.reserva)
-  historial: HistorialReserva[];
+  @Column()
+  idCancha: number;
 
-  @OneToMany(() => BoletaEquipamiento, boleta => boleta.reserva)
+  @OneToMany(() => HistorialReserva, (historial) => historial.reserva)
+  historiales: HistorialReserva[];
+
+  @OneToMany(() => BoletaEquipamiento, (boleta) => boleta.reserva)
   boletas: BoletaEquipamiento[];
+
+  @OneToMany(() => Jugador, (jugador) => jugador.reserva)
+  jugadores: Jugador[];
 }

@@ -12,30 +12,30 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.CreateBoletaEquipamientoDto = void 0;
 const class_validator_1 = require("class-validator");
 class CreateBoletaEquipamientoDto {
-    rut_usuario;
+    cantidad;
+    monto_total;
     id_reserva;
     id_equipamiento;
-    cantidad;
 }
 exports.CreateBoletaEquipamientoDto = CreateBoletaEquipamientoDto;
 __decorate([
-    (0, class_validator_1.IsNotEmpty)(),
-    (0, class_validator_1.IsString)(),
-    __metadata("design:type", String)
-], CreateBoletaEquipamientoDto.prototype, "rut_usuario", void 0);
-__decorate([
-    (0, class_validator_1.IsNotEmpty)(),
     (0, class_validator_1.IsNumber)(),
+    (0, class_validator_1.IsNotEmpty)(),
+    __metadata("design:type", Number)
+], CreateBoletaEquipamientoDto.prototype, "cantidad", void 0);
+__decorate([
+    (0, class_validator_1.IsNumber)(),
+    (0, class_validator_1.IsNotEmpty)(),
+    __metadata("design:type", Number)
+], CreateBoletaEquipamientoDto.prototype, "monto_total", void 0);
+__decorate([
+    (0, class_validator_1.IsNumber)(),
+    (0, class_validator_1.IsNotEmpty)(),
     __metadata("design:type", Number)
 ], CreateBoletaEquipamientoDto.prototype, "id_reserva", void 0);
 __decorate([
-    (0, class_validator_1.IsNotEmpty)(),
     (0, class_validator_1.IsNumber)(),
+    (0, class_validator_1.IsNotEmpty)(),
     __metadata("design:type", Number)
 ], CreateBoletaEquipamientoDto.prototype, "id_equipamiento", void 0);
-__decorate([
-    (0, class_validator_1.IsNotEmpty)(),
-    (0, class_validator_1.IsNumber)(),
-    __metadata("design:type", Number)
-], CreateBoletaEquipamientoDto.prototype, "cantidad", void 0);
 //# sourceMappingURL=create-boleta-equipamiento.dto.js.map

@@ -1,15 +1,19 @@
-import { IsNotEmpty, IsNumber, IsString } from 'class-validator';
+import { IsNotEmpty, IsNumber, IsString, IsOptional } from 'class-validator';
 
 export class CreateEquipamientoDto {
-  @IsNotEmpty()
   @IsString()
+  @IsNotEmpty()
+  nombre: string;
+
+  @IsString()
+  @IsNotEmpty()
   tipo: string;
 
-  @IsNotEmpty()
   @IsNumber()
-  costo: number;
-
   @IsNotEmpty()
-  @IsNumber()
   stock: number;
+
+  @IsNumber()
+  @IsNotEmpty()
+  costo: number;
 }

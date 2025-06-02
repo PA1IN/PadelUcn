@@ -12,18 +12,31 @@ const typeorm_1 = require("@nestjs/typeorm");
 const reserva_service_1 = require("./reserva.service");
 const reserva_controller_1 = require("./reserva.controller");
 const reserva_entity_1 = require("./entities/reserva.entity");
-const historial_reserva_entity_1 = require("./entities/historial-reserva.entity");
-const historial_reserva_service_1 = require("./historial-reserva/historial-reserva.service");
-const historial_reserva_controller_1 = require("./historial-reserva/historial-reserva.controller");
+const historial_reserva_module_1 = require("../historial-reserva/historial-reserva.module");
+const usuario_entity_1 = require("../usuario/entities/usuario.entity");
+const cancha_entity_1 = require("../cancha/entities/cancha.entity");
+const boleta_equipamiento_entity_1 = require("../boleta-equipamiento/entities/boleta-equipamiento.entity");
+const equipamiento_entity_1 = require("../equipamiento/entities/equipamiento.entity");
+const jugador_entity_1 = require("../jugador/entities/jugador.entity");
 let ReservaModule = class ReservaModule {
 };
 exports.ReservaModule = ReservaModule;
 exports.ReservaModule = ReservaModule = __decorate([
     (0, common_1.Module)({
-        imports: [typeorm_1.TypeOrmModule.forFeature([reserva_entity_1.Reserva, historial_reserva_entity_1.HistorialReserva])],
-        controllers: [reserva_controller_1.ReservaController, historial_reserva_controller_1.HistorialReservaController],
-        providers: [reserva_service_1.ReservaService, historial_reserva_service_1.HistorialReservaService],
-        exports: [reserva_service_1.ReservaService, historial_reserva_service_1.HistorialReservaService],
+        imports: [
+            typeorm_1.TypeOrmModule.forFeature([
+                reserva_entity_1.Reserva,
+                usuario_entity_1.Usuario,
+                cancha_entity_1.Cancha,
+                boleta_equipamiento_entity_1.BoletaEquipamiento,
+                equipamiento_entity_1.Equipamiento,
+                jugador_entity_1.Jugador
+            ]),
+            historial_reserva_module_1.HistorialReservaModule
+        ],
+        controllers: [reserva_controller_1.ReservaController],
+        providers: [reserva_service_1.ReservaService],
+        exports: [reserva_service_1.ReservaService]
     })
 ], ReservaModule);
 //# sourceMappingURL=reserva.module.js.map

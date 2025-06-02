@@ -1,7 +1,27 @@
 import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
 import { BoletaEquipamientoService } from './boleta-equipamiento.service';
 import { CreateBoletaEquipamientoDto } from './dto/create-boleta-equipamiento.dto';
-import { UpdateBoletaEquipamientoDto } from './dto/update-boleta-equipamiento.dto';
+// Define it as a type to avoid import issues
+import { IsNumber, IsOptional } from 'class-validator';
+
+// Proper implementation of UpdateDTO with optional fields
+export class UpdateBoletaEquipamientoDto {
+  @IsNumber()
+  @IsOptional()
+  cantidad?: number;
+
+  @IsNumber()
+  @IsOptional()
+  monto_total?: number;
+
+  @IsNumber()
+  @IsOptional()
+  id_reserva?: number;
+
+  @IsNumber()
+  @IsOptional()
+  id_equipamiento?: number;
+}
 
 @Controller('boleta-equipamiento')
 export class BoletaEquipamientoController {

@@ -19,10 +19,13 @@ const typeorm_2 = require("typeorm");
 const boleta_equipamiento_entity_1 = require("./entities/boleta-equipamiento.entity");
 const api_response_util_1 = require("../../utils/api-response.util");
 const equipamiento_service_1 = require("../equipamiento/equipamiento.service");
+const reserva_entity_1 = require("../reserva/entities/reserva.entity");
 let BoletaEquipamientoService = class BoletaEquipamientoService {
+    reservaRepository;
     boletaRepository;
     equipamientoService;
-    constructor(boletaRepository, equipamientoService) {
+    constructor(reservaRepository, boletaRepository, equipamientoService) {
+        this.reservaRepository = reservaRepository;
         this.boletaRepository = boletaRepository;
         this.equipamientoService = equipamientoService;
     }
@@ -36,7 +39,25 @@ let BoletaEquipamientoService = class BoletaEquipamientoService {
             if (equipamiento.stock < createBoletaDto.cantidad) {
                 throw new Error(`Stock insuficiente para el equipamiento ${equipamiento.tipo}`);
             }
-            const newBoleta = this.boletaRepository.create(createBoletaDto);
+            const reserva = await this.reservaRepository.findOne({
+                where: { id: createBoletaDto.id_reserva },
+                relations: ['cancha'],
+            });
+            if (!reserva) {
+                throw new Error('Reserva no encontrada');
+            }
+            console.log('Valor cancha:', reserva.cancha?.valor);
+            const valorEquipamiento = equipamiento.costo;
+            const valorCancha = reserva.cancha.valor;
+            const monto_total = valorCancha + (valorEquipamiento * createBoletaDto.cantidad);
+            console.log('Valor Equipamiento:', valorEquipamiento);
+            console.log('Valor Total:', monto_total);
+            const newBoleta = this.boletaRepository.create({
+                idReserva: createBoletaDto.id_reserva,
+                idEquipamiento: createBoletaDto.id_equipamiento,
+                cantidad: createBoletaDto.cantidad,
+                montoTotal: monto_total
+            });
             const savedBoleta = await this.boletaRepository.save(newBoleta);
             await this.equipamientoService.actualizarStock(equipamiento.id, -createBoletaDto.cantidad);
             return (0, api_response_util_1.CreateResponse)('Boleta de equipamiento creada exitosamente', savedBoleta, 'CREATED');
@@ -48,7 +69,7 @@ let BoletaEquipamientoService = class BoletaEquipamientoService {
     async findAll() {
         try {
             const boletas = await this.boletaRepository.find({
-                relations: ['usuario', 'reserva', 'equipamiento'],
+                relations: ['reserva', 'equipamiento'],
             });
             return (0, api_response_util_1.CreateResponse)('Boletas de equipamiento obtenidas exitosamente', boletas, 'OK');
         }
@@ -90,23 +111,26 @@ let BoletaEquipamientoService = class BoletaEquipamientoService {
         try {
             const boleta = await this.boletaRepository.findOne({
                 where: { id: id },
-                relations: ['equipamiento'],
+                relations: ['equipamiento', 'reserva', 'reserva.cancha'],
             });
             if (!boleta) {
                 throw new Error(`No se encontró una boleta de equipamiento con el ID ${id}`);
             }
             if (updateBoletaDto.cantidad && updateBoletaDto.cantidad !== boleta.cantidad) {
-                const equipamientoResponse = await this.equipamientoService.findOne(boleta.equipamiento.id);
-                const equipamiento = equipamientoResponse.data;
-                if (updateBoletaDto.cantidad > boleta.cantidad && equipamiento && equipamiento.stock < (updateBoletaDto.cantidad - boleta.cantidad)) {
+                const equipamiento = boleta.equipamiento;
+                if (updateBoletaDto.cantidad > boleta.cantidad && equipamiento.stock < (updateBoletaDto.cantidad - boleta.cantidad)) {
                     throw new Error(`Stock insuficiente para aumentar la cantidad de equipamiento`);
                 }
-                await this.equipamientoService.actualizarStock(boleta.equipamiento.id, updateBoletaDto.cantidad - boleta.cantidad);
+                await this.equipamientoService.actualizarStock(equipamiento.id, updateBoletaDto.cantidad - boleta.cantidad);
             }
-            await this.boletaRepository.update(id, updateBoletaDto);
+            const monto_total = boleta.reserva.cancha.valor + ((updateBoletaDto.cantidad || boleta.cantidad));
+            await this.boletaRepository.update(id, {
+                ...updateBoletaDto,
+                montoTotal: monto_total
+            });
             const updatedBoleta = await this.boletaRepository.findOne({
                 where: { id: id },
-                relations: ['usuario', 'reserva', 'equipamiento'],
+                relations: ['reserva', 'equipamiento'],
             });
             if (!updatedBoleta) {
                 throw new Error(`Error al obtener boleta actualizada con ID ${id}`);
@@ -144,8 +168,10 @@ let BoletaEquipamientoService = class BoletaEquipamientoService {
 exports.BoletaEquipamientoService = BoletaEquipamientoService;
 exports.BoletaEquipamientoService = BoletaEquipamientoService = __decorate([
     (0, common_1.Injectable)(),
-    __param(0, (0, typeorm_1.InjectRepository)(boleta_equipamiento_entity_1.BoletaEquipamiento)),
+    __param(0, (0, typeorm_1.InjectRepository)(reserva_entity_1.Reserva)),
+    __param(1, (0, typeorm_1.InjectRepository)(boleta_equipamiento_entity_1.BoletaEquipamiento)),
     __metadata("design:paramtypes", [typeorm_2.Repository,
+        typeorm_2.Repository,
         equipamiento_service_1.EquipamientoService])
 ], BoletaEquipamientoService);
 //# sourceMappingURL=boleta-equipamiento.service.js.map

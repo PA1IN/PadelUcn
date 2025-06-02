@@ -1,6 +1,11 @@
 import { BoletaEquipamientoService } from './boleta-equipamiento.service';
 import { CreateBoletaEquipamientoDto } from './dto/create-boleta-equipamiento.dto';
-import { UpdateBoletaEquipamientoDto } from './dto/update-boleta-equipamiento.dto';
+export declare class UpdateBoletaEquipamientoDto {
+    cantidad?: number;
+    monto_total?: number;
+    id_reserva?: number;
+    id_equipamiento?: number;
+}
 export declare class BoletaEquipamientoController {
     private readonly boletaEquipamientoService;
     constructor(boletaEquipamientoService: BoletaEquipamientoService);

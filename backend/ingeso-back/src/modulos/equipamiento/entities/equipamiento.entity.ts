@@ -1,22 +1,19 @@
-import { Entity, PrimaryGeneratedColumn, Column, OneToMany } from 'typeorm';
-import { BoletaEquipamiento } from '../../boleta-equipamiento/entities/boleta-equipamiento.entity';
+import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
 
-@Entity({ name: 'equipamiento' })
+@Entity()
 export class Equipamiento {
-  @PrimaryGeneratedColumn({ name: 'id_equipamiento' })
+  @PrimaryGeneratedColumn()
   id: number;
-  @Column({ nullable: false })
+
+  @Column()
   tipo: string;
 
-  @Column({ nullable: false })
-  costo: number;
-
-  @Column({ nullable: false })
-  stock: number;
-  
-  @Column({ nullable: false })
+  @Column()
   nombre: string;
 
-  @OneToMany(() => BoletaEquipamiento, boletaEquipamiento => boletaEquipamiento.equipamiento)
-  boletas: BoletaEquipamiento[];
+  @Column()
+  stock: number;
+
+  @Column()
+  costo: number;
 }

@@ -2,7 +2,9 @@ import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { CreateBoletaEquipamientoDto } from './dto/create-boleta-equipamiento.dto';
-import { UpdateBoletaEquipamientoDto } from './dto/update-boleta-equipamiento.dto';
+
+// Import from controller to ensure we're using the same definition
+import { UpdateBoletaEquipamientoDto } from './boleta-equipamiento.controller';
 import { BoletaEquipamiento } from './entities/boleta-equipamiento.entity';
 import { ApiResponse } from '../../interface/Apiresponce';
 import { CreateResponse } from '../../utils/api-response.util';

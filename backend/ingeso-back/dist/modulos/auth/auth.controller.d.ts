@@ -1,16 +1,26 @@
 import { AuthService } from './auth.service';
-import { CreateUserDto } from '../user/dto/create-user.dto';
-import { LoginDto } from './dto/login.dto';
-import { UserService } from '../user/user.service';
+import { LoginUsuarioDto, CreateUsuarioDto } from '../usuario/dto/usuario.dto';
+import { UsuarioService } from '../usuario/usuario.service';
 export declare class AuthController {
-    private authService;
-    private userService;
-    constructor(authService: AuthService, userService: UserService);
-    login(loginDto: LoginDto): Promise<import("../../interface/Apiresponce").ApiResponse<any> | {
-        statusCode: number;
-        message: string;
-        success: boolean;
-    }>;
-    register(createUserDto: CreateUserDto): Promise<import("../../interface/Apiresponce").ApiResponse<import("../user/entities/user.entity").User>>;
-    getProfile(req: any): Promise<import("../../interface/Apiresponce").ApiResponse<import("../user/entities/user.entity").User>>;
+    private readonly authService;
+    private readonly usuarioService;
+    constructor(authService: AuthService, usuarioService: UsuarioService);
+    login(loginDto: LoginUsuarioDto): Promise<import("../../interface/Apiresponce").ApiResponse<null> | import("../../interface/Apiresponce").ApiResponse<{
+        usuario: any;
+        access_token: string;
+    }>>;
+    register(createUserDto: CreateUsuarioDto): Promise<import("../../interface/Apiresponce").ApiResponse<null> | import("../../interface/Apiresponce").ApiResponse<{
+        usuario: {
+            id: number;
+            rut: string;
+            nombre: string;
+            correo: string;
+            telefono: string;
+            saldo: number;
+            isAdmin: boolean;
+            reservas: import("../reserva/entities/reserva.entity").Reserva[];
+            historiales: import("../historial-reserva/entities/historial-reserva.entity").HistorialReserva[];
+        };
+        access_token: string;
+    }>>;
 }

@@ -1,36 +1,82 @@
-import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
+import { 
+  HttpException, 
+  HttpStatus, 
+  Injectable, 
+  BadRequestException,
+  ForbiddenException,
+  NotFoundException 
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
-import { CreateReservaDto } from './dto/create-reserva.dto';
-import { UpdateReservaDto } from './dto/update-reserva.dto';
-import { Cancha } from '../canchas/entities/cancha.entity';
-import { User } from '../user/entities/user.entity';
+import { Between, LessThanOrEqual, MoreThanOrEqual, Repository } from 'typeorm';
+import { CreateReservaDto, UpdateReservaDto } from './dto/reserva.dto';
+import { Cancha } from '../cancha/entities/cancha.entity';
+import { Usuario } from '../usuario/entities/usuario.entity';
 import { Reserva } from './entities/reserva.entity';
-import { ApiResponse } from '../../interface/Apiresponce';
 import { CreateResponse } from '../../utils/api-response.util';
-import { HistorialReservaService } from './historial-reserva/historial-reserva.service';
+import { HistorialReservaService } from '../historial-reserva/historial-reserva.service';
 import { BoletaEquipamiento } from '../boleta-equipamiento/entities/boleta-equipamiento.entity';
 import { Equipamiento } from '../equipamiento/entities/equipamiento.entity';
+import { Jugador } from '../jugador/entities/jugador.entity';
+import { ApiResponse } from '../../interface/Apiresponce';
 
 @Injectable()
 export class ReservaService {
   constructor(
     @InjectRepository(BoletaEquipamiento)
     private boletaEquipamientoRepository: Repository<BoletaEquipamiento>,
-    @InjectRepository(User)
-    private usuarioRepository: Repository<User>,
+    @InjectRepository(Usuario)
+    private usuarioRepository: Repository<Usuario>,
     @InjectRepository(Cancha)
     private canchaRespository: Repository<Cancha>,
     @InjectRepository(Reserva)
     private reservaRepository: Repository<Reserva>,
+    @InjectRepository(Equipamiento)
+    private equipamientoRepository: Repository<Equipamiento>,
+    @InjectRepository(Jugador)
+    private jugadorRepository: Repository<Jugador>,
     private historialReservaService: HistorialReservaService,
   ) {}
-
-  async create(createReservaDto: CreateReservaDto): Promise<ApiResponse<Reserva>> {
+  async create(createReservaDto: CreateReservaDto, isAdmin: boolean = false): Promise<ApiResponse<Reserva>> {
     try {
       const fecha = new Date(createReservaDto.fecha);
       const fechaFormateada = new Date(fecha.getFullYear(), fecha.getMonth(), fecha.getDate());
+      const today = new Date();
+      const dayOfWeek = fecha.getDay(); // 0 = domingo, 1 = lunes, ..., 6 = sábado
 
+      // 1. Validar que la reserva sea de lunes a viernes
+      if (dayOfWeek === 0 || dayOfWeek === 6) {
+        throw new BadRequestException('Las reservas solo están disponibles de lunes a viernes');
+      }
+
+      // 2. Validar que la reserva sea con 1 semana de anticipación (a menos que sea admin)
+      if (!isAdmin) {
+        const oneWeekFromNow = new Date();
+        oneWeekFromNow.setDate(today.getDate() + 7);
+        
+        if (fecha < oneWeekFromNow) {
+          throw new BadRequestException('Las reservas deben hacerse con al menos 1 semana de anticipación');
+        }
+      }
+
+      // 3. Validar que el horario sea entre 8:00 y 20:00
+      const horaInicio = createReservaDto.hora_inicio.split(':').map(Number);
+      const horaTermino = createReservaDto.hora_termino.split(':').map(Number);
+      
+      const horaInicioNum = horaInicio[0] + horaInicio[1]/60;
+      const horaTerminoNum = horaTermino[0] + horaTermino[1]/60;
+      
+      if (horaInicioNum < 8 || horaTerminoNum > 20) {
+        throw new BadRequestException('El horario de reservas es de 08:00 a 20:00');
+      }
+
+      // 4. Validar que la duración sea entre 90 y 180 minutos
+      const duracionMinutos = (horaTerminoNum - horaInicioNum) * 60;
+      
+      if (duracionMinutos < 90 || duracionMinutos > 180) {
+        throw new BadRequestException('La duración de la reserva debe ser entre 90 y 180 minutos');
+      }
+
+      // 5. Verificar disponibilidad de la cancha
       const existingReservas = await this.reservaRepository
         .createQueryBuilder('reserva')
         .innerJoin('reserva.cancha', 'cancha')
@@ -43,18 +89,65 @@ export class ReservaService {
         .getMany();
 
       if (existingReservas.length > 0) {
-        throw new Error(`La cancha #${createReservaDto.numero_cancha} no está disponible en el horario solicitado`);
+        throw new BadRequestException(`La cancha #${createReservaDto.numero_cancha} no está disponible en el horario solicitado`);
       }
+
+      // 6. Obtener el usuario
       const usuario = await this.usuarioRepository.findOne({ where: { rut: createReservaDto.rut_usuario } });
       if (!usuario) {
-        throw new Error(`Usuario con rut ${createReservaDto.rut_usuario} no encontrado`);
+        throw new BadRequestException(`Usuario con rut ${createReservaDto.rut_usuario} no encontrado`);
       }
 
+      // 7. Verificar que el usuario no exceda 180 min de reserva diarios
+      if (!isAdmin) {
+        const reservasUsuarioDia = await this.reservaRepository.find({
+          where: {
+            usuario: { id: usuario.id },
+            fecha: fechaFormateada
+          }
+        });
+
+        let minutosReservadosHoy = 0;
+        for (const reserva of reservasUsuarioDia) {
+          const inicio = reserva.hora_inicio.split(':').map(Number);
+          const fin = reserva.hora_termino.split(':').map(Number);
+          const minutos = ((fin[0] * 60 + fin[1]) - (inicio[0] * 60 + inicio[1]));
+          minutosReservadosHoy += minutos;
+        }
+
+        if (minutosReservadosHoy + duracionMinutos > 180) {
+          throw new BadRequestException(`No puede reservar más de 180 minutos por día (ya tiene ${minutosReservadosHoy} minutos reservados)`);
+        }
+      }
+
+      // 8. Verificar que el usuario no tenga reservas concurrentes
+      const reservasConcurrentes = await this.reservaRepository
+        .createQueryBuilder('reserva')
+        .where('reserva.idUsuario = :idUsuario', { idUsuario: usuario.id })
+        .andWhere('reserva.fecha = :fecha', { fecha: fechaFormateada })
+        .andWhere('(reserva.hora_inicio < :horaTermino AND reserva.hora_termino > :horaInicio)', {
+          horaInicio: createReservaDto.hora_inicio,
+          horaTermino: createReservaDto.hora_termino,
+        })
+        .getMany();
+      
+      if (reservasConcurrentes.length > 0) {
+        throw new BadRequestException('Ya tiene una reserva en ese horario');
+      }
+
+      // 9. Obtener la cancha
       const cancha = await this.canchaRespository.findOne({ where: { numero: createReservaDto.numero_cancha } });
       if (!cancha) {
-        throw new Error(`Cancha número ${createReservaDto.numero_cancha} no encontrada`);
+        throw new BadRequestException(`Cancha número ${createReservaDto.numero_cancha} no encontrada`);
+      }      // 10. Calcular el costo de la reserva (precio por hora x duración)
+      const costoReserva = cancha.valor * (duracionMinutos / 60);
+
+      // 11. Verificar que el usuario tenga saldo suficiente
+      if (!isAdmin && usuario.saldo < costoReserva) {
+        throw new BadRequestException(`Saldo insuficiente para realizar la reserva. Saldo actual: $${usuario.saldo}, Costo: $${costoReserva}`);
       }
 
+      // 12. Crear la reserva
       const newReserva = this.reservaRepository.create({
         fecha: fechaFormateada,
         hora_inicio: createReservaDto.hora_inicio,
@@ -65,27 +158,103 @@ export class ReservaService {
 
       const savedReserva = await this.reservaRepository.save(newReserva);
 
-      const reservaCompleta = await this.reservaRepository.findOne({
-        where: { id: savedReserva.id },
-        relations: ['usuario', 'cancha'],
-      });
-
+      // 13. Procesar el pago (descontar del saldo) si no es admin
+      if (!isAdmin) {
+        usuario.saldo -= costoReserva;
+        await this.usuarioRepository.save(usuario);
+      }      // 14. Crear el historial de la reserva
       try {
         await this.historialReservaService.create({
           estado: 'Pendiente',
           idReserva: savedReserva.id,
-          idUsuario: reservaCompleta!.usuario.id
+          idUsuario: usuario.id
         });
       } catch (historialError) {
         console.error('Error al crear historial de reserva:', historialError);
       }
 
+      // 15. Procesar los jugadores si se proporcionaron
+      if (Array.isArray(createReservaDto.jugadores) && createReservaDto.jugadores.length > 0) {
+        for (const jugadorDto of createReservaDto.jugadores) {
+          const nuevoJugador = this.jugadorRepository.create({
+            nombre: jugadorDto.nombre,
+            apellido: jugadorDto.apellido,
+            rut: jugadorDto.rut,
+            edad: jugadorDto.edad,
+            idReserva: savedReserva.id
+          });
+          
+          await this.jugadorRepository.save(nuevoJugador);
+        }
+      }      // 16. Procesar el equipamiento si se proporcionó
+      let costoTotalEquipamiento = 0;
+      if (Array.isArray(createReservaDto.equipamiento) && createReservaDto.equipamiento.length > 0) {
+        for (const item of createReservaDto.equipamiento) {
+          const equipamiento = await this.equipamientoRepository.findOne({
+            where: { id: item.id_equipamiento }
+          });
+
+          if (!equipamiento) {
+            throw new BadRequestException(`Equipamiento con ID ${item.id_equipamiento} no encontrado`);
+          }
+
+          // Verificar stock
+          if (equipamiento.stock < item.cantidad) {
+            throw new BadRequestException(`Stock insuficiente para el equipamiento ${equipamiento.nombre}. Disponible: ${equipamiento.stock}`);
+          }
+
+          const costoItem = equipamiento.costo * item.cantidad;
+          costoTotalEquipamiento += costoItem;
+
+          // Crear boleta de equipamiento
+          const nuevaBoleta = this.boletaEquipamientoRepository.create({
+            reserva: { id: savedReserva.id },
+            equipamiento: { id: item.id_equipamiento },
+            cantidad: item.cantidad,
+            montoTotal: costoItem,
+          });
+
+          await this.boletaEquipamientoRepository.save(nuevaBoleta);
+
+          // Actualizar stock
+          equipamiento.stock -= item.cantidad;
+          await this.equipamientoRepository.save(equipamiento);
+        }
+
+        // Verificar saldo para el equipamiento
+        if (!isAdmin && usuario.saldo < costoTotalEquipamiento) {
+          // Revertir la reserva y lanzar error
+          await this.reservaRepository.delete(savedReserva.id);
+          throw new BadRequestException(`Saldo insuficiente para el equipamiento. Saldo actual: $${usuario.saldo}, Costo: $${costoTotalEquipamiento}`);
+        }
+
+        // Procesar el pago del equipamiento
+        if (!isAdmin && costoTotalEquipamiento > 0) {
+          usuario.saldo -= costoTotalEquipamiento;
+          await this.usuarioRepository.save(usuario);
+        }
+      }
+
+      // Obtener la reserva completa con todas las relaciones
+      const reservaCompleta = await this.reservaRepository.findOne({
+        where: { id: savedReserva.id },
+        relations: ['usuario', 'cancha', 'boletas', 'boletas.equipamiento', 'jugadores'],
+      });
+
+      if (!reservaCompleta) {
+        throw new Error('Error al cargar la reserva completa');
+      }
+
       return CreateResponse(
         `Reserva #${savedReserva.id} creada exitosamente para la cancha #${createReservaDto.numero_cancha}`,
-        reservaCompleta!,
+        reservaCompleta,
         'CREATED'
       );
     } catch (error) {
+      if (error instanceof BadRequestException) {
+        throw error;
+      }
+      
       throw new HttpException(
         CreateResponse('Error al crear la reserva', null, 'BAD_REQUEST', error.message),
         HttpStatus.BAD_REQUEST,
@@ -162,99 +331,269 @@ export class ReservaService {
         HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }
-  }
-  async update(id: number, updateReservaDto: UpdateReservaDto): Promise<ApiResponse<Reserva>> {
+  }  async update(id: number, updateReservaDto: UpdateReservaDto, isAdmin: boolean = false): Promise<ApiResponse<Reserva>> {
     try {
       const reserva = await this.reservaRepository.findOne({
         where: { id },
-        relations: ['usuario', 'cancha'],
+        relations: ['usuario', 'cancha', 'boletas', 'boletas.equipamiento', 'jugadores'],
       });
 
       if (!reserva) {
-        throw new Error(`No se encontró una reserva con el ID ${id}`);
+        throw new BadRequestException(`No se encontró una reserva con el ID ${id}`);
       }
 
-      // Validar disponibilidad si se modifica fecha, hora o cancha
+      const today = new Date();
+      let fechaFormateada = reserva.fecha;
+      let horaInicio = reserva.hora_inicio;
+      let horaTermino = reserva.hora_termino;
+      let numeroCancha = reserva.cancha.numero;
+      
+      // 1. Validar si se modifica fecha, hora o cancha
       if (updateReservaDto.fecha || updateReservaDto.hora_inicio || updateReservaDto.hora_termino || updateReservaDto.numero_cancha) {
-        const numeroCancha = updateReservaDto.numero_cancha || reserva.cancha.numero;
-        const fechaStr = updateReservaDto.fecha || reserva.fecha.toISOString().split('T')[0];
-        const fecha = new Date(fechaStr);
-        const fechaFormateada = new Date(fecha.getFullYear(), fecha.getMonth(), fecha.getDate());
-        const horaInicio = updateReservaDto.hora_inicio || reserva.hora_inicio;
-        const horaTermino = updateReservaDto.hora_termino || reserva.hora_termino;
-
+        if (updateReservaDto.fecha) {
+          const fecha = new Date(updateReservaDto.fecha);
+          fechaFormateada = new Date(fecha.getFullYear(), fecha.getMonth(), fecha.getDate());
+          
+          // Validar que la fecha sea de lunes a viernes
+          const dayOfWeek = fecha.getDay(); // 0 = domingo, 1 = lunes, ..., 6 = sábado
+          if (dayOfWeek === 0 || dayOfWeek === 6) {
+            throw new BadRequestException('Las reservas solo están disponibles de lunes a viernes');
+          }
+          
+          // Validar que la reserva sea con 1 semana de anticipación (a menos que sea admin)
+          if (!isAdmin) {
+            const oneWeekFromNow = new Date();
+            oneWeekFromNow.setDate(today.getDate() + 7);
+            
+            if (fecha < oneWeekFromNow) {
+              throw new BadRequestException('Las reservas deben modificarse con al menos 1 semana de anticipación');
+            }
+          }
+        }
+        
+        if (updateReservaDto.hora_inicio) {
+          horaInicio = updateReservaDto.hora_inicio;
+        }
+        
+        if (updateReservaDto.hora_termino) {
+          horaTermino = updateReservaDto.hora_termino;
+        }
+        
+        // Validar que el horario sea entre 8:00 y 20:00
+        const horaInicioArr = horaInicio.split(':').map(Number);
+        const horaTerminoArr = horaTermino.split(':').map(Number);
+        
+        const horaInicioNum = horaInicioArr[0] + horaInicioArr[1]/60;
+        const horaTerminoNum = horaTerminoArr[0] + horaTerminoArr[1]/60;
+        
+        if (horaInicioNum < 8 || horaTerminoNum > 20) {
+          throw new BadRequestException('El horario de reservas es de 08:00 a 20:00');
+        }
+        
+        // Validar que la duración sea entre 90 y 180 minutos
+        const duracionMinutos = (horaTerminoNum - horaInicioNum) * 60;
+        
+        if (duracionMinutos < 90 || duracionMinutos > 180) {
+          throw new BadRequestException('La duración de la reserva debe ser entre 90 y 180 minutos');
+        }
+        
+        if (updateReservaDto.numero_cancha) {
+          numeroCancha = updateReservaDto.numero_cancha;
+        }
+        
+        // Verificar disponibilidad
         const conflictos = await this.reservaRepository.createQueryBuilder('reserva')
           .innerJoin('reserva.cancha', 'cancha')
           .where('cancha.numero = :numeroCancha', { numeroCancha })
           .andWhere('reserva.fecha = :fecha', { fecha: fechaFormateada })
-          .andWhere('(reserva.hora_inicio < :horaTermino AND reserva.hora_termino > :horaInicio)')
+          .andWhere('(reserva.hora_inicio < :horaTermino AND reserva.hora_termino > :horaInicio)', {
+            horaInicio,
+            horaTermino,
+          })
           .andWhere('reserva.id != :id', { id })
-          .setParameters({ horaInicio, horaTermino })
           .getMany();
 
         if (conflictos.length > 0) {
-          throw new Error(`La cancha #${numeroCancha} no está disponible en ese horario`);
+          throw new BadRequestException(`La cancha #${numeroCancha} no está disponible en ese horario`);
+        }
+        
+        // Verificar que el usuario no exceda 180 min de reserva diarios
+        if (!isAdmin) {          const reservasUsuarioDia = await this.reservaRepository
+            .createQueryBuilder('reserva')
+            .where('reserva.idUsuario = :idUsuario', { idUsuario: reserva.usuario.id })
+            .andWhere('reserva.fecha = :fecha', { fecha: fechaFormateada })
+            .andWhere('reserva.id != :id', { id })
+            .getMany();
+
+          let minutosReservadosHoy = 0;
+          for (const otraReserva of reservasUsuarioDia) {
+            const inicio = otraReserva.hora_inicio.split(':').map(Number);
+            const fin = otraReserva.hora_termino.split(':').map(Number);
+            const minutos = ((fin[0] * 60 + fin[1]) - (inicio[0] * 60 + inicio[1]));
+            minutosReservadosHoy += minutos;
+          }
+          
+          // Agregar minutos de esta reserva modificada
+          const nuevaInicioArr = horaInicio.split(':').map(Number);
+          const nuevaFinArr = horaTermino.split(':').map(Number);
+          const nuevaDuracion = ((nuevaFinArr[0] * 60 + nuevaFinArr[1]) - (nuevaInicioArr[0] * 60 + nuevaInicioArr[1]));
+          
+          if (minutosReservadosHoy + nuevaDuracion > 180) {
+            throw new BadRequestException(
+              `No puede reservar más de 180 minutos por día (ya tiene ${minutosReservadosHoy} minutos reservados)`
+            );
+          }
+        }
+        
+        // Verificar que el usuario no tenga reservas concurrentes
+        if (!isAdmin) {
+          const reservasConcurrentes = await this.reservaRepository
+            .createQueryBuilder('reserva')
+            .where('reserva.idUsuario = :idUsuario', { idUsuario: reserva.usuario.id })
+            .andWhere('reserva.id != :id', { id })
+            .andWhere('reserva.fecha = :fecha', { fecha: fechaFormateada })
+            .andWhere('(reserva.hora_inicio < :horaTermino AND reserva.hora_termino > :horaInicio)', {
+              horaInicio,
+              horaTermino,
+            })
+            .getMany();
+          
+          if (reservasConcurrentes.length > 0) {
+            throw new BadRequestException('Ya tiene una reserva en ese horario');
+          }
+        }
+
+        // Asignar nueva cancha si se cambia
+        if (updateReservaDto.numero_cancha) {
+          const nuevaCancha = await this.canchaRespository.findOne({
+            where: { numero: updateReservaDto.numero_cancha }
+          });
+
+          if (!nuevaCancha) {
+            throw new BadRequestException(`Cancha número ${updateReservaDto.numero_cancha} no encontrada`);
+          }
+
+          reserva.cancha = nuevaCancha;
+        }
+
+        // Actualizar campos
+        if (updateReservaDto.fecha) {
+          reserva.fecha = fechaFormateada;
+        }
+        if (updateReservaDto.hora_inicio) {
+          reserva.hora_inicio = horaInicio;
+        }
+        if (updateReservaDto.hora_termino) {
+          reserva.hora_termino = horaTermino;
+        }
+
+        // Guardar cambios en la reserva
+        await this.reservaRepository.save(reserva);
+
+        // Registrar cambio en historial
+        try {
+          await this.historialReservaService.create({
+            estado: 'Modificado',
+            idReserva: id,
+            idUsuario: reserva.usuario.id
+          });
+        } catch (historialError) {
+          console.error('Error al crear historial de modificación:', historialError);
         }
       }
 
-      // Asignar nueva cancha si se cambia
-      if (updateReservaDto.numero_cancha) {
-        const nuevaCancha = await this.canchaRespository.findOne({
-          where: { numero: updateReservaDto.numero_cancha }
-        });
-
-        if (!nuevaCancha) {
-          throw new Error(`Cancha número ${updateReservaDto.numero_cancha} no encontrada`);
+      // Actualizar jugadores si se proporcionaron
+      if (Array.isArray(updateReservaDto.jugadores)) {
+        // Eliminar jugadores anteriores
+        await this.jugadorRepository.delete({ idReserva: id });
+        
+        // Agregar nuevos jugadores
+        for (const jugadorDto of updateReservaDto.jugadores) {
+          const nuevoJugador = this.jugadorRepository.create({
+            nombre: jugadorDto.nombre,
+            apellido: jugadorDto.apellido,
+            rut: jugadorDto.rut,
+            edad: jugadorDto.edad,
+            idReserva: id
+          });
+          
+          await this.jugadorRepository.save(nuevoJugador);
         }
-
-        reserva.cancha = nuevaCancha;
       }
-
-      // Actualizar campos si vienen
-      if (updateReservaDto.fecha) {
-        const fecha = new Date(updateReservaDto.fecha);
-        reserva.fecha = new Date(fecha.getFullYear(), fecha.getMonth(), fecha.getDate());
-      }
-      if (updateReservaDto.hora_inicio) {
-        reserva.hora_inicio = updateReservaDto.hora_inicio;
-      }
-      if (updateReservaDto.hora_termino) {
-        reserva.hora_termino = updateReservaDto.hora_termino;
-      }
-
-      // Guardar reserva con cambios de fecha/hora/cancha
-      await this.reservaRepository.save(reserva);
 
       // Actualizar equipamiento
       if (Array.isArray(updateReservaDto.equipamiento)) {
+        // Obtener boletas actuales para devolver stock
+        const boletasActuales = await this.boletaEquipamientoRepository.find({
+          where: { idReserva: id },
+          relations: ['equipamiento']
+        });
+        
+        // Devolver stock al inventario
+        for (const boleta of boletasActuales) {
+          const equipamiento = await this.equipamientoRepository.findOne({
+            where: { id: boleta.equipamiento.id }
+          });
+          
+          if (equipamiento) {
+            equipamiento.stock += boleta.cantidad;
+            await this.equipamientoRepository.save(equipamiento);
+          }
+        }
+        
         // Eliminar boletas anteriores
-        await this.boletaEquipamientoRepository.delete({ reserva: { id } });
+        await this.boletaEquipamientoRepository.delete({ idReserva: id });
 
+        // Procesar nuevo equipamiento
+        let costoTotalEquipamiento = 0;
         for (const item of updateReservaDto.equipamiento) {
-          const { id: idEquip, cantidad } = item;
-
-          const equipamiento = await this.boletaEquipamientoRepository.manager.getRepository(Equipamiento).findOne({
-            where: { id: idEquip }
+          const equipamiento = await this.equipamientoRepository.findOne({
+            where: { id: item.id_equipamiento }
           });
 
           if (!equipamiento) {
-            throw new Error(`Equipamiento con ID ${idEquip} no encontrado`);
+            throw new BadRequestException(`Equipamiento con ID ${item.id_equipamiento} no encontrado`);
           }
 
+          // Verificar stock
+          if (equipamiento.stock < item.cantidad) {
+            throw new BadRequestException(`Stock insuficiente para el equipamiento ${equipamiento.nombre}. Disponible: ${equipamiento.stock}`);
+          }
+
+          const costoItem = equipamiento.costo * item.cantidad;
+          costoTotalEquipamiento += costoItem;
+
+          // Crear boleta de equipamiento
           const nuevaBoleta = this.boletaEquipamientoRepository.create({
-            reserva: { id },
-            equipamiento: { id: idEquip },
-            cantidad: cantidad || 1,
-            montoTotal: equipamiento.costo * (cantidad || 1),
+            idReserva: id,
+            equipamiento: { id: item.id_equipamiento },
+            cantidad: item.cantidad,
+            montoTotal: costoItem,
           });
 
           await this.boletaEquipamientoRepository.save(nuevaBoleta);
+
+          // Actualizar stock
+          equipamiento.stock -= item.cantidad;
+          await this.equipamientoRepository.save(equipamiento);
+        }
+
+        // Verificar saldo para el equipamiento
+        if (!isAdmin && reserva.usuario.saldo < costoTotalEquipamiento) {
+          throw new BadRequestException(`Saldo insuficiente para el equipamiento. Saldo actual: $${reserva.usuario.saldo}, Costo: $${costoTotalEquipamiento}`);
+        }
+
+        // Procesar pago del equipamiento
+        if (!isAdmin && costoTotalEquipamiento > 0) {
+          reserva.usuario.saldo -= costoTotalEquipamiento;
+          await this.usuarioRepository.save(reserva.usuario);
         }
       }
 
+      // Obtener la reserva actualizada con todas las relaciones
       const reservaActualizada = await this.reservaRepository.findOne({
         where: { id },
-        relations: ['usuario', 'cancha', 'boletas', 'boletas.equipamiento'],
+        relations: ['usuario', 'cancha', 'boletas', 'boletas.equipamiento', 'jugadores'],
       });
 
       if (!reservaActualizada) {
@@ -263,6 +602,10 @@ export class ReservaService {
 
       return CreateResponse('Reserva modificada exitosamente', reservaActualizada, 'OK');
     } catch (error) {
+      if (error instanceof BadRequestException) {
+        throw error;
+      }
+      
       throw new HttpException(
         CreateResponse('Error al modificar la reserva', null, 'BAD_REQUEST', error.message),
         HttpStatus.BAD_REQUEST,
@@ -272,22 +615,67 @@ export class ReservaService {
 
 
 
-
-  async remove(id: number): Promise<ApiResponse<null>> {
+  async remove(id: number, isAdmin: boolean = false): Promise<ApiResponse<null>> {
     try {
       const reserva = await this.reservaRepository.findOne({
         where: { id: id },
-        relations: ['boletas'],
+        relations: ['usuario', 'boletas', 'boletas.equipamiento'],
       });
       
       if (!reserva) {
-        throw new Error(`No se encontró una reserva con el ID ${id}`);
+        throw new BadRequestException(`No se encontró una reserva con el ID ${id}`);
       }
       
+      // Verificar regla de cancelación (1 semana de anticipación) si no es admin
+      if (!isAdmin) {
+        const fechaReserva = new Date(reserva.fecha);
+        const today = new Date();
+        const oneWeekFromNow = new Date();
+        oneWeekFromNow.setDate(today.getDate() + 7);
+        
+        if (fechaReserva < oneWeekFromNow) {
+          throw new BadRequestException('Las reservas deben cancelarse con al menos 1 semana de anticipación');
+        }
+      }
+      
+      // Devolver equipamiento al inventario
+      if (reserva.boletas && reserva.boletas.length > 0) {
+        for (const boleta of reserva.boletas) {
+          if (boleta.equipamiento) {
+            const equipamiento = await this.equipamientoRepository.findOne({
+              where: { id: boleta.equipamiento.id }
+            });
+            
+            if (equipamiento) {
+              equipamiento.stock += boleta.cantidad;
+              await this.equipamientoRepository.save(equipamiento);
+            }
+          }
+        }
+      }
+      
+      // Crear registro de cancelación en el historial
+      try {
+        await this.historialReservaService.create({
+          estado: 'Cancelado',
+          idReserva: id,
+          idUsuario: reserva.usuario.id
+        });
+      } catch (historialError) {
+        console.error('Error al crear historial de cancelación:', historialError);
+      }
+      
+      // No hay reembolso según las reglas de negocio, así que no devolvemos el saldo al usuario
+      
+      // Eliminar la reserva
       await this.reservaRepository.delete(id);
-      return CreateResponse('Reserva eliminada exitosamente', null, 'OK');
+      return CreateResponse('Reserva cancelada exitosamente', null, 'OK');
     } catch (error) {
-      if (error.message.includes('No se encontró')) {
+      if (error instanceof BadRequestException) {
+        throw error;
+      }
+      
+      if (error.message && error.message.includes('No se encontró')) {
         throw new HttpException(
           CreateResponse('Reserva no encontrada', null, 'NOT_FOUND', error.message),
           HttpStatus.NOT_FOUND,
@@ -295,7 +683,7 @@ export class ReservaService {
       }
       
       throw new HttpException(
-        CreateResponse('Error al eliminar la reserva', null, 'INTERNAL_SERVER_ERROR', error.message),
+        CreateResponse('Error al cancelar la reserva', null, 'INTERNAL_SERVER_ERROR', error.message),
         HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }

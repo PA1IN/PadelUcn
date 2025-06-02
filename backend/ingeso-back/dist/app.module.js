@@ -12,12 +12,12 @@ const typeorm_1 = require("@nestjs/typeorm");
 const config_1 = require("@nestjs/config");
 const app_controller_1 = require("./app.controller");
 const app_service_1 = require("./app.service");
-const canchas_module_1 = require("./modulos/canchas/canchas.module");
-const user_module_1 = require("./modulos/user/user.module");
+const cancha_module_1 = require("./modulos/cancha/cancha.module");
+const usuario_module_1 = require("./modulos/usuario/usuario.module");
 const auth_module_1 = require("./modulos/auth/auth.module");
 const reserva_module_1 = require("./modulos/reserva/reserva.module");
 const equipamiento_module_1 = require("./modulos/equipamiento/equipamiento.module");
-const boleta_equipamiento_module_1 = require("./modulos/boleta-equipamiento/boleta-equipamiento.module");
+const bloque_module_1 = require("./modulos/bloque/bloque.module");
 let AppModule = class AppModule {
 };
 exports.AppModule = AppModule;
@@ -37,19 +37,16 @@ exports.AppModule = AppModule = __decorate([
                     username: configService.get('DB_USER', 'ingeso'),
                     password: configService.get('DB_PASSWORD', '12342'), database: configService.get('DB_NAME', 'padelucn'),
                     entities: [__dirname + '/**/*.entity{.ts,.js}'],
-                    synchronize: false,
+                    synchronize: true,
                     logging: true,
                     retryAttempts: 5,
                     retryDelay: 3000,
                     connectTimeoutMS: 10000,
                 }),
-            }),
-            canchas_module_1.CanchasModule,
-            user_module_1.UserModule,
-            auth_module_1.AuthModule,
-            reserva_module_1.ReservaModule,
+            }), cancha_module_1.CanchaModule,
+            usuario_module_1.UsuarioModule, auth_module_1.AuthModule, reserva_module_1.ReservaModule,
             equipamiento_module_1.EquipamientoModule,
-            boleta_equipamiento_module_1.BoletaEquipamientoModule,
+            bloque_module_1.BloqueModule,
         ],
         controllers: [app_controller_1.AppController],
         providers: [app_service_1.AppService], })

@@ -54,46 +54,34 @@ let EquipamientoService = class EquipamientoService {
             return (0, api_response_util_1.CreateResponse)('Equipamiento obtenido exitosamente', equipamiento, 'OK');
         }
         catch (error) {
-            if (error.message.includes('No se encontró')) {
-                throw new common_1.HttpException((0, api_response_util_1.CreateResponse)('Equipamiento no encontrado', null, 'NOT_FOUND', error.message), common_1.HttpStatus.NOT_FOUND);
-            }
-            throw new common_1.HttpException((0, api_response_util_1.CreateResponse)('Error al obtener el equipamiento', null, 'INTERNAL_SERVER_ERROR', error.message), common_1.HttpStatus.INTERNAL_SERVER_ERROR);
+            throw new common_1.HttpException((0, api_response_util_1.CreateResponse)('Error al obtener equipamiento', null, 'NOT_FOUND', error.message), common_1.HttpStatus.NOT_FOUND);
         }
     }
     async update(id, updateEquipamientoDto) {
         try {
-            const equipamiento = await this.equipamientoRepository.findOne({ where: { id: id } });
+            const equipamiento = await this.equipamientoRepository.findOne({ where: { id } });
             if (!equipamiento) {
                 throw new Error(`No se encontró un equipamiento con el ID ${id}`);
             }
             await this.equipamientoRepository.update(id, updateEquipamientoDto);
-            const updatedEquipamiento = await this.equipamientoRepository.findOne({ where: { id: id } });
-            if (!updatedEquipamiento) {
-                throw new Error(`Error al obtener equipamiento actualizado con ID ${id}`);
-            }
+            const updatedEquipamiento = await this.equipamientoRepository.findOne({ where: { id } });
             return (0, api_response_util_1.CreateResponse)('Equipamiento actualizado exitosamente', updatedEquipamiento, 'OK');
         }
         catch (error) {
-            if (error.message.includes('No se encontró')) {
-                throw new common_1.HttpException((0, api_response_util_1.CreateResponse)('Equipamiento no encontrado', null, 'NOT_FOUND', error.message), common_1.HttpStatus.NOT_FOUND);
-            }
-            throw new common_1.HttpException((0, api_response_util_1.CreateResponse)('Error al actualizar el equipamiento', null, 'BAD_REQUEST', error.message), common_1.HttpStatus.BAD_REQUEST);
+            throw new common_1.HttpException((0, api_response_util_1.CreateResponse)('Error al actualizar equipamiento', null, 'BAD_REQUEST', error.message), common_1.HttpStatus.BAD_REQUEST);
         }
     }
     async remove(id) {
         try {
-            const equipamiento = await this.equipamientoRepository.findOne({ where: { id: id } });
+            const equipamiento = await this.equipamientoRepository.findOne({ where: { id } });
             if (!equipamiento) {
                 throw new Error(`No se encontró un equipamiento con el ID ${id}`);
             }
             await this.equipamientoRepository.delete(id);
-            return (0, api_response_util_1.CreateResponse)('Equipamiento eliminado exitosamente', null, 'OK');
+            return (0, api_response_util_1.CreateResponse)('Equipamiento eliminado exitosamente', equipamiento, 'OK');
         }
         catch (error) {
-            if (error.message.includes('No se encontró')) {
-                throw new common_1.HttpException((0, api_response_util_1.CreateResponse)('Equipamiento no encontrado', null, 'NOT_FOUND', error.message), common_1.HttpStatus.NOT_FOUND);
-            }
-            throw new common_1.HttpException((0, api_response_util_1.CreateResponse)('Error al eliminar el equipamiento', null, 'INTERNAL_SERVER_ERROR', error.message), common_1.HttpStatus.INTERNAL_SERVER_ERROR);
+            throw new common_1.HttpException((0, api_response_util_1.CreateResponse)('Error al eliminar equipamiento', null, 'BAD_REQUEST', error.message), common_1.HttpStatus.BAD_REQUEST);
         }
     }
     async actualizarStock(id, cantidad) {
