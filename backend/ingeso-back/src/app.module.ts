@@ -23,9 +23,8 @@ import { BloqueModule } from './modulos/bloque/bloque.module';
         host: configService.get('DB_HOST', 'localhost'),
         port: parseInt(configService.get('DB_PORT', '5433')),
         username: configService.get('DB_USER', 'ingeso'),
-        password: configService.get('DB_PASSWORD', '12342'),        database: configService.get('DB_NAME', 'padelucn'),
-        entities: [__dirname + '/**/*.entity{.ts,.js}'],
-        synchronize: true, // Habilitado temporalmente para crear las tablas
+        password: configService.get('DB_PASSWORD', '12342'),        database: configService.get('DB_NAME', 'padelucn'),        entities: [__dirname + '/**/*.entity{.ts,.js}'],
+        synchronize: false, // Disabled to avoid schema conflicts with existing tables
         logging: true,
         retryAttempts: 5,
         retryDelay: 3000,

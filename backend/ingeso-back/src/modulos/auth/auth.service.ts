@@ -13,13 +13,25 @@ export class AuthService {
     private usuarioRepository: Repository<Usuario>,
     private jwtService: JwtService,
   ) {}
-
   async validateUser(rut: string, password: string): Promise<any> {
     const usuario = await this.usuarioRepository.findOne({ where: { rut } });
+    
+    if (!usuario) {
+      return null;
+    }
+    
+    // Add logging to debug password comparison
+    console.log('Validating user: ', rut);
+    console.log('Password provided: ', password);
+    console.log('Stored password hash: ', usuario.password);
+    
     if (usuario && await bcrypt.compare(password, usuario.password)) {
-      const { password, ...result } = usuario;
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      const { password: _, ...result } = usuario;
       return result;
     }
+    
+    console.log('Password validation failed');
     return null;
   }
   async login(loginDto: LoginUsuarioDto) {
