@@ -14,9 +14,10 @@ Invoke-RestMethod http://localhost:8080/usuario -ErrorAction SilentlyContinue
 
 # Vamos a probar el inicio de sesión directamente con el usuario admin
 $body = @{
-    rut = "11111111-1"
-    password = "admin123"
+    "rut": "11111111-1",
+    "password": "admin123"
 }
+
 $json = $body | ConvertTo-Json
 Write-Host "Intentando iniciar sesión con el usuario admin..." -ForegroundColor Yellow
 Invoke-RestMethod -Uri http://localhost:8080/login -Method Post -Body $json -ContentType "application/json" -ErrorAction SilentlyContinue
