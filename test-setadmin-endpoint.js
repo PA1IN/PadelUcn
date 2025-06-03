@@ -13,12 +13,10 @@ async function testSetAdmin() {
 
     // Now use the token to set another user as admin
     const userToChangeRut = '22222222-2';  // The user to be made admin
-    console.log(`Attempting to set user ${userToChangeRut} as admin...`);    const setAdminResponse = await axios.post(
-      `http://localhost:8080/api/usuarios/make-admin`,
-      { 
-        rut: userToChangeRut,
-        isAdmin: true
-      },
+    console.log(`Attempting to set user ${userToChangeRut} as admin...`);
+      const setAdminResponse = await axios.patch(
+      `http://localhost:8080/api/usuarios/set-admin/${userToChangeRut}`,
+      { isAdmin: true },  // Request body with the isAdmin field
       { 
         headers: { 
           'Authorization': `Bearer ${adminToken}`,
