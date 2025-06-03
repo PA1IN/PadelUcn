@@ -1,4 +1,28 @@
 # Padel UCN
+
+## Resumen del Sistema
+
+PadelUCN es una aplicación de reserva de canchas de pádel para la Universidad Católica del Norte. El sistema permite a los usuarios reservar canchas en horarios específicos, alquilar equipamiento deportivo y gestionar sus reservas.
+
+### Características Principales
+- **Reserva de canchas**: Los usuarios pueden reservar canchas de lunes a viernes entre 8:00 AM y 8:00 PM
+- **Gestión de equipamiento**: Sistema de alquiler de equipamiento deportivo (raquetas, pelotas, accesorios)
+- **Gestión de usuario**: Perfiles de usuario con saldo para realizar reservas
+- **Historial de reservas**: Seguimiento completo de cambios de estado en las reservas
+- **Panel de administración**: Funcionalidades especiales para administradores
+
+### Instrucciones de Uso
+1. Inicie sesión con sus credenciales (RUT y contraseña)
+2. Navegue a la sección de reservas para seleccionar cancha, fecha y hora
+3. Agregue equipamiento opcional a su reserva
+4. Complete la reserva y realice el pago
+
+### Usuarios de Prueba
+- **Admin**: 11111111-1 / password123
+- **Usuario Regular**: 22222222-2 / password123 
+- **Usuario Regular**: 33333333-3 / password123
+- **Usuario Regular**: 44444444-4 / password123
+
 ## Endpoints API
 
 Todos los endpoints están prefijados con `/api`. Por ejemplo, para acceder al endpoint de canchas, debes usar `/api/canchas`.
@@ -118,11 +142,11 @@ El sistema ahora maneja un modelo unificado para usuarios, donde se distinguen u
 
 | Método HTTP | Endpoint | Descripción |
 |-------------|----------|-------------|
-| GET | `/api/users` | Obtiene todos los usuarios (requiere permisos de administrador) |
-| GET | `/api/users/:rut` | Obtiene la información de un usuario específico por su RUT |
-| POST | `/api/users` | Registra un nuevo usuario |
-| PATCH | `/api/users/:rut` | Actualiza la información de un usuario existente |
-| DELETE | `/api/users/:rut` | Elimina un usuario |
+| GET | `/api/usuarios` | Obtiene todos los usuarios (requiere permisos de administrador) |
+| GET | `/api/usuarios/:rut` | Obtiene la información de un usuario específico por su RUT |
+| POST | `/api/usuarios` | Registra un nuevo usuario |
+| PATCH | `/api/usuarios/:rut` | Actualiza la información de un usuario existente |
+| DELETE | `/api/usuarios/:rut` | Elimina un usuario |
 | POST | `/api/auth/login` | Inicia sesión y obtiene un token de acceso |
 | POST | `/api/auth/register` | Registra un nuevo usuario y obtiene un token |
 
@@ -143,11 +167,17 @@ El sistema ahora maneja un modelo unificado para usuarios, donde se distinguen u
 ```json
 {
   "rut": "11111111-1",
-  "password": "admin123"
+  "password": "password123"
 }
 ```
 
-> **Nota importante:** Aunque en la base de datos el campo se llama "contraseña", la API espera recibir "password" debido a cómo están configurados los DTOs en el backend. Se ha configurado el mapeo en la entidad TypeORM para que funcione correctamente.
+> **Nota importante:** 
+> - Aunque en la base de datos el campo se llama "contraseña", la API espera recibir "password" debido a cómo están configurados los DTOs en el backend.
+> - Los siguientes usuarios de prueba están disponibles con la contraseña "password123":
+>   - 11111111-1 (Admin)
+>   - 22222222-2 (Usuario regular)
+>   - 33333333-3 (Usuario regular)
+>   - 44444444-4 (Usuario regular)
 
 #### Actualización de usuario (PATCH `/api/users/:rut`)
 ```json
@@ -191,12 +221,12 @@ El sistema maneja bloques de tiempo predefinidos para facilitar la reserva de ca
 
 | Método HTTP | Endpoint | Descripción |
 |-------------|----------|-------------|
-| GET | `/api/bloque` | Obtiene todos los bloques disponibles |
-| GET | `/api/bloque/:id` | Obtiene la información de un bloque específico |
-| GET | `/api/bloque/fecha/:fecha` | Obtiene todos los bloques de una fecha específica |
-| POST | `/api/bloque` | Crea un nuevo bloque de tiempo |
-| PATCH | `/api/bloque/:id` | Actualiza la información de un bloque existente |
-| DELETE | `/api/bloque/:id` | Elimina un bloque de tiempo |
+| GET | `/api/bloques` | Obtiene todos los bloques disponibles |
+| GET | `/api/bloques/:id` | Obtiene la información de un bloque específico |
+| GET | `/api/bloques/fecha/:fecha` | Obtiene todos los bloques de una fecha específica |
+| POST | `/api/bloques` | Crea un nuevo bloque de tiempo |
+| PATCH | `/api/bloques/:id` | Actualiza la información de un bloque existente |
+| DELETE | `/api/bloques/:id` | Elimina un bloque de tiempo |
 
 ### Formato de datos
 
@@ -875,6 +905,8 @@ El sistema registra transacciones asociadas a boletas de equipamiento:
 ## Notas importantes
 
 1. **Autenticación**: Todos los endpoints (excepto login y register) requieren un token JWT válido en el header de autorización.
+   - Para usar el token, agrégalo al header de las peticiones HTTP como: `Authorization: Bearer [token]`
+   - El token expira después de 1 hora, por lo que deberás iniciar sesión nuevamente si ha caducado
 
 2. **Rol de administrador**: Los endpoints para crear, actualizar o eliminar canchas, equipamiento y usuarios ahora requieren que el usuario tenga `isAdmin=true`.
 
@@ -885,5 +917,31 @@ El sistema registra transacciones asociadas a boletas de equipamiento:
    - `Completado`: Cuando una reserva se marca como realizada
 
 4. **Mantenimiento de canchas**: Las canchas con `mantenimiento=true` no están disponibles para reservas.
+
+5. **Horarios de reserva**: Por reglas de negocio, las canchas solo se pueden reservar:
+   - De lunes a viernes
+   - Entre las 8:00 y las 20:00 horas
+   - No hay disponibilidad los fines de semana
+
+## Instrucciones de Ejecución
+
+Para ejecutar la aplicación localmente:
+
+1. **Requisitos previos:**
+   - Docker y Docker Compose instalados
+   - Node.js (versión 14 o superior) para ejecutar scripts locales
+
+2. **Iniciar servicios:**
+   ```
+   docker-compose up -d
+   ```
+
+3. **Acceso a la aplicación:**
+   - Frontend: http://localhost:3000
+   - API Backend: http://localhost:8080/api
+   - Base de datos: PostgreSQL en puerto 5433
+
+4. **Pruebas de API:**
+   Puede probar los endpoints con Postman o cualquier cliente HTTP usando los ejemplos proporcionados en esta documentación.
 
 

@@ -70,9 +70,8 @@ async function testLogin(user) {
 
 // Run tests for all users
 async function runTests() {
-  console.log('==== PADELUCN LOGIN API TEST (V2) ====');
+  console.log('==== PADELUCN LOGIN API TEST ====');
   console.log('Testing against endpoint:', API_URL);
-  console.log('Using password: password123 for all users');
   console.log('-----------------------------------');
   
   let successCount = 0;
