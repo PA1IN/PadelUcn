@@ -10,10 +10,10 @@ export class User {
   @Column({ unique: true })
   rut: string;
 
-  @Column({ name: 'contraseña' })
+  @Column({ name: 'nombre_usuario' })
   password: string;
 
-  @Column({ name: 'nombre_usuario' })
+  @Column({ name: 'contraseña' })
   nombre: string;
 
   @Column()
