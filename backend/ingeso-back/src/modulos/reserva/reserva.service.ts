@@ -20,7 +20,7 @@ export class ReservaService {
     @InjectRepository(User)
     private usuarioRepository: Repository<User>,
     @InjectRepository(Cancha)
-    private canchaRespository: Repository<Cancha>,
+    private canchaRepository: Repository<Cancha>,
     @InjectRepository(Reserva)
     private reservaRepository: Repository<Reserva>,
     private historialReservaService: HistorialReservaService,
@@ -50,7 +50,7 @@ export class ReservaService {
         throw new Error(`Usuario con rut ${createReservaDto.rut_usuario} no encontrado`);
       }
 
-      const cancha = await this.canchaRespository.findOne({ where: { numero: createReservaDto.numero_cancha } });
+      const cancha = await this.canchaRepository.findOne({ where: { numero: createReservaDto.numero_cancha } });
       if (!cancha) {
         throw new Error(`Cancha número ${createReservaDto.numero_cancha} no encontrada`);
       }
@@ -199,7 +199,7 @@ export class ReservaService {
 
       // Asignar nueva cancha si se cambia
       if (updateReservaDto.numero_cancha) {
-        const nuevaCancha = await this.canchaRespository.findOne({
+        const nuevaCancha = await this.canchaRepository.findOne({
           where: { numero: updateReservaDto.numero_cancha }
         });
 
@@ -510,7 +510,7 @@ export class ReservaService {
     // 🔥 4️⃣ Descontar saldo y guardar la reserva
     if (reserva.usuario.saldo < costoTotal) throw new BadRequestException('Saldo insuficiente para la reserva.');
     reserva.usuario.saldo -= costoTotal;
-    await this.userRepository.save(reserva.usuario);
+    await this.usuarioRepository.save(reserva.usuario);
 
     // 🔥 5️⃣ Guardar reserva en la tabla `reserva`
     const nuevaReserva = this.reservaRepository.create(reserva);
