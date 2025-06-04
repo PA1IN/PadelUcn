@@ -1,137 +1,230 @@
-"use client"
+"use client";
 
-import { useEffect, useState } from "react"
-import { useParams, useRouter } from "next/navigation"
-import { useUserProfile } from "@/hooks/useUserProfile"
-import { useModificarReserva, useReservaPorId } from "@/hooks/useReserva"
-import { useCanchas } from "@/hooks/useCancha"
-import { useEquipamiento } from "@/hooks/useEquipamiento"
+import { useParams, useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
+import { useUserProfile } from "@/hooks/useUserProfile";
+import {
+  useModificarReserva,
+  useObtenerReservaPorId,
+  EquipamientoSeleccionado,
+} from "@/hooks/useReserva";
+import { useCanchas } from "@/hooks/useCanchas";
+import { useEquipamiento } from "@/hooks/useEquipamiento";
+import { useActualizarSaldo } from "@/hooks/useActualizarSaldo";
+import { useToast } from "@/components/ui/use-toast";
 
-interface EquipamientoSeleccionado {
-  id: number
-  cantidad: number
-}
+export default function ModificarReservaPage() {
+  const { id } = useParams();
+  const router = useRouter();
+  const { toast } = useToast();
 
-export default function ModificarReserva() {
-  const router = useRouter()
-  const params = useParams()
-  const id = typeof params?.id === "string" ? parseInt(params.id) : undefined
+  const { data: usuario } = useUserProfile();
+  const { data: canchas = [] } = useCanchas();
+  const { data: equipamientos = [] } = useEquipamiento();
+  const {
+    data: reserva,
+    isLoading,
+    isError,
+  } = useObtenerReservaPorId(Number(id));
+  const modificarReserva = useModificarReserva();
+  const actualizarSaldo = useActualizarSaldo();
 
-  const { data: user } = useUserProfile()
-  const { data: canchas } = useCanchas()
-  const { data: equipamiento = [] } = useEquipamiento()
-  const { data: reservaActual, isLoading } = useReservaPorId(id)
-
-  const modificarReserva = useModificarReserva()
-
-  const [fecha, setFecha] = useState("")
-  const [hora_inicio, setHoraInicio] = useState("")
-  const [hora_termino, setHoraTermino] = useState("")
-  const [numero_cancha, setNumeroCancha] = useState("")
-  const [equipamientoSeleccionado, setEquipamientoSeleccionado] = useState<EquipamientoSeleccionado[]>([])
+  const [fecha, setFecha] = useState("");
+  const [horaInicio, setHoraInicio] = useState("");
+  const [horaTermino, setHoraTermino] = useState("");
+  const [numeroCancha, setNumeroCancha] = useState("");
+  const [equipamientoSeleccionado, setEquipamientoSeleccionado] =
+    useState<EquipamientoSeleccionado[]>([]);
 
   useEffect(() => {
-    if (reservaActual) {
-      setFecha(reservaActual.fecha)
-      setHoraInicio(reservaActual.hora_inicio)
-      setHoraTermino(reservaActual.hora_termino)
-      setNumeroCancha(reservaActual.cancha.numero.toString())
-      setEquipamientoSeleccionado(
-        reservaActual.boletas?.map(b => ({
-          id: b.equipamiento.id,
-          cantidad: b.cantidad ?? 1
-        })) || []
-      )
+    if (reserva) {
+      setFecha(reserva.fecha);
+      setHoraInicio(reserva.hora_inicio);
+      setHoraTermino(reserva.hora_termino);
+      setNumeroCancha(reserva.numero_cancha.toString());
+      setEquipamientoSeleccionado(reserva.equipamiento || []);
     }
-  }, [reservaActual])
+  }, [reserva]);
 
-  const toggleEquipamiento = (id: number) => {
-    setEquipamientoSeleccionado(prev => {
-      const existe = prev.find(e => e.id === id)
-      if (existe) {
-        return prev.filter(e => e.id !== id)
-      } else {
-        return [...prev, { id, cantidad: 1 }]
-      }
-    })
-  }
+  const calcularCostoTotal = () => {
+    const cancha = canchas.find(
+      (c) => c.numero_cancha === Number(numeroCancha)
+    );
+    const costoCancha = cancha?.valor || 0;
+    const costoEquipamiento = equipamientoSeleccionado.reduce(
+      (acc, eq) => acc + eq.costo * eq.cantidad,
+      0
+    );
+    return costoCancha + costoEquipamiento;
+  };
 
-  const cambiarCantidad = (id: number, cantidad: number) => {
-    setEquipamientoSeleccionado(prev =>
-      prev.map(e => e.id === id ? { ...e, cantidad } : e)
-    )
-  }
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!fecha || !horaInicio || !horaTermino || !numeroCancha) {
+      toast({
+        title: "Error",
+        description: "Todos los campos son obligatorios.",
+        variant: "destructive",
+      });
+      return;
+    }
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!fecha || !hora_inicio || !hora_termino || !numero_cancha || !id) return
-
-    modificarReserva.mutate({
-      id: id,
-      data: {
+    try {
+      await modificarReserva.mutateAsync({
+        id_reserva: Number(id),
         fecha,
-        hora_inicio,
-        hora_termino,
-        numero_cancha: parseInt(numero_cancha),
-        equipamiento: equipamientoSeleccionado
-      }
-    }, {
-      onSuccess: () => {
-        alert("Reserva modificada exitosamente")
-        router.push("/reservas")
-      },
-      onError: () => {
-        alert("Error al modificar reserva")
-      }
-    })
-  }
+        hora_inicio: horaInicio,
+        hora_termino: horaTermino,
+        numero_cancha: Number(numeroCancha),
+        equipamiento_id: equipamientoSeleccionado.map((eq) => ({
+          id: eq.id_equipamiento,
+          cantidad: eq.cantidad,
+        })),
+      });
 
-  if (isLoading || !reservaActual) return <p className="p-4">Cargando datos de la reserva...</p>
+      const nuevoCosto = calcularCostoTotal();
+      const costoAnterior = reserva?.costo_total || 0;
+      const diferencia = nuevoCosto - costoAnterior;
+
+      if (usuario?.rut) {
+        const nuevoSaldo = (usuario.saldo || 0) - diferencia;
+        actualizarSaldo.mutate({ rut: usuario.rut, monto: nuevoSaldo });
+      }
+
+      toast({
+        title: "Reserva modificada",
+        description: "La reserva fue actualizada correctamente.",
+      });
+
+      router.push("/reservas");
+    } catch (err: any) {
+      toast({
+        title: "Error al modificar",
+        description: err.message || "No se pudo modificar la reserva.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  if (isLoading) return <div className="p-6">Cargando reserva...</div>;
+  if (isError || !reserva)
+    return <div className="p-6 text-red-500">Error cargando reserva</div>;
 
   return (
-    <div className="p-6 max-w-md mx-auto">
-      <h1 className="text-xl font-bold mb-4">Modificar Reserva</h1>
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <input type="date" value={fecha} onChange={e => setFecha(e.target.value)} required className="border w-full p-2" />
-        <input type="time" value={hora_inicio} onChange={e => setHoraInicio(e.target.value)} required className="border w-full p-2" />
-        <input type="time" value={hora_termino} onChange={e => setHoraTermino(e.target.value)} required className="border w-full p-2" />
-        <select value={numero_cancha} onChange={e => setNumeroCancha(e.target.value)} required className="border w-full p-2">
-          <option value="">Selecciona una cancha</option>
-          {canchas?.map((c: any) => (
-            <option key={c.numero} value={c.numero}>Cancha {c.numero} - ${c.valor}</option>
-          ))}
-        </select>
+    <div className="min-h-screen bg-gray-100 p-6">
+      <form
+        onSubmit={handleSubmit}
+        className="bg-white p-6 rounded shadow max-w-xl mx-auto space-y-4"
+      >
+        <h1 className="text-xl font-bold text-center text-blue-600">
+          Modificar Reserva
+        </h1>
 
-        <div className="flex flex-col gap-3">
-          <p className="font-medium">Equipamiento:</p>
-          {equipamiento.map((e: any) => {
-            const seleccionado = equipamientoSeleccionado.find(eq => eq.id === e.id)
-            return (
-              <div key={e.id} className="flex items-center gap-2">
-                <input
-                  type="checkbox"
-                  checked={!!seleccionado}
-                  onChange={() => toggleEquipamiento(e.id)}
-                />
-                <label className="flex-1">{e.nombre}</label>
-                {seleccionado && (
-                  <input
-                    type="number"
-                    min={1}
-                    value={seleccionado.cantidad}
-                    onChange={evt => cambiarCantidad(e.id, Number(evt.target.value))}
-                    className="w-16 border p-1"
-                  />
-                )}
-              </div>
-            )
-          })}
+        <div>
+          <label className="block text-sm font-medium">Fecha</label>
+          <input
+            type="date"
+            value={fecha}
+            onChange={(e) => setFecha(e.target.value)}
+            className="w-full border p-2 rounded"
+          />
         </div>
 
-        <button type="submit" className="bg-blue-600 text-white px-4 py-2 rounded w-full">
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <label className="block text-sm font-medium">Hora Inicio</label>
+            <input
+              type="time"
+              value={horaInicio}
+              onChange={(e) => setHoraInicio(e.target.value)}
+              className="w-full border p-2 rounded"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium">Hora Término</label>
+            <input
+              type="time"
+              value={horaTermino}
+              onChange={(e) => setHoraTermino(e.target.value)}
+              className="w-full border p-2 rounded"
+            />
+          </div>
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium">Cancha</label>
+          <select
+            value={numeroCancha}
+            onChange={(e) => setNumeroCancha(e.target.value)}
+            className="w-full border p-2 rounded"
+          >
+            <option value="">Selecciona una cancha</option>
+            {canchas.map((c) => (
+              <option key={c.id_cancha} value={c.numero_cancha}>
+                {c.nombre} - ${c.valor}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium">Equipamiento</label>
+          <div className="space-y-2">
+            {equipamientos.map((eq) => {
+              const selected = equipamientoSeleccionado.find(
+                (e) => e.id_equipamiento === eq.id_equipamiento
+              );
+              const cantidad = selected?.cantidad || 0;
+
+              return (
+                <div
+                  key={eq.id_equipamiento}
+                  className="flex justify-between items-center"
+                >
+                  <div>
+                    <p className="text-sm">
+                      {eq.nombre} (${eq.costo})
+                    </p>
+                    <p className="text-xs text-gray-500">
+                      Stock: {eq.stock}
+                    </p>
+                  </div>
+                  <input
+                    type="number"
+                    min="0"
+                    max={eq.stock}
+                    value={cantidad}
+                    onChange={(e) => {
+                      const nuevaCantidad = parseInt(e.target.value) || 0;
+                      setEquipamientoSeleccionado((prev) => {
+                        const sinActual = prev.filter(
+                          (p) => p.id_equipamiento !== eq.id_equipamiento
+                        );
+                        return nuevaCantidad > 0
+                          ? [...sinActual, { ...eq, cantidad: nuevaCantidad }]
+                          : sinActual;
+                      });
+                    }}
+                    className="w-16 border p-1 rounded text-sm"
+                  />
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
+        <div className="flex justify-between font-bold text-green-700">
+          <span>Total:</span>
+          <span>${calcularCostoTotal().toLocaleString()}</span>
+        </div>
+
+        <button
+          type="submit"
+          className="w-full bg-blue-600 hover:bg-blue-700 text-white p-2 rounded"
+        >
           Guardar Cambios
         </button>
       </form>
     </div>
-  )
+  );
 }

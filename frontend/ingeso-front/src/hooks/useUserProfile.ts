@@ -1,30 +1,22 @@
-import {useQuery} from '@tanstack/react-query';
-import api from '../api/axios';
+import { useQuery } from '@tanstack/react-query';
+import api from '@/api/axios';
 
-interface Userperfil
-{
-    rut: string; 
-    nombre: string;
-    correo: string;
+export interface UserProfile {
+  rut: string;
+  nombre: string;
+  correo: string;
+  telefono: string;
+  direccion?: string;
+  is_admin: boolean;
+  saldo: number;
 }
 
-
-interface Perfilresponse
-{
-    statusCode: number;
-    message: string;
-    data: Userperfil
-    success: boolean;
-
-}
-
-export function useUserProfile(){
-    return useQuery<Userperfil>({
-        queryKey:['user'],
-        queryFn: async () => {
-            const respuesta = await api.get<Perfilresponse>('/api/auth/profile');
-            console.log("datos de respuesta del perfil pa visualizar: ", respuesta.data);
-            return respuesta.data?.data;
-        },
-    });
+export function useUserProfile() {
+  return useQuery<UserProfile, Error>({
+    queryKey: ['userProfile'],
+    queryFn: async () => {
+      const { data } = await api.get('/api/auth/profile');
+      return data;
+    },
+  });
 }

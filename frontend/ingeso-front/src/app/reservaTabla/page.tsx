@@ -1,183 +1,256 @@
 "use client"
 
-import { useState, useEffect } from "react"
-import { useUserProfile } from "@/hooks/useUserProfile"
-import { useCrearReserva } from "@/hooks/useReserva"
-import { useCanchas } from "@/hooks/useCancha"
-import { useEquipamiento } from "@/hooks/useEquipamiento"
+import { useState } from "react"
 import { useRouter } from "next/navigation"
+import { useUserProfile } from "@/hooks/useUserProfile"
+import { useEquipamiento } from "@/hooks/useEquipamiento"
+import { useCanchasDisponibles } from "@/hooks/useCanchasDisponibles"
+import { useCrearReserva, Jugador, EquipamientoSeleccionado } from "@/hooks/useReserva"
+import { useActualizarSaldo } from "@/hooks/useActualizarSaldo"
 
-function formatDateInSpanish(dateStr: string): string {
-  const date = new Date(dateStr)
-  const months = ["enero", "febrero", "marzo", "abril", "mayo", "junio", "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre"]
-  const day = date.getDate()
-  const month = months[date.getMonth()]
-  const year = date.getFullYear()
-  return `${day} de ${month} de ${year}`
-}
-
-export default function ReservaTabla() {
+export default function ReservaTablaPage() {
+  const router = useRouter()
   const { data: user } = useUserProfile()
-  const { data: courts, isLoading: loadingCourts, isError: errorCanchas } = useCanchas()
-  const { data: availableEquipment = [], isError: errorEquipamiento } = useEquipamiento()
-  const router = useRouter();
+  const { data: equipamiento = [] } = useEquipamiento()
+  const [fecha, setFecha] = useState("")
+  const [horaInicio, setHoraInicio] = useState("")
+  const [jugadores, setJugadores] = useState<Jugador[]>([])
+  const [nuevoJugador, setNuevoJugador] = useState({ nombre: "", apellido: "", rut: "", edad: "" })
+  const [filtroPersonas, setFiltroPersonas] = useState(2)
+  const [selectedEquipment, setSelectedEquipment] = useState<EquipamientoSeleccionado[]>([])
+  const crearReserva = useCrearReserva()
+  const actualizarSaldo = useActualizarSaldo()
 
-  const [selectedCourt, setSelectedCourt] = useState("")
-  const [selectedDate, setSelectedDate] = useState("")
-  const [selectedTime, setSelectedTime] = useState("")
-  const [selectedEquipment, setSelectedEquipment] = useState<string[]>([])
-  const [availableDates, setAvailableDates] = useState<string[]>([])
-  const [availableTimes, setAvailableTimes] = useState<string[]>([])
-  const [error, setError] = useState<string | null>(null)
-  const [success, setSuccess] = useState<string | null>(null)
+  const [numeroCancha, setNumeroCancha] = useState("")
+  const [mostrarCanchas, setMostrarCanchas] = useState(false)
 
-  const crearReserva = useCrearReserva(
-    () => {
-      setSuccess("Reserva creada exitosamente")
-      setSelectedCourt("")
-      setSelectedDate("")
-      setSelectedTime("")
-      setSelectedEquipment([])
-    },
-    (error) => setError(error?.response?.data?.message || "Error al crear reserva")
-  )
+  const {
+    data: canchasDisponibles = [],
+    refetch: refetchCanchas,
+    isFetching,
+  } = useCanchasDisponibles(
+    {fecha, hora: horaInicio, personas: filtroPersonas},
+    {enabled: false})
 
-  useEffect(() => {
-    const today = new Date()
-    const dates = [...Array(30)].map((_, i) => {
-      const d = new Date()
-      d.setDate(today.getDate() + i)
-      return d.toISOString().split("T")[0]
-    })
-    setAvailableDates(dates)
-  }, [])
+  const handleBuscarCanchas = () => {
+    if (!fecha || !horaInicio) return
+    setMostrarCanchas(true)
+    refetchCanchas()
+  }
 
-  useEffect(() => {
-    if (!selectedDate) return setAvailableTimes([])
-    const baseTimes = [
-      "08:00", "09:00", "10:00", "11:00", "12:00", "13:00",
-      "14:00", "15:00", "16:00", "17:00", "18:00", "19:00"
-    ]
-    setAvailableTimes(baseTimes)
-  }, [selectedDate])
+  const handleAgregarJugador = () => {
+    if (
+      nuevoJugador.nombre.trim() &&
+      nuevoJugador.apellido.trim() &&
+      nuevoJugador.rut.trim() &&
+      nuevoJugador.edad !== ""
+    ) {
+      setJugadores((prev) => [...prev, { ...nuevoJugador, edad: Number(nuevoJugador.edad) }])
+      setNuevoJugador({ nombre: "", apellido: "", rut: "", edad: "" })
+    }
+  }
 
-  const toggleEquipment = (equipmentId: string) => {
-    setSelectedEquipment(prev =>
-      prev.includes(equipmentId) ? prev.filter(id => id !== equipmentId) : [...prev, equipmentId]
+  const calcularCostoTotal = () => {
+    const cancha = canchasDisponibles.find((c) => c.numero_cancha === Number(numeroCancha))
+    const costoCancha = cancha?.valor ?? 0
+    const costoEquipamiento = selectedEquipment.reduce(
+      (acc, eq) => acc + eq.costo * eq.cantidad,
+      0
     )
+    return costoCancha + costoEquipamiento
   }
 
-  const calcularHoraTermino = (inicio: string): string => {
-    const [h, m] = inicio.split(":").map(Number)
-    const date = new Date()
-    date.setHours(h, m + 60)
-    return date.toTimeString().substring(0, 5)
-  }
+  const handleCrearReserva = async () => {
+    if (!fecha || !horaInicio || !numeroCancha || jugadores.length !== filtroPersonas) return
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-    setError(null)
-    setSuccess(null)
+    const [hora, minuto] = horaInicio.split(":").map(Number)
+    const horaTermino = `${(hora + 1).toString().padStart(2, "0")}:${minuto.toString().padStart(2, "0")}`
 
-    if (!selectedCourt || !selectedDate || !selectedTime || !user?.rut) {
-      setError("Completa todos los campos requeridos")
+    const reservaEnProcesoCosto = calcularCostoTotal()
+    if ((user?.saldo ?? 0) < reservaEnProcesoCosto) {
+      alert("Saldo insuficiente")
       return
     }
 
-    crearReserva.mutate({
-      fecha: selectedDate,
-      hora_inicio: selectedTime,
-      hora_termino: calcularHoraTermino(selectedTime),
-      rut_usuario: user.rut,
-      numero_cancha: parseInt(selectedCourt),
-      equipamiento: selectedEquipment
-    })
+    try {
+      await crearReserva.mutateAsync({
+        fecha,
+        hora_inicio: horaInicio,
+        hora_termino: horaTermino,
+        numero_cancha: Number(numeroCancha),
+        jugadores,
+        equipamiento_id: selectedEquipment.map((e) => ({
+          id: e.id_equipamiento,
+          cantidad: e.cantidad,
+        })),
+        rut_usuario: user?.rut ?? "",
+      })
+
+      await actualizarSaldo.mutateAsync({
+        rut: user?.rut ?? "",
+        monto: (user?.saldo ?? 0) - reservaEnProcesoCosto,
+      })
+
+      router.push("/verReservas")
+    } catch (error) {
+      console.error("Error creando reserva:", error)
+    }
   }
 
-  if (!user) return <div className="text-center mt-10 text-red-600">Cargando perfil del usuario...</div>
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center p-4">
-      <div className="bg-green-500 text-white p-4 rounded w-full max-w-md mb-4">
-        <h1 className="text-xl font-bold">Reserva tu Cancha</h1>
-      </div>
+    <div className="min-h-screen bg-gray-100 p-6">
+      <h1 className="text-2xl font-bold mb-6 text-blue-700 text-center">Crear Reserva</h1>
 
-      <div className="w-full max-w-md space-y-4 bg-white p-6 rounded-lg shadow-md">
-        {error && <p className="text-red-600">{error}</p>}
-        {success && <p className="text-green-600 whitespace-pre-line">{success}</p>}
+      <div className="grid md:grid-cols-2 gap-4">
+        <div className="bg-white p-4 rounded shadow space-y-4">
+          <h2 className="font-semibold text-lg text-gray-700">Datos de Reserva</h2>
+          <input
+            type="date"
+            value={fecha}
+            onChange={(e) => setFecha(e.target.value)}
+            className="w-full border p-2 rounded"
+          />
+          <input
+            type="time"
+            value={horaInicio}
+            onChange={(e) => setHoraInicio(e.target.value)}
+            className="w-full border p-2 rounded"
+          />
+          <button
+            onClick={handleBuscarCanchas}
+            className="w-full bg-blue-600 text-white p-2 rounded hover:bg-blue-700"
+          >
+            Buscar Canchas Disponibles
+          </button>
 
-        <form onSubmit={handleSubmit} className="space-y-6">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Cancha *</label>
-            <select value={selectedCourt} onChange={e => setSelectedCourt(e.target.value)} required disabled={loadingCourts} className="w-full px-3 py-2 border rounded">
+          {mostrarCanchas && (
+            <select
+              value={numeroCancha}
+              onChange={(e) => setNumeroCancha(e.target.value)}
+              className="w-full border p-2 rounded"
+            >
               <option value="">Selecciona una cancha</option>
-              {Array.isArray(courts) && courts.map(c => (
-                <option key={c.numero} value={String(c.numero)}>{`Cancha ${c.numero} - $${c.valor}/h - ${c.nombre}`}</option>
-              ))}
+              {isFetching ? (
+                <option>Cargando...</option>
+              ) : (
+                canchasDisponibles.map((c) => (
+                  <option key={c.id_cancha} value={c.numero_cancha}>
+                    {c.nombre} - ${c.valor}
+                  </option>
+                ))
+              )}
             </select>
-            {errorCanchas && <p className="text-red-500 text-sm">Error al cargar las canchas</p>}
+          )}
+        </div>
+
+        <div className="bg-white p-4 rounded shadow space-y-4">
+          <h2 className="font-semibold text-lg text-gray-700">Jugadores</h2>
+
+          <select
+            value={filtroPersonas}
+            onChange={(e) => setFiltroPersonas(Number(e.target.value))}
+            className="w-full border p-2 rounded"
+          >
+            {[2, 4, 6].map((cant) => (
+              <option key={cant} value={cant}>
+                {cant} Personas
+              </option>
+            ))}
+          </select>
+
+          <div className="grid grid-cols-2 gap-2">
+            <input
+              type="text"
+              placeholder="Nombre"
+              value={nuevoJugador.nombre}
+              onChange={(e) => setNuevoJugador((prev) => ({ ...prev, nombre: e.target.value }))}
+              className="border p-2 rounded"
+            />
+            <input
+              type="text"
+              placeholder="Apellido"
+              value={nuevoJugador.apellido}
+              onChange={(e) => setNuevoJugador((prev) => ({ ...prev, apellido: e.target.value }))}
+              className="border p-2 rounded"
+            />
+            <input
+              type="text"
+              placeholder="RUT"
+              value={nuevoJugador.rut}
+              onChange={(e) => setNuevoJugador((prev) => ({ ...prev, rut: e.target.value }))}
+              className="border p-2 rounded"
+            />
+            <input
+              type="number"
+              placeholder="Edad"
+              value={nuevoJugador.edad}
+              onChange={(e) => setNuevoJugador((prev) => ({ ...prev, edad: e.target.value }))}
+              className="border p-2 rounded"
+            />
           </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Fecha *</label>
-            <select value={selectedDate} onChange={e => setSelectedDate(e.target.value)} required className="w-full px-3 py-2 border rounded">
-              <option value="">Selecciona una fecha</option>
-              {availableDates.map(date => <option key={date} value={date}>{formatDateInSpanish(date)}</option>)}
-            </select>
-          </div>
+          <button
+            onClick={handleAgregarJugador}
+            className="w-full bg-green-600 text-white p-2 rounded hover:bg-green-700"
+          >
+            Agregar Jugador
+          </button>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Hora *</label>
-            <select value={selectedTime} onChange={e => setSelectedTime(e.target.value)} required className="w-full px-3 py-2 border rounded">
-              <option value="">Selecciona una hora</option>
-              {availableTimes.map(time => <option key={time} value={time}>{time}</option>)}
-            </select>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Equipamiento</label>
-            <div className="flex flex-wrap gap-2">
-              {availableEquipment.map((e) => (
-                <button
-                  key={e.id}
-                  type="button"
-                  onClick={() => toggleEquipment(e.id.toString())}
-                  className={`px-3 py-1 text-sm rounded transition ${
-                    selectedEquipment.includes(e.id.toString())
-                      ? "bg-green-500 text-white"
-                      : "bg-gray-200 text-black"
-                  }`}
-                >
-                  {e.nombre}
-                </button>
-              ))}
-              {errorEquipamiento && <p className="text-red-500 text-sm">Error al cargar equipamiento</p>}
-            </div>
-          </div>
-
-          <div className="pt-4">
-            <button
-              type="submit"
-              disabled={crearReserva.isPending}
-              className={`w-full py-2 rounded text-white ${crearReserva.isPending ? "bg-gray-400" : "bg-green-600 hover:bg-green-700"}`}
-            >
-              {crearReserva.isPending ? "Procesando..." : "Confirmar Reserva"}
-            </button>
-          </div>
-        </form>
-
-        <div className="pt-4 border-t border-gray-200 mt-6">
-          <p className="text-center text-sm text-black">
-            <button
-              type="button"
-              onClick={() => router.push("/home")}
-              className="text-green-600 hover:underline"
-            >
-              Volver a Home
-            </button>
-          </p>
+          <ul className="list-disc pl-5 text-sm text-gray-700">
+            {jugadores.map((j, i) => (
+              <li key={i}>
+                {j.nombre} {j.apellido} ({j.rut}) - {j.edad} años
+              </li>
+            ))}
+          </ul>
         </div>
       </div>
+
+      <div className="bg-white p-4 rounded shadow mt-6 space-y-4">
+        <h2 className="font-semibold text-lg text-gray-700">Equipamiento</h2>
+        {equipamiento.map((eq) => {
+          const seleccionado = selectedEquipment.find((e) => e.id_equipamiento === eq.id_equipamiento)
+          const cantidad = seleccionado?.cantidad || 0
+
+          return (
+            <div key={eq.id_equipamiento} className="flex justify-between items-center">
+              <div>
+                <p className="text-sm">{eq.nombre} (${eq.costo})</p>
+                <p className="text-xs text-gray-500">Stock: {eq.stock}</p>
+              </div>
+              <input
+                type="number"
+                min="0"
+                max={eq.stock}
+                value={cantidad}
+                onChange={(e) => {
+                  const nuevaCantidad = parseInt(e.target.value) || 0
+                  setSelectedEquipment((prev) => {
+                    const sinActual = prev.filter((p) => p.id_equipamiento !== eq.id_equipamiento)
+                    return nuevaCantidad > 0
+                      ? [...sinActual, { ...eq, cantidad: nuevaCantidad }]
+                      : sinActual
+                  })
+                }}
+                className="w-16 border p-1 rounded text-sm"
+              />
+            </div>
+          )
+        })}
+      </div>
+
+      <div className="flex justify-between items-center mt-4 font-bold text-green-700">
+        <span>Total:</span>
+        <span>${calcularCostoTotal().toLocaleString()}</span>
+      </div>
+
+      <button
+        onClick={handleCrearReserva}
+        className="w-full bg-purple-600 hover:bg-purple-700 text-white p-3 mt-6 rounded"
+      >
+        Confirmar Reserva
+      </button>
     </div>
   )
 }

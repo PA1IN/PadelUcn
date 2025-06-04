@@ -15,10 +15,7 @@ export default function Login() {
   const login = useLogin(
     (token) => {
       setToken(token)
-      router.push("/home") // Modificado: ahora redirecciona a reservaTabla en lugar de /home
-    },
-    (error) => {
-      setErrorMsg(error)
+      router.push("/home")
     },
   )
 
@@ -85,11 +82,9 @@ export default function Login() {
           </button>
         </form>
 
-        {/* Errores */}
         {login.isError && <p className="mt-4 text-sm text-red-600 text-center">Usuario o contraseña incorrectas</p>}
         {errorMsg && <p className="mt-2 text-sm text-red-600 text-center">{errorMsg}</p>}
 
-        {/* Enlaces */}
         <div className="mt-6 text-sm text-center text-gray-600 space-y-1">
           <p>
             ¿No tienes cuenta?{" "}
