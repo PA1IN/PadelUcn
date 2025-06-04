@@ -1,15 +1,3 @@
--- database-schema-new.sql
--- Drop existing tables if they exist
-DROP TABLE IF EXISTS "transaccion" CASCADE;
-DROP TABLE IF EXISTS "boleta_equipamiento" CASCADE;
-DROP TABLE IF EXISTS "historial_reserva" CASCADE;
-DROP TABLE IF EXISTS "jugador" CASCADE;
-DROP TABLE IF EXISTS "reserva" CASCADE;
-DROP TABLE IF EXISTS "bloque" CASCADE;
-DROP TABLE IF EXISTS "cancha" CASCADE;
-DROP TABLE IF EXISTS "equipamiento" CASCADE;
-DROP TABLE IF EXISTS "usuario" CASCADE;
-
 -- Create Usuario table
 CREATE TABLE "usuario" (
     "id_usuario" SERIAL PRIMARY KEY,
