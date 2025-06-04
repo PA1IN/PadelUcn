@@ -22,20 +22,41 @@ let EquipamientoController = class EquipamientoController {
     constructor(equipamientoService) {
         this.equipamientoService = equipamientoService;
     }
-    create(createEquipamientoDto) {
-        return this.equipamientoService.create(createEquipamientoDto);
+    async create(createEquipamientoDto) {
+        const result = await this.equipamientoService.create(createEquipamientoDto);
+        return result.data;
     }
-    findAll() {
-        return this.equipamientoService.findAll();
+    async findAll() {
+        const result = await this.equipamientoService.findAll();
+        const equipamientos = result.data || [];
+        return equipamientos.map(equipamiento => ({
+            id_equipamiento: equipamiento.id,
+            nombre: equipamiento.nombre,
+            tipo: equipamiento.tipo,
+            costo: equipamiento.costo,
+            stock: equipamiento.stock
+        }));
     }
-    findOne(id) {
-        return this.equipamientoService.findOne(+id);
+    async findOne(id) {
+        const result = await this.equipamientoService.findOne(+id);
+        const equipamiento = result.data;
+        if (!equipamiento)
+            return null;
+        return {
+            id_equipamiento: equipamiento.id,
+            nombre: equipamiento.nombre,
+            tipo: equipamiento.tipo,
+            costo: equipamiento.costo,
+            stock: equipamiento.stock
+        };
     }
-    update(id, updateEquipamientoDto) {
-        return this.equipamientoService.update(+id, updateEquipamientoDto);
+    async update(id, updateEquipamientoDto) {
+        const result = await this.equipamientoService.update(+id, updateEquipamientoDto);
+        return result.data;
     }
-    remove(id) {
-        return this.equipamientoService.remove(+id);
+    async remove(id) {
+        await this.equipamientoService.remove(+id);
+        return null;
     }
 };
 exports.EquipamientoController = EquipamientoController;
@@ -44,20 +65,20 @@ __decorate([
     __param(0, (0, common_1.Body)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [create_equipamiento_dto_1.CreateEquipamientoDto]),
-    __metadata("design:returntype", void 0)
+    __metadata("design:returntype", Promise)
 ], EquipamientoController.prototype, "create", null);
 __decorate([
     (0, common_1.Get)(),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", []),
-    __metadata("design:returntype", void 0)
+    __metadata("design:returntype", Promise)
 ], EquipamientoController.prototype, "findAll", null);
 __decorate([
     (0, common_1.Get)(':id'),
     __param(0, (0, common_1.Param)('id')),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String]),
-    __metadata("design:returntype", void 0)
+    __metadata("design:returntype", Promise)
 ], EquipamientoController.prototype, "findOne", null);
 __decorate([
     (0, common_1.Patch)(':id'),
@@ -65,14 +86,14 @@ __decorate([
     __param(1, (0, common_1.Body)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String, update_equipamiento_dto_1.UpdateEquipamientoDto]),
-    __metadata("design:returntype", void 0)
+    __metadata("design:returntype", Promise)
 ], EquipamientoController.prototype, "update", null);
 __decorate([
     (0, common_1.Delete)(':id'),
     __param(0, (0, common_1.Param)('id')),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String]),
-    __metadata("design:returntype", void 0)
+    __metadata("design:returntype", Promise)
 ], EquipamientoController.prototype, "remove", null);
 exports.EquipamientoController = EquipamientoController = __decorate([
     (0, common_1.Controller)('equipamiento'),

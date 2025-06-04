@@ -2,33 +2,55 @@ import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/commo
 import { EquipamientoService } from './equipamiento.service';
 import { CreateEquipamientoDto } from './dto/create-equipamiento.dto';
 import { UpdateEquipamientoDto } from './dto/update-equipamiento.dto';
+import { Equipamiento } from './entities/equipamiento.entity';
 
 @Controller('equipamiento')
 export class EquipamientoController {
   constructor(private readonly equipamientoService: EquipamientoService) {}
 
   @Post()
-  create(@Body() createEquipamientoDto: CreateEquipamientoDto) {
-    return this.equipamientoService.create(createEquipamientoDto);
+  async create(@Body() createEquipamientoDto: CreateEquipamientoDto): Promise<Equipamiento | null> {
+    const result = await this.equipamientoService.create(createEquipamientoDto);
+    return result.data;
   }
-
   @Get()
-  findAll() {
-    return this.equipamientoService.findAll();
+  async findAll() {
+    const result = await this.equipamientoService.findAll();
+    const equipamientos = result.data || [];
+    
+    return equipamientos.map(equipamiento => ({
+      id_equipamiento: equipamiento.id,
+      nombre: equipamiento.nombre,
+      tipo: equipamiento.tipo,
+      costo: equipamiento.costo,
+      stock: equipamiento.stock
+    }));
   }
-
   @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.equipamientoService.findOne(+id);
+  async findOne(@Param('id') id: string) {
+    const result = await this.equipamientoService.findOne(+id);
+    const equipamiento = result.data;
+    
+    if (!equipamiento) return null;
+    
+    return {
+      id_equipamiento: equipamiento.id,
+      nombre: equipamiento.nombre,
+      tipo: equipamiento.tipo,
+      costo: equipamiento.costo,
+      stock: equipamiento.stock
+    };
   }
 
   @Patch(':id')
-  update(@Param('id') id: string, @Body() updateEquipamientoDto: UpdateEquipamientoDto) {
-    return this.equipamientoService.update(+id, updateEquipamientoDto);
+  async update(@Param('id') id: string, @Body() updateEquipamientoDto: UpdateEquipamientoDto): Promise<Equipamiento | null> {
+    const result = await this.equipamientoService.update(+id, updateEquipamientoDto);
+    return result.data;
   }
 
   @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.equipamientoService.remove(+id);
+  async remove(@Param('id') id: string): Promise<null> {
+    await this.equipamientoService.remove(+id);
+    return null;
   }
 }

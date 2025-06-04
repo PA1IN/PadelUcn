@@ -18,7 +18,6 @@ const historial_reserva_service_1 = require("./historial-reserva.service");
 const jwt_auth_guard_1 = require("../auth/guards/jwt-auth.guard");
 const roles_guard_1 = require("../auth/guards/roles.guard");
 const roles_decorator_1 = require("../auth/decorators/roles.decorator");
-const api_response_util_1 = require("../../utils/api-response.util");
 let HistorialReservaController = class HistorialReservaController {
     historialReservaService;
     constructor(historialReservaService) {
@@ -27,37 +26,37 @@ let HistorialReservaController = class HistorialReservaController {
     async findAll() {
         try {
             const historiales = await this.historialReservaService.findAll();
-            return (0, api_response_util_1.CreateResponse)('Historiales obtenidos exitosamente', historiales, 'OK');
+            return historiales;
         }
         catch (error) {
-            return (0, api_response_util_1.CreateResponse)('Error al obtener historiales', null, 'BAD_REQUEST', error.message, false);
+            throw new common_1.HttpException(error.message, common_1.HttpStatus.BAD_REQUEST);
         }
     }
     async findOne(id) {
         try {
             const historial = await this.historialReservaService.findOne(+id);
-            return (0, api_response_util_1.CreateResponse)('Historial obtenido exitosamente', historial, 'OK');
+            return historial;
         }
         catch (error) {
-            return (0, api_response_util_1.CreateResponse)('Error al obtener historial', null, 'NOT_FOUND', error.message, false);
+            throw new common_1.HttpException(error.message, common_1.HttpStatus.NOT_FOUND);
         }
     }
     async findByReserva(id) {
         try {
             const historiales = await this.historialReservaService.findByReserva(+id);
-            return (0, api_response_util_1.CreateResponse)('Historiales de reserva obtenidos exitosamente', historiales, 'OK');
+            return historiales;
         }
         catch (error) {
-            return (0, api_response_util_1.CreateResponse)('Error al obtener historiales de reserva', null, 'BAD_REQUEST', error.message, false);
+            throw new common_1.HttpException(error.message, common_1.HttpStatus.BAD_REQUEST);
         }
     }
     async findByUsuario(id) {
         try {
             const historiales = await this.historialReservaService.findByUsuario(+id);
-            return (0, api_response_util_1.CreateResponse)('Historiales de usuario obtenidos exitosamente', historiales, 'OK');
+            return historiales;
         }
         catch (error) {
-            return (0, api_response_util_1.CreateResponse)('Error al obtener historiales de usuario', null, 'BAD_REQUEST', error.message, false);
+            throw new common_1.HttpException(error.message, common_1.HttpStatus.BAD_REQUEST);
         }
     }
 };

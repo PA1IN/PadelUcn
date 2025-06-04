@@ -101,7 +101,7 @@ CREATE TABLE "boleta_equipamiento" (
 CREATE TABLE "transaccion" (
     "id_transaccion" SERIAL PRIMARY KEY,
     "fecha" DATE NOT NULL,
-    "id_boleta_equipamiento" DATE,
+    "id_boleta_equipamiento" INTEGER,
     FOREIGN KEY ("id_boleta_equipamiento") REFERENCES "boleta_equipamiento"("id_boleta") ON DELETE SET NULL
 );
 

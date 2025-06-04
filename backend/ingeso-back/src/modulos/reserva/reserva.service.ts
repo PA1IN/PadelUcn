@@ -249,10 +249,33 @@ export class ReservaService {
         `Reserva #${savedReserva.id} creada exitosamente para la cancha #${createReservaDto.numero_cancha}`,
         reservaCompleta,
         'CREATED'
-      );
-    } catch (error) {
+      );    } catch (error) {
+      console.error('Error detallado al crear reserva:', error);
+      
+      // Registrar información adicional
+      console.error('Datos de la reserva:', {
+        fecha: createReservaDto.fecha,
+        hora_inicio: createReservaDto.hora_inicio,
+        hora_termino: createReservaDto.hora_termino,
+        rut_usuario: createReservaDto.rut_usuario,
+        numero_cancha: createReservaDto.numero_cancha
+      });
+      
+      // Capturar explícitamente cada tipo de error para registrar información más específica
       if (error instanceof BadRequestException) {
-        throw error;
+        console.error('Error de validación:', error.message);
+        throw new HttpException(
+          CreateResponse(error.message, null, 'BAD_REQUEST', error.message),
+          HttpStatus.BAD_REQUEST,
+        );
+      }
+      
+      if (error.code === '23503') {  // Error de violación de clave foránea
+        console.error('Error de clave foránea:', error.detail);
+        throw new HttpException(
+          CreateResponse('Referencia inválida en la reserva. Verifique que la cancha, usuario y bloque existan.', null, 'BAD_REQUEST', error.detail),
+          HttpStatus.BAD_REQUEST,
+        );
       }
       
       throw new HttpException(
@@ -732,7 +755,7 @@ export class ReservaService {
     async obtenerHorariosDisponibles(
     numeroCancha: number,
     fechaStr: string
-  ): Promise<ApiResponse<{horariosDisponibles: Array<{inicio: string, fin: string}>}>> {
+  ): Promise<ApiResponse<{horariosDisponibles: Array<{inicio: string, fin: string, duracion: number}>}>> {
     try {
       const fecha = new Date(fechaStr);
       
@@ -749,35 +772,53 @@ export class ReservaService {
         .select(['reserva.hora_inicio', 'reserva.hora_termino'])
         .getMany();
       
-      // Horarios de operación de la cancha (podría ser configurable)
+      // Horarios de operación de la cancha
       const horaApertura = '08:00:00';
-      const horaCierre = '22:00:00';
+      const horaCierre = '20:00:00';
       
-      // Generar intervalos de 1 hora (típicamente para reservas de pádel)
-      const horariosDisponibles: Array<{inicio: string, fin: string}> = [];
-      let horaActual = horaApertura;
+      // Intervalo en minutos para buscar espacios disponibles (cada 30 min)
+      const intervaloMinutos = 30;
       
-      while (horaActual < horaCierre) {
-        // Calcular la hora de fin (1 hora después del inicio)
-        const [horas, minutos] = horaActual.split(':').map(Number);
-        let horaFinNum = horas + 1;
-        const horaFin = `${horaFinNum.toString().padStart(2, '0')}:${minutos.toString().padStart(2, '0')}:00`;
-        
-        // Verificar si este intervalo está ocupado por alguna reserva
-        const ocupado = reservas.some(reserva => 
-          (horaActual < reserva.hora_termino && horaFin > reserva.hora_inicio)
-        );
-        
-        // Si no está ocupado, agregarlo a los horarios disponibles
-        if (!ocupado && horaFin <= horaCierre) {
-          horariosDisponibles.push({
-            inicio: horaActual,
-            fin: horaFin
-          });
+      // Duraciones de reserva disponibles (en minutos)
+      const duracionesDisponibles = [90, 120, 150, 180];
+      
+      const horariosDisponibles: Array<{inicio: string, fin: string, duracion: number}> = [];
+      
+      // Dividir el día en intervalos de 'intervaloMinutos' minutos
+      for (let hora = 8; hora < 20; hora++) {
+        for (let minuto = 0; minuto < 60; minuto += intervaloMinutos) {
+          const horaInicioStr = `${hora.toString().padStart(2, '0')}:${minuto.toString().padStart(2, '0')}:00`;
+          
+          // Para cada hora de inicio, verificar las posibles duraciones
+          for (const duracionMin of duracionesDisponibles) {
+            // Calcular hora de fin
+            const inicioParts = horaInicioStr.split(':').map(Number);
+            const inicioMinutos = inicioParts[0] * 60 + inicioParts[1];
+            const finMinutos = inicioMinutos + duracionMin;
+            
+            const finHoras = Math.floor(finMinutos / 60);
+            const finMin = finMinutos % 60;
+            
+            // Si la hora de fin es después de la hora de cierre, omitir
+            if (finHoras >= 20) continue;
+            
+            const horaFinStr = `${finHoras.toString().padStart(2, '0')}:${finMin.toString().padStart(2, '0')}:00`;
+            
+            // Verificar si este intervalo está ocupado por alguna reserva
+            const ocupado = reservas.some(reserva => 
+              (horaInicioStr < reserva.hora_termino && horaFinStr > reserva.hora_inicio)
+            );
+            
+            // Si no está ocupado, agregarlo a los horarios disponibles
+            if (!ocupado) {
+              horariosDisponibles.push({
+                inicio: horaInicioStr,
+                fin: horaFinStr,
+                duracion: duracionMin
+              });
+            }
+          }
         }
-        
-        // Avanzar a la siguiente hora
-        horaActual = horaFin;
       }
       
       return CreateResponse(

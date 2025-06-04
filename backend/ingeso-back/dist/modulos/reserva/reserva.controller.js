@@ -19,45 +19,96 @@ const reserva_dto_1 = require("./dto/reserva.dto");
 const jwt_auth_guard_1 = require("../auth/guards/jwt-auth.guard");
 const roles_guard_1 = require("../auth/guards/roles.guard");
 const roles_decorator_1 = require("../auth/decorators/roles.decorator");
-const api_response_util_1 = require("../../utils/api-response.util");
 let ReservaController = class ReservaController {
     reservaService;
     constructor(reservaService) {
         this.reservaService = reservaService;
     }
+    transformReservaResponse(reserva) {
+        return {
+            id_reserva: reserva.id,
+            fecha: reserva.fecha,
+            hora_inicio: reserva.hora_inicio,
+            hora_termino: reserva.hora_termino,
+            id_usuario: reserva.idUsuario,
+            id_cancha: reserva.idCancha,
+            numero_cancha: reserva.cancha?.numero || null,
+            nombre_cancha: reserva.cancha?.nombre || null,
+            valor_cancha: reserva.cancha?.valor || null,
+            usuario: reserva.usuario ? {
+                id: reserva.usuario.id,
+                rut: reserva.usuario.rut,
+                nombre: reserva.usuario.nombre,
+                correo: reserva.usuario.correo,
+                saldo: reserva.usuario.saldo
+            } : null,
+            cancha: reserva.cancha ? {
+                id_cancha: reserva.cancha.id,
+                numero_cancha: reserva.cancha.numero,
+                nombre: reserva.cancha.nombre,
+                descripcion: reserva.cancha.descripcion,
+                valor: reserva.cancha.valor
+            } : null,
+            jugadores: reserva.jugadores?.map(jugador => ({
+                id_jugador: jugador.id,
+                nombre: jugador.nombre,
+                apellido: jugador.apellido,
+                rut: jugador.rut,
+                edad: jugador.edad,
+                id_reserva: jugador.idReserva
+            })) || [],
+            boletas: reserva.boletas?.map(boleta => ({
+                id_boleta: boleta.id,
+                cantidad: boleta.cantidad,
+                monto_total: boleta.montoTotal,
+                id_reserva: boleta.idReserva,
+                id_equipamiento: boleta.idEquipamiento,
+                equipamiento: boleta.equipamiento ? {
+                    id_equipamiento: boleta.equipamiento.id,
+                    nombre: boleta.equipamiento.nombre,
+                    tipo: boleta.equipamiento.tipo,
+                    costo: boleta.equipamiento.costo
+                } : null
+            })) || [],
+            historial: reserva.historiales?.map(historial => ({
+                id_historial: historial.id,
+                estado: historial.estado,
+                fecha_estado: historial.fechaEstado,
+                id_reserva: historial.idReserva,
+                id_usuario: historial.idUsuario
+            })) || []
+        };
+    }
     async create(createReservaDto, req) {
         try {
             const isAdmin = req.user.isAdmin;
             const reserva = await this.reservaService.create(createReservaDto, isAdmin);
-            return (0, api_response_util_1.CreateResponse)('Reserva creada exitosamente', reserva, 'CREATED');
+            return reserva.data ? this.transformReservaResponse(reserva.data) : null;
         }
         catch (error) {
-            return (0, api_response_util_1.CreateResponse)('Error al crear la reserva', null, 'BAD_REQUEST', error.message, false);
+            return null;
         }
     }
     async findAll() {
-        try {
-            const reservas = await this.reservaService.findAll();
-            return (0, api_response_util_1.CreateResponse)('Reservas obtenidas exitosamente', reservas, 'OK');
-        }
-        catch (error) {
-            return (0, api_response_util_1.CreateResponse)('Error al obtener reservas', null, 'BAD_REQUEST', error.message, false);
-        }
+        const reservas = await this.reservaService.findAll();
+        if (!reservas.data)
+            return [];
+        return reservas.data.map(reserva => this.transformReservaResponse(reserva));
     }
     async findOne(id, req) {
         try {
             const response = await this.reservaService.findOne(+id);
             const reserva = response.data;
             if (!reserva) {
-                return (0, api_response_util_1.CreateResponse)('Reserva no encontrada', null, 'NOT_FOUND', 'La reserva solicitada no existe', false);
+                return null;
             }
             if (!req.user.isAdmin && reserva.idUsuario !== req.user.id) {
-                return (0, api_response_util_1.CreateResponse)('No tienes permisos para ver esta reserva', null, 'FORBIDDEN', 'Acceso denegado', false);
+                return null;
             }
-            return (0, api_response_util_1.CreateResponse)('Reserva obtenida exitosamente', reserva, 'OK');
+            return this.transformReservaResponse(reserva);
         }
         catch (error) {
-            return (0, api_response_util_1.CreateResponse)('Error al obtener la reserva', null, 'BAD_REQUEST', error.message, false);
+            return null;
         }
     }
     async update(id, updateReservaDto, req) {
@@ -66,14 +117,14 @@ let ReservaController = class ReservaController {
             if (!isAdmin) {
                 const reservaResponse = await this.reservaService.findOne(+id);
                 if (reservaResponse.data && reservaResponse.data.idUsuario !== req.user.id) {
-                    return (0, api_response_util_1.CreateResponse)('No tienes permisos para modificar esta reserva', null, 'FORBIDDEN', 'Acceso denegado', false);
+                    return null;
                 }
             }
             const reserva = await this.reservaService.update(+id, updateReservaDto, isAdmin);
-            return (0, api_response_util_1.CreateResponse)('Reserva actualizada exitosamente', reserva, 'OK');
+            return reserva.data ? this.transformReservaResponse(reserva.data) : null;
         }
         catch (error) {
-            return (0, api_response_util_1.CreateResponse)('Error al actualizar la reserva', null, 'BAD_REQUEST', error.message, false);
+            return null;
         }
     }
     async remove(id, req) {
@@ -82,64 +133,66 @@ let ReservaController = class ReservaController {
             if (!isAdmin) {
                 const reservaResponse = await this.reservaService.findOne(+id);
                 if (reservaResponse.data && reservaResponse.data.idUsuario !== req.user.id) {
-                    return (0, api_response_util_1.CreateResponse)('No tienes permisos para cancelar esta reserva', null, 'FORBIDDEN', 'Acceso denegado', false);
+                    return null;
                 }
             }
             await this.reservaService.remove(+id, isAdmin);
-            return (0, api_response_util_1.CreateResponse)('Reserva cancelada exitosamente', null, 'OK');
+            return null;
         }
         catch (error) {
-            return (0, api_response_util_1.CreateResponse)('Error al cancelar la reserva', null, 'BAD_REQUEST', error.message, false);
+            return null;
         }
     }
     async findByUsuario(rut, req) {
         try {
             if (!req.user.isAdmin && req.user.rut !== rut) {
-                return (0, api_response_util_1.CreateResponse)('No tienes permisos para ver estas reservas', null, 'FORBIDDEN', 'Acceso denegado', false);
+                return [];
             }
             const reservas = await this.reservaService.findByUsuario(rut);
-            return (0, api_response_util_1.CreateResponse)('Reservas del usuario obtenidas exitosamente', reservas, 'OK');
+            if (!reservas.data)
+                return [];
+            return reservas.data.map(reserva => this.transformReservaResponse(reserva));
         }
         catch (error) {
-            return (0, api_response_util_1.CreateResponse)('Error al obtener las reservas del usuario', null, 'BAD_REQUEST', error.message, false);
+            return [];
         }
     }
     async findByCancha(numero) {
         try {
             const reservas = await this.reservaService.findByCancha(+numero);
-            return (0, api_response_util_1.CreateResponse)('Reservas de la cancha obtenidas exitosamente', reservas, 'OK');
+            if (!reservas.data)
+                return [];
+            return reservas.data.map(reserva => this.transformReservaResponse(reserva));
         }
         catch (error) {
-            return (0, api_response_util_1.CreateResponse)('Error al obtener las reservas de la cancha', null, 'BAD_REQUEST', error.message, false);
+            return [];
         }
     }
     async verificarDisponibilidad(numero, fecha, horaInicio, horaTermino) {
         try {
             const disponibilidad = await this.reservaService.verificarDisponibilidad(+numero, fecha, horaInicio, horaTermino);
-            return (0, api_response_util_1.CreateResponse)(disponibilidad.data && disponibilidad.data.disponible
-                ? `La cancha #${numero} está disponible en el horario solicitado`
-                : `La cancha #${numero} no está disponible en el horario solicitado`, { disponible: disponibilidad.data ? disponibilidad.data.disponible : false }, 'OK');
+            return { disponible: disponibilidad.data ? disponibilidad.data.disponible : false };
         }
         catch (error) {
-            return (0, api_response_util_1.CreateResponse)('Error al verificar disponibilidad', null, 'BAD_REQUEST', error.message, false);
+            return { disponible: false };
         }
     }
     async obtenerHorariosDisponibles(numero, fecha) {
         try {
             const horarios = await this.reservaService.obtenerHorariosDisponibles(+numero, fecha);
-            return (0, api_response_util_1.CreateResponse)(`Horarios disponibles para la cancha #${numero} en la fecha ${fecha}`, { horariosDisponibles: horarios }, 'OK');
+            return { horariosDisponibles: horarios };
         }
         catch (error) {
-            return (0, api_response_util_1.CreateResponse)('Error al obtener horarios disponibles', null, 'BAD_REQUEST', error.message, false);
+            return { horariosDisponibles: [] };
         }
     }
     async obtenerEstadisticas() {
         try {
             const estadisticas = await this.reservaService.obtenerEstadisticas();
-            return (0, api_response_util_1.CreateResponse)('Estadísticas obtenidas exitosamente', estadisticas, 'OK');
+            return estadisticas.data;
         }
         catch (error) {
-            return (0, api_response_util_1.CreateResponse)('Error al obtener estadísticas', null, 'BAD_REQUEST', error.message, false);
+            return null;
         }
     }
 };

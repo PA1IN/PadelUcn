@@ -5,9 +5,9 @@ import { HistorialReserva } from '../../historial-reserva/entities/historial-res
 import { BoletaEquipamiento } from '../../boleta-equipamiento/entities/boleta-equipamiento.entity';
 import { Jugador } from '../../jugador/entities/jugador.entity';
 
-@Entity()
+@Entity('reserva')
 export class Reserva {
-  @PrimaryGeneratedColumn()
+  @PrimaryGeneratedColumn({ name: 'id_reserva' })
   id: number;
 
   @Column({ type: 'date' })
@@ -19,17 +19,16 @@ export class Reserva {
   @Column({ type: 'time' })
   hora_termino: string;
   @ManyToOne(() => Usuario, (usuario) => usuario.reservas)
-  @JoinColumn({ name: 'idUsuario' })
+  @JoinColumn({ name: 'id_usuario' })
   usuario: Usuario;
 
-  @Column()
+  @Column({ name: 'id_usuario' })
   idUsuario: number;
-
   @ManyToOne(() => Cancha, (cancha) => cancha.reservas)
-  @JoinColumn({ name: 'idCancha' })
+  @JoinColumn({ name: 'id_cancha' })
   cancha: Cancha;
 
-  @Column()
+  @Column({ name: 'id_cancha' })
   idCancha: number;
 
   @OneToMany(() => HistorialReserva, (historial) => historial.reserva)

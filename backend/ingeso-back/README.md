@@ -783,22 +783,26 @@ $ npm run test
       "horariosDisponibles": [
         {
           "inicio": "08:00:00",
-          "fin": "09:00:00"
+          "fin": "09:30:00",
+          "duracion": 90
         },
         {
-          "inicio": "09:00:00",
-          "fin": "10:00:00"
+          "inicio": "08:00:00",
+          "fin": "10:00:00",
+          "duracion": 120
         },
         {
-          "inicio": "12:00:00",
-          "fin": "13:00:00"
+          "inicio": "08:00:00",
+          "fin": "10:30:00",
+          "duracion": 150
         },
         {
-          "inicio": "13:00:00",
-          "fin": "14:00:00"
+          "inicio": "08:00:00",
+          "fin": "11:00:00",
+          "duracion": 180
         },
         {
-          "inicio": "14:00:00",
+          "inicio": "08:30:00",
           "fin": "15:00:00"
         },
         {

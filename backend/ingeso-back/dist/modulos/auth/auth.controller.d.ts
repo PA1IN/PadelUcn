@@ -5,22 +5,19 @@ export declare class AuthController {
     private readonly authService;
     private readonly usuarioService;
     constructor(authService: AuthService, usuarioService: UsuarioService);
-    login(loginDto: LoginUsuarioDto): Promise<import("../../interface/Apiresponce").ApiResponse<null> | import("../../interface/Apiresponce").ApiResponse<{
-        usuario: any;
-        access_token: string;
-    }>>;
-    register(createUserDto: CreateUsuarioDto): Promise<import("../../interface/Apiresponce").ApiResponse<null> | import("../../interface/Apiresponce").ApiResponse<{
-        usuario: {
-            id: number;
-            rut: string;
-            nombre: string;
-            correo: string;
-            telefono: string;
-            saldo: number;
-            isAdmin: boolean;
-            reservas: import("../reserva/entities/reserva.entity").Reserva[];
-            historiales: import("../historial-reserva/entities/historial-reserva.entity").HistorialReserva[];
-        };
-        access_token: string;
-    }>>;
+    login(loginDto: LoginUsuarioDto): Promise<{
+        token: string;
+    }>;
+    register(createUserDto: CreateUsuarioDto): Promise<{
+        message: string;
+    }>;
+    getProfile(req: any): Promise<{
+        rut: any;
+        nombre: any;
+        correo: any;
+        telefono: any;
+        direccion: any;
+        is_admin: any;
+        saldo: any;
+    }>;
 }

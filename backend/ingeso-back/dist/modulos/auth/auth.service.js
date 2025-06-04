@@ -28,10 +28,17 @@ let AuthService = class AuthService {
     }
     async validateUser(rut, password) {
         const usuario = await this.usuarioRepository.findOne({ where: { rut } });
+        if (!usuario) {
+            return null;
+        }
+        console.log('Validating user: ', rut);
+        console.log('Password provided: ', password);
+        console.log('Stored password hash: ', usuario.password);
         if (usuario && await bcrypt.compare(password, usuario.password)) {
-            const { password, ...result } = usuario;
+            const { password: _, ...result } = usuario;
             return result;
         }
+        console.log('Password validation failed');
         return null;
     }
     async login(loginDto) {

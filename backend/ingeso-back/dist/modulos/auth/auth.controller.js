@@ -17,7 +17,7 @@ const common_1 = require("@nestjs/common");
 const auth_service_1 = require("./auth.service");
 const usuario_dto_1 = require("../usuario/dto/usuario.dto");
 const usuario_service_1 = require("../usuario/usuario.service");
-const api_response_util_1 = require("../../utils/api-response.util");
+const jwt_auth_guard_1 = require("./guards/jwt-auth.guard");
 let AuthController = class AuthController {
     authService;
     usuarioService;
@@ -26,22 +26,28 @@ let AuthController = class AuthController {
         this.usuarioService = usuarioService;
     }
     async login(loginDto) {
-        try {
-            const result = await this.authService.login(loginDto);
-            return (0, api_response_util_1.CreateResponse)('Inicio de sesión exitoso', result, 'OK');
-        }
-        catch (error) {
-            return (0, api_response_util_1.CreateResponse)('Error al iniciar sesión', null, 'UNAUTHORIZED', error.message, false);
-        }
+        const result = await this.authService.login(loginDto);
+        return {
+            token: result.access_token
+        };
     }
     async register(createUserDto) {
-        try {
-            const result = await this.authService.register(createUserDto);
-            return (0, api_response_util_1.CreateResponse)('Usuario registrado exitosamente', result, 'CREATED');
-        }
-        catch (error) {
-            return (0, api_response_util_1.CreateResponse)('Error al registrar usuario', null, 'BAD_REQUEST', error.message, false);
-        }
+        const result = await this.authService.register(createUserDto);
+        return {
+            message: 'Usuario registrado exitosamente'
+        };
+    }
+    async getProfile(req) {
+        const user = req.user;
+        return {
+            rut: user.rut,
+            nombre: user.nombre,
+            correo: user.correo,
+            telefono: user.telefono || '',
+            direccion: user.direccion || '',
+            is_admin: user.isAdmin || false,
+            saldo: user.saldo || 0
+        };
     }
 };
 exports.AuthController = AuthController;
@@ -59,6 +65,14 @@ __decorate([
     __metadata("design:paramtypes", [usuario_dto_1.CreateUsuarioDto]),
     __metadata("design:returntype", Promise)
 ], AuthController.prototype, "register", null);
+__decorate([
+    (0, common_1.Get)('profile'),
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
+    __param(0, (0, common_1.Request)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object]),
+    __metadata("design:returntype", Promise)
+], AuthController.prototype, "getProfile", null);
 exports.AuthController = AuthController = __decorate([
     (0, common_1.Controller)('auth'),
     __metadata("design:paramtypes", [auth_service_1.AuthService,

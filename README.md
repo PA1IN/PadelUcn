@@ -147,8 +147,10 @@ El sistema ahora maneja un modelo unificado para usuarios, donde se distinguen u
 | POST | `/api/usuarios` | Registra un nuevo usuario |
 | PATCH | `/api/usuarios/:rut` | Actualiza la información de un usuario existente |
 | DELETE | `/api/usuarios/:rut` | Elimina un usuario |
+| PATCH | `/api/usuarios/set-admin/:rut` | Establece permisos de administrador a un usuario (solo admin) |
 | POST | `/api/auth/login` | Inicia sesión y obtiene un token de acceso |
 | POST | `/api/auth/register` | Registra un nuevo usuario y obtiene un token |
+| GET | `/api/auth/profile` | Obtiene el perfil del usuario autenticado |
 
 ### Formato de datos
 
@@ -156,10 +158,17 @@ El sistema ahora maneja un modelo unificado para usuarios, donde se distinguen u
 ```json
 {
   "rut": "22222222-2",
-  "nombre_usuario": "Juan Pérez",
+  "nombre": "Juan Pérez",
   "correo": "juan@example.com",
-  "contraseña": "usuario123",
+  "password": "usuario123",
   "telefono": "+56922222222"
+}
+```
+
+**Respuesta exitosa:**
+```json
+{
+  "message": "Usuario registrado exitosamente"
 }
 ```
 
@@ -171,6 +180,13 @@ El sistema ahora maneja un modelo unificado para usuarios, donde se distinguen u
 }
 ```
 
+**Respuesta exitosa:**
+```json
+{
+  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+}
+```
+
 > **Nota importante:** 
 > - Aunque en la base de datos el campo se llama "contraseña", la API espera recibir "password" debido a cómo están configurados los DTOs en el backend.
 > - Los siguientes usuarios de prueba están disponibles con la contraseña "password123":
@@ -179,7 +195,7 @@ El sistema ahora maneja un modelo unificado para usuarios, donde se distinguen u
 >   - 33333333-3 (Usuario regular)
 >   - 44444444-4 (Usuario regular)
 
-#### Actualización de usuario (PATCH `/api/users/:rut`)
+#### Actualización de usuario (PATCH `/api/usuarios/:rut`)
 ```json
 {
   "nombre": "Juan Carlos Pérez",
@@ -189,84 +205,37 @@ El sistema ahora maneja un modelo unificado para usuarios, donde se distinguen u
 }
 ```
 
-#### Respuesta al obtener un usuario (GET `/api/users/:rut`)
+#### Respuesta al obtener un usuario (GET `/api/usuarios/:rut`)
 ```json
 {
-  "statusCode": 200,
-  "message": "Usuario obtenido exitosamente",
-  "data": {
-    "id_usuario": 2,
-    "rut": "22222222-2",
-    "nombre_usuario": "Juan Pérez",
-    "correo": "juan@example.com",
-    "telefono": "+56922222222",
-    "saldo": 50000,
-    "is_admin": false
-  },
-  "success": true
+  "id": 2,
+  "rut": "22222222-2",
+  "nombre": "Juan Pérez",
+  "correo": "juan@example.com",
+  "telefono": "+56922222222",
+  "saldo": 50000,
+  "isAdmin": false
 }
 ```
-
-## Módulo de Bloques de Tiempo
-
-El sistema maneja bloques de tiempo predefinidos para facilitar la reserva de canchas:
-
-### Atributos de Bloque
-- **ID**: Identificador único del bloque de tiempo
-- **Fecha**: Fecha del bloque
-- **Hora Inicio**: Hora de inicio del bloque
-- **Hora Fin**: Hora de término del bloque
-
-### Endpoints de la API para Bloques
-
-| Método HTTP | Endpoint | Descripción |
-|-------------|----------|-------------|
-| GET | `/api/bloques` | Obtiene todos los bloques disponibles |
-| GET | `/api/bloques/:id` | Obtiene la información de un bloque específico |
-| GET | `/api/bloques/fecha/:fecha` | Obtiene todos los bloques de una fecha específica |
-| POST | `/api/bloques` | Crea un nuevo bloque de tiempo |
-| PATCH | `/api/bloques/:id` | Actualiza la información de un bloque existente |
-| DELETE | `/api/bloques/:id` | Elimina un bloque de tiempo |
-
-### Formato de datos
-
-#### Creación de bloque (POST `/api/bloque`)
-```json
-{
-  "fecha_date": "2025-06-02",
-  "hora_inicio": "08:00:00",
-  "hora_fin": "09:00:00"
-}
 ```
 
-#### Respuesta al obtener bloques por fecha (GET `/api/bloque/fecha/:fecha`)
-```json
-{
-  "statusCode": 200,
-  "message": "Bloques obtenidos exitosamente",
-  "data": [
-    {
-      "id_bloque": 1,
-      "fecha_date": "2025-06-02",
-      "hora_inicio": "08:00:00",
-      "hora_fin": "09:00:00"
-    },
-    {
-      "id_bloque": 2,
-      "fecha_date": "2025-06-02",
-      "hora_inicio": "09:00:00",
-      "hora_fin": "10:00:00"
-    },
-    {
-      "id_bloque": 3,
-      "fecha_date": "2025-06-02",
-      "hora_inicio": "10:00:00",
-      "hora_fin": "11:00:00"
-    }
-  ],
-  "success": true
-}
-```
+## Sistema de Reservas Dinámicas
+
+El sistema implementa un modelo de reservas dinámico con las siguientes características:
+
+### Características del Sistema de Reservas
+- **Duración Variable**: Las reservas pueden tener una duración entre 90 y 180 minutos
+- **Intervalos de 30 minutos**: El sistema ofrece disponibilidad en intervalos de 30 minutos
+- **Duraciones Disponibles**: 90, 120, 150 y 180 minutos
+- **Verificación de Conflictos**: El sistema verifica automáticamente que no haya conflictos con otras reservas
+- **Límite de Reserva Diaria**: Usuarios regulares pueden reservar hasta 180 minutos por día
+
+### Implementación
+El endpoint `/api/reservas/disponibilidad-dia/:numero/:fecha` devuelve todos los horarios disponibles con diferentes duraciones para una cancha en una fecha específica.
+
+### Notas sobre el Sistema de Bloques
+
+La entidad `Bloque` aún se mantiene en el sistema para propósitos de compatibilidad histórica, pero ya no se utiliza para reservas. El sistema ahora funciona completamente con reservas dinámicas basadas en la hora de inicio y fin, sin depender de bloques predefinidos.
 
 ## Módulo de Reservas
 
@@ -289,19 +258,18 @@ El sistema permite la gestión de reservas de canchas con su respectivo historia
 
 ### Endpoints de la API para Reservas
 
-| Método HTTP | Endpoint | Descripción |
-|-------------|----------|-------------|
-| GET | `/api/reservas` | Obtiene todas las reservas |
-| GET | `/api/reservas/:id` | Obtiene la información de una reserva específica |
-| POST | `/api/reservas` | Crea una nueva reserva |
-| PATCH | `/api/reservas/:id` | Actualiza la información de una reserva existente |
-| DELETE | `/api/reservas/:id` | Cancela una reserva |
-| GET | `/api/reservas/historial/:id` | Obtiene el historial de una reserva |
-| GET | `/api/reservas/usuario/:rut` | Obtiene todas las reservas de un usuario |
-| GET | `/api/reservas/cancha/:numero` | Obtiene todas las reservas de una cancha |
-| GET | `/api/reservas/disponibilidad/:numero/:fecha/:horaInicio/:horaTermino` | Verifica disponibilidad de una cancha en un horario específico |
-| GET | `/api/reservas/disponibilidad-dia/:numero/:fecha` | Obtiene todos los horarios disponibles de una cancha en una fecha |
-| GET | `/api/reservas/estadisticas` | Obtiene estadísticas de uso de las canchas (solo administradores) |
+| Método HTTP | Endpoint | Descripción | Autenticación |
+|-------------|----------|-------------|---------------|
+| GET | `/api/reservas` | Obtiene todas las reservas | Admin solamente |
+| GET | `/api/reservas/:id` | Obtiene una reserva específica | Usuario propietario o Admin |
+| POST | `/api/reservas` | Crea una nueva reserva | Usuario autenticado |
+| PATCH | `/api/reservas/:id` | Actualiza una reserva | Usuario propietario o Admin |
+| DELETE | `/api/reservas/:id` | Cancela una reserva | Usuario propietario o Admin |
+| GET | `/api/reservas/usuario/:rut` | Obtiene reservas de un usuario | Mismo usuario o Admin |
+| GET | `/api/reservas/cancha/:numero` | Obtiene reservas de una cancha | Usuario autenticado |
+| GET | `/api/reservas/disponibilidad/:numero/:fecha/:horaInicio/:horaTermino` | Verifica disponibilidad | Usuario autenticado |
+| GET | `/api/reservas/disponibilidad-dia/:numero/:fecha` | Horarios disponibles en una fecha | Usuario autenticado |
+| GET | `/api/reservas/estadisticas` | Estadísticas de uso | Admin solamente |
 
 ### Formato de datos
 
@@ -313,7 +281,8 @@ El sistema permite la gestión de reservas de canchas con su respectivo historia
   "hora_termino": "10:30:00",
   "rut_usuario": "22222222-2",
   "numero_cancha": 2,
-  "id_bloque": 2
+  "jugadores": [],
+  "equipamiento": []
 }
 ```
 
@@ -338,7 +307,6 @@ El sistema permite la gestión de reservas de canchas con su respectivo historia
     "hora_termino": "10:30:00",
     "id_cancha": 2,
     "id_usuario": 2,
-    "id_bloque": 2,
     "usuario": {
       "id_usuario": 2,
       "rut": "22222222-2",
@@ -376,34 +344,29 @@ El sistema permite la gestión de reservas de canchas con su respectivo historia
   "data": {
     "horariosDisponibles": [
       { 
-        "id_bloque": 1,
-        "fecha_date": "2025-06-02",
-        "hora_inicio": "08:00:00", 
-        "hora_fin": "09:00:00" 
+        "inicio": "08:00:00", 
+        "fin": "09:30:00",
+        "duracion": 90
       },
       { 
-        "id_bloque": 2,
-        "fecha_date": "2025-06-02",
-        "hora_inicio": "09:00:00", 
-        "hora_fin": "10:00:00" 
+        "inicio": "08:00:00", 
+        "fin": "10:00:00",
+        "duracion": 120
       },
       { 
-        "id_bloque": 3,
-        "fecha_date": "2025-06-02",
-        "hora_inicio": "10:00:00", 
-        "hora_fin": "11:00:00" 
+        "inicio": "08:00:00", 
+        "fin": "10:30:00",
+        "duracion": 150
       },
       { 
-        "id_bloque": 11,
-        "fecha_date": "2025-06-02",
-        "hora_inicio": "18:00:00", 
-        "hora_fin": "19:00:00" 
+        "inicio": "08:00:00", 
+        "fin": "11:00:00",
+        "duracion": 180
       },
       { 
-        "id_bloque": 12,
-        "fecha_date": "2025-06-02",
-        "hora_inicio": "19:00:00", 
-        "hora_fin": "20:00:00" 
+        "inicio": "08:30:00", 
+        "fin": "10:00:00",
+        "duracion": 90
       }
     ]
   },
@@ -424,7 +387,6 @@ El sistema permite la gestión de reservas de canchas con su respectivo historia
       "hora_termino": "10:30:00",
       "id_cancha": 2,
       "id_usuario": 2,
-      "id_bloque": 2,
       "cancha": {
         "id_cancha": 2,
         "numero": 2,
@@ -904,9 +866,62 @@ El sistema registra transacciones asociadas a boletas de equipamiento:
 
 ## Notas importantes
 
-1. **Autenticación**: Todos los endpoints (excepto login y register) requieren un token JWT válido en el header de autorización.
-   - Para usar el token, agrégalo al header de las peticiones HTTP como: `Authorization: Bearer [token]`
-   - El token expira después de 1 hora, por lo que deberás iniciar sesión nuevamente si ha caducado
+### **Autenticación para Postman**
+
+1. **Token JWT requerido**: Todos los endpoints (excepto `/api/auth/login` y `/api/auth/register`) requieren autenticación.
+
+2. **Cómo obtener el token**:
+   - Hacer POST a `/api/auth/login` con RUT y password
+   - La respuesta contiene: `{ "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..." }`
+   - Copiar el valor del token (sin las comillas)
+
+3. **Configurar headers en Postman**:
+   ```
+   Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+   Content-Type: application/json
+   ```
+
+4. **Endpoints públicos** (no requieren token):
+   - `POST /api/auth/login`
+   - `POST /api/auth/register`
+   - `GET /api/canchas` (obtener todas las canchas)
+   - `GET /api/canchas/disponibles` (obtener canchas disponibles)
+   - `GET /api/canchas/:numero` (obtener cancha específica)
+
+5. **Endpoints que requieren rol de administrador**:
+   - `GET /api/usuarios` (obtener todos los usuarios)
+   - `POST /api/canchas` (crear cancha)
+   - `PATCH /api/canchas/:numero` (actualizar cancha)
+   - `DELETE /api/canchas/:numero` (eliminar cancha)
+   - `GET /api/reservas` (obtener todas las reservas)
+   - `GET /api/reservas/estadisticas` (obtener estadísticas)
+   - `POST /api/bloques` (crear bloque)
+   - `PATCH /api/bloques/:id` (actualizar bloque)
+   - `DELETE /api/bloques/:id` (eliminar bloque)
+   - `POST /api/equipamiento` (crear equipamiento)
+   - `PATCH /api/equipamiento/:id` (actualizar equipamiento)
+   - `DELETE /api/equipamiento/:id` (eliminar equipamiento)
+   - `PATCH /api/usuarios/set-admin/:rut` (establecer admin)
+   - `DELETE /api/usuarios/:rut` (eliminar usuario)
+   - Todos los endpoints de `/api/historial-reservas`
+
+6. **Usuarios de prueba disponibles**:
+   ```
+   Admin: RUT: 11111111-1, Password: password123
+   Usuario regular: RUT: 22222222-2, Password: password123
+   Usuario regular: RUT: 33333333-3, Password: password123
+   Usuario regular: RUT: 44444444-4, Password: password123
+   ```
+
+7. **Expiración del token**: El token expira después de 1 hora. Si obtienes error 401, debes hacer login nuevamente.
+
+### **Formato de respuestas**
+
+Las respuestas de la API pueden tener diferentes formatos según el endpoint:
+- **Login**: `{ "token": "..." }`
+- **Register**: `{ "message": "Usuario registrado exitosamente" }`
+- **Reservas**: Datos transformados con nombres de campos específicos del frontend
+- **Otros endpoints**: Generalmente devuelven los datos directamente del servicio
 
 2. **Rol de administrador**: Los endpoints para crear, actualizar o eliminar canchas, equipamiento y usuarios ahora requieren que el usuario tenga `isAdmin=true`.
 
