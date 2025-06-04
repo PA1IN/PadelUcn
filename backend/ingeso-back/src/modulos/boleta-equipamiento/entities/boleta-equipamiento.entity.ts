@@ -4,8 +4,9 @@ import { Equipamiento } from '../../equipamiento/entities/equipamiento.entity';
 
 @Entity({ name: 'boleta_equipamiento' })
 export class BoletaEquipamiento {
-  @PrimaryGeneratedColumn({ name: 'id_historial' })
+  @PrimaryGeneratedColumn({ name: 'id_boleta' })
   id: number;
+
   @Column({ nullable: false })
   cantidad: number;
   

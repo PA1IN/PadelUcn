@@ -23,6 +23,9 @@ export class Cancha {
   @Column({ default: false })
   mantenimiento: boolean;
   
+  @Column({ nullable: false})
+  cantidad_max_jugador: number
+
   @Column({ type: 'int', nullable:false})
   valor: number;
 
