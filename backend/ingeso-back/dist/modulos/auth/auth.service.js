@@ -28,14 +28,21 @@ let AuthService = class AuthService {
     }
     async validateUser(rut, password) {
         const usuario = await this.usuarioRepository.findOne({ where: { rut } });
+        if (!usuario) {
+            return null;
+        }
+        console.log('Validating user: ', rut);
+        console.log('Password provided: ', password);
+        console.log('Stored password hash: ', usuario.password);
         if (usuario && await bcrypt.compare(password, usuario.password)) {
-            const { password, ...result } = usuario;
+            const { password: _, ...result } = usuario;
             return result;
         }
+        console.log('Password validation failed');
         return null;
     }
     async login(loginDto) {
-        const usuario = await this.validateUser(loginDto.rut, loginDto.password);
+        const usuario = await this.validateUser(loginDto.rut, loginDto.contraseña);
         if (!usuario) {
             throw new common_1.UnauthorizedException('Credenciales inválidas');
         }
@@ -46,34 +53,44 @@ let AuthService = class AuthService {
             isAdmin: usuario.isAdmin
         };
         return {
-            usuario,
             access_token: this.jwtService.sign(payload, { expiresIn: '24h' }),
+            user: {
+                id: usuario.id,
+                rut: usuario.rut,
+                nombre: usuario.nombre,
+                correo: usuario.correo,
+                telefono: usuario.telefono,
+                saldo: usuario.saldo,
+                isAdmin: usuario.isAdmin,
+            },
         };
     }
-    async register(createUsuarioDto) {
+    async register(registerDto) {
         const existingUser = await this.usuarioRepository.findOne({
-            where: { rut: createUsuarioDto.rut }
+            where: { rut: registerDto.rut }
         });
         if (existingUser) {
             throw new common_1.ConflictException('El usuario ya existe');
         }
-        const hashedPassword = await bcrypt.hash(createUsuarioDto.password, 10);
+        const hashedPassword = await bcrypt.hash(registerDto.contraseña, 10);
         const newUser = this.usuarioRepository.create({
-            ...createUsuarioDto,
+            rut: registerDto.rut,
+            nombre: registerDto.nombre_usuario,
+            correo: registerDto.correo,
+            telefono: registerDto.telefono,
             password: hashedPassword,
             isAdmin: false,
+            saldo: 0,
         });
         const savedUser = await this.usuarioRepository.save(newUser);
-        const { password, ...result } = savedUser;
-        const payload = {
-            sub: result.id,
-            rut: result.rut,
-            nombre: result.nombre,
-            isAdmin: result.isAdmin
-        };
         return {
-            usuario: result,
-            access_token: this.jwtService.sign(payload, { expiresIn: '24h' }),
+            id: savedUser.id,
+            rut: savedUser.rut,
+            nombre: savedUser.nombre,
+            correo: savedUser.correo,
+            telefono: savedUser.telefono,
+            saldo: savedUser.saldo,
+            isAdmin: savedUser.isAdmin,
         };
     }
 };

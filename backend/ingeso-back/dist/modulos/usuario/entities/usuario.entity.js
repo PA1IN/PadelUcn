@@ -27,7 +27,7 @@ let Usuario = class Usuario {
 };
 exports.Usuario = Usuario;
 __decorate([
-    (0, typeorm_1.PrimaryGeneratedColumn)(),
+    (0, typeorm_1.PrimaryGeneratedColumn)({ name: 'id_usuario' }),
     __metadata("design:type", Number)
 ], Usuario.prototype, "id", void 0);
 __decorate([
@@ -35,7 +35,7 @@ __decorate([
     __metadata("design:type", String)
 ], Usuario.prototype, "rut", void 0);
 __decorate([
-    (0, typeorm_1.Column)(),
+    (0, typeorm_1.Column)({ name: 'nombre_usuario' }),
     __metadata("design:type", String)
 ], Usuario.prototype, "nombre", void 0);
 __decorate([
@@ -43,7 +43,7 @@ __decorate([
     __metadata("design:type", String)
 ], Usuario.prototype, "correo", void 0);
 __decorate([
-    (0, typeorm_1.Column)({ name: 'contraseña' }),
+    (0, typeorm_1.Column)({ name: 'contrase??a' }),
     __metadata("design:type", String)
 ], Usuario.prototype, "password", void 0);
 __decorate([
@@ -55,7 +55,7 @@ __decorate([
     __metadata("design:type", Number)
 ], Usuario.prototype, "saldo", void 0);
 __decorate([
-    (0, typeorm_1.Column)({ default: false }),
+    (0, typeorm_1.Column)({ name: 'is_admin', default: false }),
     __metadata("design:type", Boolean)
 ], Usuario.prototype, "isAdmin", void 0);
 __decorate([
@@ -67,6 +67,6 @@ __decorate([
     __metadata("design:type", Array)
 ], Usuario.prototype, "historiales", void 0);
 exports.Usuario = Usuario = __decorate([
-    (0, typeorm_1.Entity)()
+    (0, typeorm_1.Entity)('usuario')
 ], Usuario);
 //# sourceMappingURL=usuario.entity.js.map

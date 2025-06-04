@@ -5,7 +5,7 @@ import { AxiosError } from 'axios';
 interface Registerdata
 {
     rut: string;
-    password: string;
+    contraseña: string;
     nombre: string;
     correo: string;
 }
@@ -16,9 +16,14 @@ interface Registerresponse
 }
 
 export function useRegister(onSuccess: () => void, onFail:(error:string)=>void) {
-    return useMutation<Registerresponse,AxiosError,Registerdata>({
-        mutationFn: async ({rut, password, nombre, correo}) => {
-            const respuesta = await api.post('api/auth/register',{rut, password, nombre, correo});
+    return useMutation<Registerresponse,AxiosError,Registerdata>({        mutationFn: async ({rut, contraseña, nombre, correo}) => {
+            const respuesta = await api.post('api/auth/register',{
+                rut, 
+                contraseña, 
+                nombre_usuario: nombre, 
+                correo,
+                telefono: '+56900000000' // Default phone number
+            });
             return respuesta.data;
         },
         onSuccess: () => {

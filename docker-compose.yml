@@ -1,4 +1,3 @@
-version: '3.8'
 services:
   padelucn-db:
     image: postgres:latest
@@ -11,8 +10,7 @@ services:
       POSTGRES_DB: padelucn
     volumes:
       - padelucn_data:/var/lib/postgresql/data
-      - ./backend/ingeso-back/database-schema-new.sql:/docker-entrypoint-initdb.d/01-schema.sql
-      - ./backend/ingeso-back/sample-data-new.sql:/docker-entrypoint-initdb.d/02-sample-data.sql
+      - ./backend/esquemafinal.sql:/docker-entrypoint-initdb.d/01-schema.sql
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ingeso -d padelucn"]
       interval: 10s
@@ -23,7 +21,7 @@ services:
       - padelucn-network
 
   padelucn-backend:
-    platform: linux/amd64  # Especificamos la plataforma explícitamente
+    platform: linux/amd64
     build:
       context: ./backend/ingeso-back
       dockerfile: Dockerfile

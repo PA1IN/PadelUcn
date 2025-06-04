@@ -43,6 +43,15 @@ let UsuarioController = class UsuarioController {
             return (0, api_response_util_1.CreateResponse)('Error al obtener usuarios', null, 'BAD_REQUEST', error.message, false);
         }
     }
+    async setAdmin(rut, updateAdminDto, req) {
+        try {
+            const usuario = await this.usuarioService.setAdmin(rut, updateAdminDto, req.user);
+            return (0, api_response_util_1.CreateResponse)(`Estado de administrador de usuario ${rut} actualizado exitosamente`, usuario, 'OK');
+        }
+        catch (error) {
+            return (0, api_response_util_1.CreateResponse)('Error al actualizar estado de administrador', null, 'BAD_REQUEST', error.message, false);
+        }
+    }
     async findOne(id, req) {
         try {
             if (!req.user.isAdmin && req.user.id !== +id) {
@@ -93,6 +102,17 @@ __decorate([
     __metadata("design:paramtypes", []),
     __metadata("design:returntype", Promise)
 ], UsuarioController.prototype, "findAll", null);
+__decorate([
+    (0, common_1.Patch)('set-admin/:rut'),
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),
+    (0, roles_decorator_1.Roles)('admin'),
+    __param(0, (0, common_1.Param)('rut')),
+    __param(1, (0, common_1.Body)()),
+    __param(2, (0, common_1.Request)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, usuario_dto_1.UpdateAdminDto, Object]),
+    __metadata("design:returntype", Promise)
+], UsuarioController.prototype, "setAdmin", null);
 __decorate([
     (0, common_1.Get)(':id'),
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),

@@ -4,7 +4,7 @@ import { AxiosError } from 'axios';
 
 interface Logindata {
     rut: string;
-    password: string;
+    contraseña: string;
 }
 
 interface Loginresponse {
@@ -17,9 +17,8 @@ interface Loginresponse {
 }
 
 export function useLogin(onSuccess: (token: string)=> void, onFail:(error:string)=> void) {
-    return useMutation<Loginresponse,AxiosError,Logindata>({
-        mutationFn: async ({rut,password}: Logindata): Promise<Loginresponse> => {
-            const respuesta = await api.post('/api/auth/login', {rut,password});
+    return useMutation<Loginresponse,AxiosError,Logindata>({        mutationFn: async ({rut, contraseña}: Logindata): Promise<Loginresponse> => {
+            const respuesta = await api.post('/api/auth/login', {rut, contraseña});
             return respuesta.data;
         },
         onSuccess: (data) => {

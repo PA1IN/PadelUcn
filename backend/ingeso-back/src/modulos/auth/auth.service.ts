@@ -4,7 +4,7 @@ import { Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 import * as bcrypt from 'bcrypt';
 import { Usuario } from '../usuario/entities/usuario.entity';
-import { CreateUsuarioDto, LoginUsuarioDto } from '../usuario/dto/usuario.dto';
+import { LoginDto, RegisterDto, LoginResponseDto, RegisterResponseDto } from './dto/auth.dto';
 
 @Injectable()
 export class AuthService {
@@ -33,9 +33,8 @@ export class AuthService {
     
     console.log('Password validation failed');
     return null;
-  }
-  async login(loginDto: LoginUsuarioDto) {
-    const usuario = await this.validateUser(loginDto.rut, loginDto.password);
+  }  async login(loginDto: LoginDto): Promise<LoginResponseDto> {
+    const usuario = await this.validateUser(loginDto.rut, loginDto.contraseña);
     
     if (!usuario) {
       throw new UnauthorizedException('Credenciales inválidas');
@@ -47,17 +46,22 @@ export class AuthService {
       nombre: usuario.nombre,
       isAdmin: usuario.isAdmin 
     };
-    
-    return {
-      usuario,
+      return {
       access_token: this.jwtService.sign(payload, { expiresIn: '24h' }),
+      user: {
+        id: usuario.id,
+        rut: usuario.rut,
+        nombre: usuario.nombre,
+        correo: usuario.correo,
+        telefono: usuario.telefono,
+        saldo: usuario.saldo,
+        isAdmin: usuario.isAdmin,
+      },
     };
-  }
-
-  async register(createUsuarioDto: CreateUsuarioDto) {
+  }  async register(registerDto: RegisterDto): Promise<RegisterResponseDto> {
     // Verificar si el usuario ya existe
     const existingUser = await this.usuarioRepository.findOne({ 
-      where: { rut: createUsuarioDto.rut } 
+      where: { rut: registerDto.rut } 
     });
     
     if (existingUser) {
@@ -65,26 +69,27 @@ export class AuthService {
     }
 
     // Crear nuevo usuario con contraseña encriptada
-    const hashedPassword = await bcrypt.hash(createUsuarioDto.password, 10);
+    const hashedPassword = await bcrypt.hash(registerDto.contraseña, 10);
     const newUser = this.usuarioRepository.create({
-      ...createUsuarioDto,
+      rut: registerDto.rut,
+      nombre: registerDto.nombre_usuario,
+      correo: registerDto.correo,
+      telefono: registerDto.telefono,
       password: hashedPassword,
       isAdmin: false,
+      saldo: 0,
     });
 
     const savedUser = await this.usuarioRepository.save(newUser);
-    const { password, ...result } = savedUser;
-    
-    const payload = { 
-      sub: result.id, 
-      rut: result.rut, 
-      nombre: result.nombre,
-      isAdmin: result.isAdmin 
-    };
     
     return {
-      usuario: result,
-      access_token: this.jwtService.sign(payload, { expiresIn: '24h' }),
+      id: savedUser.id,
+      rut: savedUser.rut,
+      nombre: savedUser.nombre,
+      correo: savedUser.correo,
+      telefono: savedUser.telefono,
+      saldo: savedUser.saldo,
+      isAdmin: savedUser.isAdmin,
     };
   }
 }

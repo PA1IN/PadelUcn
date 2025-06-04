@@ -21,11 +21,10 @@ export default function Login() {
       setErrorMsg(error)
     },
   )
-
   const submit = (e: SyntheticEvent) => {
     e.preventDefault()
     setErrorMsg("")
-    login.mutate({ rut, password })
+    login.mutate({ rut, contraseña: password })
   }
 
   return (

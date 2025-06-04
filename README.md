@@ -1,27 +1,47 @@
-# Padel UCN
+# 🏓 Padel UCN - Sistema de Reservas
 
-## Resumen del Sistema
+## 📋 Resumen del Sistema
 
-PadelUCN es una aplicación de reserva de canchas de pádel para la Universidad Católica del Norte. El sistema permite a los usuarios reservar canchas en horarios específicos, alquilar equipamiento deportivo y gestionar sus reservas.
+PadelUCN es una aplicación completa de reserva de canchas de pádel para la Universidad Católica del Norte. El sistema permite a los usuarios reservar canchas en horarios específicos, alquilar equipamiento deportivo y gestionar sus reservas con un sistema robusto de validaciones.
 
-### Características Principales
-- **Reserva de canchas**: Los usuarios pueden reservar canchas de lunes a viernes entre 8:00 AM y 8:00 PM
-- **Gestión de equipamiento**: Sistema de alquiler de equipamiento deportivo (raquetas, pelotas, accesorios)
-- **Gestión de usuario**: Perfiles de usuario con saldo para realizar reservas
-- **Historial de reservas**: Seguimiento completo de cambios de estado en las reservas
-- **Panel de administración**: Funcionalidades especiales para administradores
+### 🌟 Características Principales
+- **🏟️ Reserva de canchas**: Sistema completo de reservas con validación de disponibilidad
+- **🛠️ Gestión de equipamiento**: Alquiler de equipamiento deportivo (raquetas, pelotas, accesorios)
+- **👤 Gestión de usuarios**: Perfiles con saldo, autenticación JWT y roles de administrador
+- **📊 Historial de reservas**: Seguimiento completo de cambios de estado
+- **🔐 Autenticación segura**: Sistema JWT con validaciones robustas
+- **✅ Validaciones completas**: DTOs con validaciones en español para mejor UX
 
-### Instrucciones de Uso
-1. Inicie sesión con sus credenciales (RUT y contraseña)
-2. Navegue a la sección de reservas para seleccionar cancha, fecha y hora
-3. Agregue equipamiento opcional a su reserva
-4. Complete la reserva y realice el pago
+### 🚀 Instrucciones de Inicio Rápido
 
-### Usuarios de Prueba
-- **Admin**: 11111111-1 / password123
-- **Usuario Regular**: 22222222-2 / password123 
-- **Usuario Regular**: 33333333-3 / password123
-- **Usuario Regular**: 44444444-4 / password123
+#### 1. **Iniciar el Sistema**
+```bash
+# Iniciar base de datos
+docker-compose up -d padelucn-db
+
+# Iniciar backend (en otra terminal)
+cd backend/ingeso-back
+npm run start:dev
+```
+
+#### 2. **Acceder al Sistema**
+- **Backend API**: `http://localhost:8080/api`
+- **Base de datos**: PostgreSQL en puerto `5433`
+
+#### 3. **Usuarios de Prueba**
+| RUT | Contraseña | Rol |
+|-----|------------|-----|
+| `11111111-1` | `password123` | **Administrador** |
+| `22222222-2` | `password123` | Usuario regular |
+| `33333333-3` | `password123` | Usuario regular |
+| `44444444-4` | `password123` | Usuario regular |
+
+#### 4. **Flujo de Uso Básico**
+1. **Registrarse/Iniciar sesión** con RUT y contraseña
+2. **Explorar canchas disponibles** con `GET /api/canchas`
+3. **Verificar disponibilidad** con endpoints de disponibilidad
+4. **Crear reserva** con equipamiento opcional
+5. **Gestionar reservas** y ver historial
 
 ## Endpoints API
 
@@ -147,7 +167,12 @@ El sistema ahora maneja un modelo unificado para usuarios, donde se distinguen u
 | POST | `/api/usuarios` | Registra un nuevo usuario |
 | PATCH | `/api/usuarios/:rut` | Actualiza la información de un usuario existente |
 | DELETE | `/api/usuarios/:rut` | Elimina un usuario |
-| POST | `/api/auth/login` | Inicia sesión y obtiene un token de acceso |
+
+### Endpoints de Autenticación
+
+| Método HTTP | Endpoint | Descripción |
+|-------------|----------|-------------|
+| POST | `/api/auth/login` | Inicia sesión y obtiene un token de acceso JWT |
 | POST | `/api/auth/register` | Registra un nuevo usuario y obtiene un token |
 
 ### Formato de datos
@@ -163,33 +188,100 @@ El sistema ahora maneja un modelo unificado para usuarios, donde se distinguen u
 }
 ```
 
+**Respuesta exitosa (201 Created):**
+```json
+{
+  "statusCode": 201,
+  "message": "Usuario registrado exitosamente",
+  "data": {
+    "user": {
+      "id_usuario": 5,
+      "rut": "22222222-2",
+      "nombre_usuario": "Juan Pérez",
+      "correo": "juan@example.com",
+      "telefono": "+56922222222",
+      "saldo": 0,
+      "is_admin": false
+    },
+    "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjUsInJ1dCI6IjIyMjIyMjIyLTIiLCJpc0FkbWluIjpmYWxzZSwiaWF0IjoxNzM3MjIxNjIxLCJleHAiOjE3MzcyMjUyMjF9.ABC123..."
+  },
+  "success": true
+}
+```
+
 #### Inicio de sesión (POST `/api/auth/login`)
 ```json
 {
   "rut": "11111111-1",
-  "password": "password123"
+  "contraseña": "password123"
+}
+```
+
+**Respuesta exitosa (200 OK):**
+```json
+{
+  "statusCode": 200,
+  "message": "Inicio de sesión exitoso",
+  "data": {
+    "user": {
+      "id_usuario": 1,
+      "rut": "11111111-1",
+      "nombre_usuario": "Admin User",
+      "correo": "admin@padelucn.cl",
+      "telefono": "+56911111111",
+      "saldo": 100000,
+      "is_admin": true
+    },
+    "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjEsInJ1dCI6IjExMTExMTExLTEiLCJpc0FkbWluIjp0cnVlLCJpYXQiOjE3MzcyMjE2MjEsImV4cCI6MTczNzIyNTIyMX0.XYZ789..."
+  },
+  "success": true
+}
+```
+
+**Respuesta de error (401 Unauthorized):**
+```json
+{
+  "statusCode": 401,
+  "message": "Credenciales inválidas",
+  "data": null,
+  "success": false,
+  "error": "RUT o contraseña incorrectos"
+}
+```
+
+**Respuesta de error de validación (400 Bad Request):**
+```json
+{
+  "statusCode": 400,
+  "message": "Error de validación",
+  "data": null,
+  "success": false,
+  "error": [
+    "El RUT debe tener formato chileno válido (ej: 12345678-9)",
+    "La contraseña debe tener al menos 6 caracteres"
+  ]
 }
 ```
 
 > **Nota importante:** 
-> - Aunque en la base de datos el campo se llama "contraseña", la API espera recibir "password" debido a cómo están configurados los DTOs en el backend.
+> - Los campos de contraseña en la API utilizan `contraseña` tanto para login como para registro.
 > - Los siguientes usuarios de prueba están disponibles con la contraseña "password123":
 >   - 11111111-1 (Admin)
 >   - 22222222-2 (Usuario regular)
 >   - 33333333-3 (Usuario regular)
 >   - 44444444-4 (Usuario regular)
 
-#### Actualización de usuario (PATCH `/api/users/:rut`)
+#### Actualización de usuario (PATCH `/api/usuarios/:rut`)
 ```json
 {
-  "nombre": "Juan Carlos Pérez",
+  "nombre_usuario": "Juan Carlos Pérez",
   "correo": "juan.perez@nuevoemail.com",
   "telefono": "+56987654321",
   "saldo": 50000
 }
 ```
 
-#### Respuesta al obtener un usuario (GET `/api/users/:rut`)
+#### Respuesta al obtener un usuario (GET `/api/usuarios/:rut`)
 ```json
 {
   "statusCode": 200,
@@ -230,7 +322,7 @@ El sistema maneja bloques de tiempo predefinidos para facilitar la reserva de ca
 
 ### Formato de datos
 
-#### Creación de bloque (POST `/api/bloque`)
+#### Creación de bloque (POST `/api/bloques`)
 ```json
 {
   "fecha_date": "2025-06-02",
@@ -239,7 +331,7 @@ El sistema maneja bloques de tiempo predefinidos para facilitar la reserva de ca
 }
 ```
 
-#### Respuesta al obtener bloques por fecha (GET `/api/bloque/fecha/:fecha`)
+#### Respuesta al obtener bloques por fecha (GET `/api/bloques/fecha/:fecha`)
 ```json
 {
   "statusCode": 200,
@@ -265,6 +357,113 @@ El sistema maneja bloques de tiempo predefinidos para facilitar la reserva de ca
     }
   ],
   "success": true
+}
+```
+
+## 🔐 Sistema de Validaciones y Errores
+
+### Validaciones Implementadas
+
+El sistema cuenta con un completo sistema de validaciones con mensajes en español para mejorar la experiencia del usuario:
+
+#### **Validaciones de Usuario/Autenticación:**
+- **RUT**: Formato chileno válido (ej: 12345678-9)
+- **Nombre**: Mínimo 2 caracteres, máximo 100 caracteres
+- **Correo**: Formato de email válido
+- **Contraseña**: Mínimo 6 caracteres
+- **Teléfono**: Formato chileno (+56XXXXXXXXX)
+
+#### **Validaciones de Reserva:**
+- **Fecha**: Formato válido (YYYY-MM-DD), no puede ser en el pasado
+- **Horarios**: Formato HH:MM:SS, hora inicio debe ser menor que hora fin
+- **Duración**: Máximo 3 horas por reserva
+- **Referencias**: Usuario y cancha deben existir
+
+#### **Validaciones de Cancha:**
+- **Número**: Único en el sistema
+- **Nombre**: Mínimo 3 caracteres, máximo 100 caracteres
+- **Valor**: Entre $5,000 y $50,000 pesos chilenos
+- **Capacidad**: Entre 2 y 8 jugadores máximo
+
+#### **Validaciones de Equipamiento:**
+- **Tipo**: Solo valores permitidos (Raquetas, Pelotas, Accesorios, Protección)
+- **Stock**: Número positivo, máximo 100 unidades
+- **Costo**: Entre $100 y $10,000 pesos chilenos
+
+#### **Validaciones de Jugador:**
+- **Edad**: Entre 10 y 80 años
+- **RUT**: Formato chileno válido y único por reserva
+
+### Ejemplos de Respuestas de Error
+
+#### Error de Validación (400 Bad Request)
+```json
+{
+  "statusCode": 400,
+  "message": "Error de validación",
+  "data": null,
+  "success": false,
+  "error": [
+    "El RUT debe tener formato chileno válido (ej: 12345678-9)",
+    "El nombre debe tener entre 2 y 100 caracteres",
+    "El correo electrónico debe tener un formato válido",
+    "El teléfono debe tener formato chileno (+56XXXXXXXXX)"
+  ]
+}
+```
+
+#### Error de Autenticación (401 Unauthorized)
+```json
+{
+  "statusCode": 401,
+  "message": "No autorizado",
+  "data": null,
+  "success": false,
+  "error": "Token de acceso requerido o inválido"
+}
+```
+
+#### Error de Autorización (403 Forbidden)
+```json
+{
+  "statusCode": 403,
+  "message": "Acceso denegado",
+  "data": null,
+  "success": false,
+  "error": "Se requieren permisos de administrador para esta acción"
+}
+```
+
+#### Error de Recurso No Encontrado (404 Not Found)
+```json
+{
+  "statusCode": 404,
+  "message": "Recurso no encontrado",
+  "data": null,
+  "success": false,
+  "error": "El usuario con RUT 99999999-9 no existe"
+}
+```
+
+#### Error de Conflicto (409 Conflict)
+```json
+{
+  "statusCode": 409,
+  "message": "Conflicto de recursos",
+  "data": null,
+  "success": false,
+  "error": "La cancha ya está reservada en ese horario"
+}
+```
+
+#### Error del Servidor (500 Internal Server Error)
+```json
+{
+  "statusCode": 500,
+  "message": "Error interno del servidor",
+  "data": null,
+  "success": false,
+  "error": "Ha ocurrido un error inesperado. Contacte al administrador."
 }
 ```
 
@@ -904,44 +1103,526 @@ El sistema registra transacciones asociadas a boletas de equipamiento:
 
 ## Notas importantes
 
-1. **Autenticación**: Todos los endpoints (excepto login y register) requieren un token JWT válido en el header de autorización.
-   - Para usar el token, agrégalo al header de las peticiones HTTP como: `Authorization: Bearer [token]`
-   - El token expira después de 1 hora, por lo que deberás iniciar sesión nuevamente si ha caducado
+### 🔑 Autenticación y Autorización
 
-2. **Rol de administrador**: Los endpoints para crear, actualizar o eliminar canchas, equipamiento y usuarios ahora requieren que el usuario tenga `isAdmin=true`.
+1. **Autenticación JWT**: Todos los endpoints (excepto `/api/auth/login` y `/api/auth/register`) requieren un token JWT válido.
 
-3. **Estados del historial de reservas**: Los posibles estados son:
+   **Cómo usar el token:**
+   ```http
+   Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjEsInJ1dCI6IjExMTExMTExLTEiLCJpc0FkbWluIjp0cnVlLCJpYXQiOjE3MzcyMjE2MjEsImV4cCI6MTczNzIyNTIyMX0.XYZ789...
+   ```
+
+   **Ejemplo completo con curl:**
+   ```bash
+   curl -X GET http://localhost:8080/api/usuarios \
+     -H "Authorization: Bearer YOUR_TOKEN_HERE" \
+     -H "Content-Type: application/json"
+   ```
+
+   **Ejemplo con JavaScript/Fetch:**
+   ```javascript
+   const token = localStorage.getItem('authToken');
+   
+   fetch('http://localhost:8080/api/usuarios', {
+     headers: {
+       'Authorization': `Bearer ${token}`,
+       'Content-Type': 'application/json'
+     }
+   })
+   .then(response => response.json())
+   .then(data => console.log(data));
+   ```
+
+2. **Expiración del token**: Los tokens JWT expiran después de **1 hora**. Después de ese tiempo, deberás iniciar sesión nuevamente para obtener un nuevo token.
+
+3. **Roles de usuario**: El sistema distingue entre dos tipos de usuarios:
+   - **Administradores** (`is_admin: true`): Pueden crear, modificar y eliminar canchas, equipamiento, y gestionar todos los usuarios
+   - **Usuarios regulares** (`is_admin: false`): Pueden hacer reservas, ver sus propias reservas y gestionar su perfil
+
+### 🛡️ Endpoints que Requieren Permisos de Administrador
+
+Los siguientes endpoints requieren que el usuario autenticado tenga `is_admin: true`:
+
+| Método | Endpoint | Descripción |
+|--------|----------|-------------|
+| POST | `/api/canchas` | Crear nueva cancha |
+| PATCH | `/api/canchas/:numero` | Modificar cancha |
+| DELETE | `/api/canchas/:numero` | Eliminar cancha |
+| POST | `/api/equipamiento` | Crear nuevo equipamiento |
+| PATCH | `/api/equipamiento/:id` | Modificar equipamiento |
+| DELETE | `/api/equipamiento/:id` | Eliminar equipamiento |
+| GET | `/api/usuarios` | Listar todos los usuarios |
+| DELETE | `/api/usuarios/:rut` | Eliminar usuario |
+| GET | `/api/reservas/estadisticas` | Ver estadísticas del sistema |
+
+### 📋 Reglas de Negocio
+
+2. **Estados del historial de reservas**: Los posibles estados son:
    - `Pendiente`: Estado inicial al crear una reserva
    - `Modificado`: Cuando se modifica una reserva existente
    - `Cancelado`: Cuando se cancela una reserva
    - `Completado`: Cuando una reserva se marca como realizada
 
-4. **Mantenimiento de canchas**: Las canchas con `mantenimiento=true` no están disponibles para reservas.
+3. **Mantenimiento de canchas**: Las canchas con `mantenimiento=true` no están disponibles para reservas.
 
-5. **Horarios de reserva**: Por reglas de negocio, las canchas solo se pueden reservar:
+4. **Horarios de reserva**: Por reglas de negocio, las canchas solo se pueden reservar:
    - De lunes a viernes
    - Entre las 8:00 y las 20:00 horas
    - No hay disponibilidad los fines de semana
 
+5. **Validaciones específicas chilenas**:
+   - **Formato RUT**: 12345678-9 (con dígito verificador)
+   - **Formato teléfono**: +56XXXXXXXXX (código país + 9 dígitos)
+   - **Monedas**: Valores en pesos chilenos (CLP)
+
+### 🔧 Headers Requeridos
+
+Para todas las peticiones HTTP, incluye los siguientes headers:
+
+```http
+Content-Type: application/json
+Authorization: Bearer YOUR_JWT_TOKEN_HERE
+```
+
+### 🌐 CORS y Frontend
+
+El backend está configurado para aceptar peticiones desde cualquier origen durante el desarrollo. En producción, esto debe configurarse para aceptar solo dominios autorizados.
+
+## 🧪 Pruebas de API - Guía Práctica
+
+### Configuración de Cliente HTTP (Postman/Insomnia)
+
+#### 1. **Variables de Entorno**
+Crea las siguientes variables en tu cliente HTTP:
+
+```
+BASE_URL = http://localhost:8080/api
+AUTH_TOKEN = (se llenará después del login)
+```
+
+#### 2. **Flujo de Prueba Completo**
+
+**Paso 1: Registro de Usuario**
+```http
+POST {{BASE_URL}}/auth/register
+Content-Type: application/json
+
+{
+  "rut": "55555555-5",
+  "nombre_usuario": "Usuario Prueba",
+  "correo": "prueba@test.com",
+  "contraseña": "test123456",
+  "telefono": "+56955555555"
+}
+```
+
+**Paso 2: Inicio de Sesión**
+```http
+POST {{BASE_URL}}/auth/login
+Content-Type: application/json
+
+{
+  "rut": "55555555-5",
+  "contraseña": "test123456"
+}
+```
+*Guarda el token devuelto en la variable AUTH_TOKEN*
+
+**Paso 3: Consultar Canchas**
+```http
+GET {{BASE_URL}}/canchas
+Authorization: Bearer {{AUTH_TOKEN}}
+```
+
+**Paso 4: Verificar Disponibilidad**
+```http
+GET {{BASE_URL}}/reservas/disponibilidad-dia/1/2025-06-15
+Authorization: Bearer {{AUTH_TOKEN}}
+```
+
+**Paso 5: Crear Reserva**
+```http
+POST {{BASE_URL}}/reservas
+Authorization: Bearer {{AUTH_TOKEN}}
+Content-Type: application/json
+
+{
+  "fecha": "2025-06-15",
+  "hora_inicio": "10:00:00",
+  "hora_termino": "11:00:00",
+  "rut_usuario": "55555555-5",
+  "numero_cancha": 1,
+  "id_bloque": 3
+}
+```
+
+**Paso 6: Agregar Equipamiento**
+```http
+POST {{BASE_URL}}/boleta-equipamiento
+Authorization: Bearer {{AUTH_TOKEN}}
+Content-Type: application/json
+
+{
+  "id_reserva": 1,
+  "id_equipamiento": 1,
+  "cantidad": 2
+}
+```
+
+### Scripts de Prueba Automatizada
+
+#### Script en Node.js para Pruebas Rápidas
+
+```javascript
+const axios = require('axios');
+
+const BASE_URL = 'http://localhost:8080/api';
+let authToken = '';
+
+async function testAPI() {
+  try {    // 1. Login
+    const loginResponse = await axios.post(`${BASE_URL}/auth/login`, {
+      rut: '11111111-1',
+      contraseña: 'password123'
+    });
+    
+    authToken = loginResponse.data.data.token;
+    console.log('✅ Login exitoso');
+    
+    // 2. Obtener canchas
+    const canchasResponse = await axios.get(`${BASE_URL}/canchas`, {
+      headers: { Authorization: `Bearer ${authToken}` }
+    });
+    
+    console.log(`✅ Canchas obtenidas: ${canchasResponse.data.data.length}`);
+    
+    // 3. Verificar disponibilidad
+    const fecha = '2025-06-15';
+    const numeroCancha = 1;
+    
+    const disponibilidadResponse = await axios.get(
+      `${BASE_URL}/reservas/disponibilidad-dia/${numeroCancha}/${fecha}`,
+      { headers: { Authorization: `Bearer ${authToken}` } }
+    );
+    
+    console.log(`✅ Horarios disponibles: ${disponibilidadResponse.data.data.horariosDisponibles.length}`);
+    
+    console.log('🎉 Todas las pruebas pasaron correctamente');
+    
+  } catch (error) {
+    console.error('❌ Error en las pruebas:', error.response?.data || error.message);
+  }
+}
+
+testAPI();
+```
+
+### Colección de Postman
+
+Puedes importar esta colección JSON en Postman para tener todos los endpoints configurados:
+
+```json
+{
+  "info": {
+    "name": "PadelUCN API",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "BASE_URL",
+      "value": "http://localhost:8080/api"
+    },
+    {
+      "key": "AUTH_TOKEN",
+      "value": ""
+    }
+  ],
+  "item": [
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Login",
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "body": {              "mode": "raw",
+              "raw": "{\n  \"rut\": \"11111111-1\",\n  \"contraseña\": \"password123\"\n}"
+            },
+            "url": {
+              "raw": "{{BASE_URL}}/auth/login",
+              "host": ["{{BASE_URL}}"],
+              "path": ["auth", "login"]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}
+```
+
 ## Instrucciones de Ejecución
 
-Para ejecutar la aplicación localmente:
+### 📋 Requisitos Previos
 
-1. **Requisitos previos:**
-   - Docker y Docker Compose instalados
-   - Node.js (versión 14 o superior) para ejecutar scripts locales
+- **Docker** y **Docker Compose** instalados
+- **Node.js** versión 18 o superior
+- **PostgreSQL** (incluido en Docker Compose)
+- **NPM** o **Yarn**
 
-2. **Iniciar servicios:**
-   ```
-   docker-compose up -d
-   ```
+### 🚀 Instalación y Configuración
 
-3. **Acceso a la aplicación:**
-   - Frontend: http://localhost:3000
-   - API Backend: http://localhost:8080/api
-   - Base de datos: PostgreSQL en puerto 5433
+#### 1. **Clonar el Repositorio**
+```bash
+git clone https://github.com/tu-usuario/PadelUcn.git
+cd PadelUcn
+```
 
-4. **Pruebas de API:**
-   Puede probar los endpoints con Postman o cualquier cliente HTTP usando los ejemplos proporcionados en esta documentación.
+#### 2. **Configurar Variables de Entorno**
+Crea un archivo `.env` en el directorio `backend/ingeso-back/`:
+
+```env
+# Base de datos
+DB_HOST=localhost
+DB_PORT=5433
+DB_USERNAME=padeluser
+DB_PASSWORD=padelpass
+DB_DATABASE=padelucn
+
+# JWT
+JWT_SECRET=tu_clave_secreta_muy_segura_aqui
+JWT_EXPIRES_IN=1h
+
+# Puerto del servidor
+PORT=8080
+```
+
+#### 3. **Iniciar Base de Datos**
+```bash
+# Desde el directorio raíz del proyecto
+docker-compose up -d padelucn-db
+
+# Verificar que esté corriendo
+docker-compose ps
+```
+
+#### 4. **Instalar Dependencias del Backend**
+```bash
+cd backend/ingeso-back
+npm install
+```
+
+#### 5. **Iniciar Backend en Modo Desarrollo**
+```bash
+npm run start:dev
+```
+
+#### 6. **Verificar Instalación**
+Abre tu navegador en: `http://localhost:8080/api`
+
+Deberías ver un mensaje de bienvenida de la API.
+
+### 🔧 Comandos Útiles
+
+```bash
+# Ver logs de la base de datos
+docker-compose logs padelucn-db
+
+# Reiniciar solo la base de datos
+docker-compose restart padelucn-db
+
+# Detener todos los servicios
+docker-compose down
+
+# Limpiar volúmenes (⚠️ Esto borrará todos los datos)
+docker-compose down -v
+
+# Ver el estado de los contenedores
+docker-compose ps
+
+# Ejecutar comandos en el contenedor de PostgreSQL
+docker-compose exec padelucn-db psql -U padeluser -d padelucn
+```
+
+### 🐛 Solución de Problemas Comunes
+
+#### **Puerto 8080 ocupado**
+```bash
+# Ver qué proceso usa el puerto 8080
+lsof -i :8080
+
+# En Windows
+netstat -ano | findstr :8080
+```
+
+#### **Base de datos no conecta**
+```bash
+# Verificar que PostgreSQL esté corriendo
+docker-compose logs padelucn-db
+
+# Conectar manualmente a la base de datos
+docker-compose exec padelucn-db psql -U padeluser -d padelucn
+```
+
+#### **Error de permisos en Docker**
+```bash
+# En Linux/Mac, agregar usuario al grupo docker
+sudo usermod -aG docker $USER
+
+# Luego cerrar sesión y volver a iniciar
+```
+
+### 📊 Acceso a Servicios
+
+Una vez que todo esté corriendo:
+
+- **Backend API**: `http://localhost:8080/api`
+- **Base de datos**: `localhost:5433` (usuario: `padeluser`, contraseña: `padelpass`)
+- **Frontend** (si aplica): `http://localhost:3000`
+
+### 🧪 Datos de Prueba
+
+El sistema incluye los siguientes usuarios de prueba:
+
+| RUT | Contraseña | Rol | Saldo |
+|-----|------------|-----|-------|
+| `11111111-1` | `password123` | Administrador | $100,000 |
+| `22222222-2` | `password123` | Usuario | $50,000 |
+| `33333333-3` | `password123` | Usuario | $30,000 |
+| `44444444-4` | `password123` | Usuario | $25,000 |
+
+## 🔧 Arquitectura del Sistema
+
+### Stack Tecnológico
+
+**Backend:**
+- **NestJS** - Framework de Node.js
+- **TypeScript** - Lenguaje de programación
+- **TypeORM** - ORM para base de datos
+- **PostgreSQL** - Base de datos relacional
+- **JWT** - Autenticación y autorización
+- **class-validator** - Validaciones de DTOs
+- **bcrypt** - Hashing de contraseñas
+
+**Infraestructura:**
+- **Docker & Docker Compose** - Containerización
+- **NPM** - Gestión de paquetes
+
+### Estructura del Proyecto
+
+```
+PadelUcn/
+├── backend/
+│   └── ingeso-back/
+│       ├── src/
+│       │   ├── modulos/           # Módulos de la aplicación
+│       │   │   ├── auth/          # Autenticación JWT
+│       │   │   ├── usuario/       # Gestión de usuarios
+│       │   │   ├── cancha/        # Gestión de canchas
+│       │   │   ├── reserva/       # Sistema de reservas
+│       │   │   ├── equipamiento/  # Equipamiento deportivo
+│       │   │   ├── bloque/        # Bloques de tiempo
+│       │   │   ├── jugador/       # Jugadores por reserva
+│       │   │   ├── historial-reserva/ # Historial de cambios
+│       │   │   ├── boleta-equipamiento/ # Boletas de alquiler
+│       │   │   └── transaccion/   # Transacciones
+│       │   ├── main.ts           # Punto de entrada
+│       │   └── app.module.ts     # Módulo principal
+│       ├── package.json
+│       └── tsconfig.json
+├── docker-compose.yml            # Servicios Docker
+├── esquemafinal.sql             # Schema de base de datos
+└── README.md                    # Esta documentación
+```
+
+### Base de Datos
+
+**Entidades Principales:**
+- `Usuario` - Usuarios del sistema (administradores y regulares)
+- `Cancha` - Canchas disponibles para reserva
+- `Reserva` - Reservas realizadas por usuarios
+- `Bloque` - Bloques de tiempo disponibles
+- `Equipamiento` - Equipamiento deportivo para alquiler
+- `HistorialReserva` - Historial de cambios de estado
+- `BoletaEquipamiento` - Boletas de alquiler de equipamiento
+- `Jugador` - Jugadores asociados a reservas
+- `Transaccion` - Transacciones del sistema
+
+## 📈 Próximos Pasos y Mejoras
+
+### Funcionalidades Pendientes
+
+1. **Sistema de Pagos**
+   - Integración con pasarelas de pago
+   - Gestión de saldos y transacciones
+   - Facturación automática
+
+2. **Notificaciones**
+   - Envío de emails de confirmación
+   - Recordatorios de reservas
+   - Notificaciones push
+
+3. **Reportes Avanzados**
+   - Dashboard administrativo
+   - Reportes de ingresos
+   - Análisis de uso de canchas
+
+4. **Frontend Completo**
+   - Interfaz web responsive
+   - Aplicación móvil
+   - Panel administrativo
+
+### Consideraciones de Producción
+
+1. **Seguridad**
+   - HTTPS obligatorio
+   - Rate limiting
+   - Logging de seguridad
+   - Validación de entrada más estricta
+
+2. **Performance**
+   - Cache con Redis
+   - Optimización de consultas
+   - CDN para assets estáticos
+
+3. **Monitoreo**
+   - Logging estructurado
+   - Métricas de aplicación
+   - Alertas automáticas
+
+## 🤝 Contribución
+
+Para contribuir al proyecto:
+
+1. Fork el repositorio
+2. Crea una rama para tu feature (`git checkout -b feature/nueva-funcionalidad`)
+3. Commit tus cambios (`git commit -am 'Agrega nueva funcionalidad'`)
+4. Push a la rama (`git push origin feature/nueva-funcionalidad`)
+5. Crea un Pull Request
+
+### Estándares de Código
+
+- **TypeScript** estricto
+- **ESLint** para linting
+- **Prettier** para formateo
+- **Conventional Commits** para mensajes de commit
+- **DTOs** con validaciones completas
+- **Documentación** en código y README
+
+## 📞 Soporte y Contacto
+
+- **Issues**: Reporta bugs o solicita features en GitHub Issues
+- **Documentación**: Esta documentación se actualiza continuamente
+- **Email**: contacto@padelucn.cl (ejemplo)
+
+## 📄 Licencia
+
+Este proyecto está bajo la Licencia MIT. Ver el archivo `LICENSE` para más detalles.
+
+---
+
+**PadelUCN** - Sistema de Reservas v1.0
+Desarrollado para la Universidad Católica del Norte
 
 
