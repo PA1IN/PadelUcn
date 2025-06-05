@@ -26,6 +26,10 @@ export class Reserva {
   @JoinColumn({ name: 'id_cancha' })
   cancha: Cancha;
 
+  @ManyToOne(() => Bloque, bloque => bloque.reservas) //VER que wea
+  @JoinColumn({ name: 'id_bloque'})
+  bloque: Bloque;
+
   @OneToMany(() => HistorialReserva, historial => historial.reserva)
   historial: HistorialReserva[];
 
