@@ -19,11 +19,12 @@ let Cancha = class Cancha {
     descripcion;
     valor;
     mantenimiento;
+    cantidadMaxJugador;
     reservas;
 };
 exports.Cancha = Cancha;
 __decorate([
-    (0, typeorm_1.PrimaryGeneratedColumn)(),
+    (0, typeorm_1.PrimaryGeneratedColumn)({ name: 'id_cancha' }),
     __metadata("design:type", Number)
 ], Cancha.prototype, "id", void 0);
 __decorate([
@@ -47,10 +48,14 @@ __decorate([
     __metadata("design:type", Boolean)
 ], Cancha.prototype, "mantenimiento", void 0);
 __decorate([
+    (0, typeorm_1.Column)({ name: 'cantidad_max_jugador', default: 4 }),
+    __metadata("design:type", Number)
+], Cancha.prototype, "cantidadMaxJugador", void 0);
+__decorate([
     (0, typeorm_1.OneToMany)(() => reserva_entity_1.Reserva, (reserva) => reserva.cancha),
     __metadata("design:type", Array)
 ], Cancha.prototype, "reservas", void 0);
 exports.Cancha = Cancha = __decorate([
-    (0, typeorm_1.Entity)()
+    (0, typeorm_1.Entity)('cancha')
 ], Cancha);
 //# sourceMappingURL=cancha.entity.js.map

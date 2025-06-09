@@ -16,6 +16,7 @@ class CreateJugadorDto {
     apellido;
     rut;
     edad;
+    id_reserva;
 }
 exports.CreateJugadorDto = CreateJugadorDto;
 __decorate([
@@ -43,6 +44,11 @@ __decorate([
     (0, class_validator_1.Max)(80, { message: 'La edad máxima es 80 años' }),
     __metadata("design:type", Number)
 ], CreateJugadorDto.prototype, "edad", void 0);
+__decorate([
+    (0, class_validator_1.IsNotEmpty)({ message: 'El ID de reserva es requerido' }),
+    (0, class_validator_1.IsNumber)({}, { message: 'El ID de reserva debe ser un número' }),
+    __metadata("design:type", Number)
+], CreateJugadorDto.prototype, "id_reserva", void 0);
 class UpdateJugadorDto {
     nombre;
     apellido;

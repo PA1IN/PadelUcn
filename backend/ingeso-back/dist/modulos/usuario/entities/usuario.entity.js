@@ -43,7 +43,7 @@ __decorate([
     __metadata("design:type", String)
 ], Usuario.prototype, "correo", void 0);
 __decorate([
-    (0, typeorm_1.Column)({ name: 'contrase??a' }),
+    (0, typeorm_1.Column)({ name: 'contrasena' }),
     __metadata("design:type", String)
 ], Usuario.prototype, "password", void 0);
 __decorate([

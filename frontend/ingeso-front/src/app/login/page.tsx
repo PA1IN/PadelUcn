@@ -18,11 +18,10 @@ export default function Login() {
       router.push("/home")
     },
   )
-
   const submit = (e: SyntheticEvent) => {
     e.preventDefault()
     setErrorMsg("")
-    login.mutate({ rut, password })
+    login.mutate({ rut, contraseña: password })
   }
 
   return (

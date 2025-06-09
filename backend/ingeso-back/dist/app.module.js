@@ -18,6 +18,7 @@ const auth_module_1 = require("./modulos/auth/auth.module");
 const reserva_module_1 = require("./modulos/reserva/reserva.module");
 const equipamiento_module_1 = require("./modulos/equipamiento/equipamiento.module");
 const bloque_module_1 = require("./modulos/bloque/bloque.module");
+const jugador_module_1 = require("./modulos/jugador/jugador.module");
 let AppModule = class AppModule {
 };
 exports.AppModule = AppModule;
@@ -42,10 +43,10 @@ exports.AppModule = AppModule = __decorate([
                     retryDelay: 3000,
                     connectTimeoutMS: 10000,
                 }),
-            }), cancha_module_1.CanchaModule,
-            usuario_module_1.UsuarioModule, auth_module_1.AuthModule, reserva_module_1.ReservaModule,
+            }), cancha_module_1.CanchaModule, usuario_module_1.UsuarioModule, auth_module_1.AuthModule, reserva_module_1.ReservaModule,
             equipamiento_module_1.EquipamientoModule,
             bloque_module_1.BloqueModule,
+            jugador_module_1.JugadorModule,
         ],
         controllers: [app_controller_1.AppController],
         providers: [app_service_1.AppService], })

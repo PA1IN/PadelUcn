@@ -21,11 +21,10 @@ export default function Register() {
       setErrorMsg(error)
     },
   )
-
   const enviar = (e: SyntheticEvent) => {
     e.preventDefault()
     setErrorMsg("")
-    register.mutate({ rut, password, correo, nombre })
+    register.mutate({ rut, contraseña: password, correo, nombre })
   }
 
   return (

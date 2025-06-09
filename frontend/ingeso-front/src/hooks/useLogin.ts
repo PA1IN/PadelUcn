@@ -1,23 +1,33 @@
-import { useMutation } from '@tanstack/react-query';
-import api from '@/api/axios';
+import {useMutation} from '@tanstack/react-query';
+import api from '../api/axios';
+import { AxiosError } from 'axios';
 
-interface LoginInput {
-  rut: string;
-  password: string;
+interface Logindata {
+    rut: string;
+    contraseña: string;
 }
 
-interface LoginResponse {
-  token: string;
+interface Loginresponse {
+    message: string;
+    data: {
+        token: string;
+    };
+    statusCode: number;
+    success: boolean;
 }
 
-export function useLogin(onSuccessCallback?: (token: string) => void) {
-  return useMutation<LoginResponse, Error, LoginInput>({
-    mutationFn: async (credentials) => {
-      const { data } = await api.post('/auth/login', credentials);
-      return data;
-    },
-    onSuccess: (data) => {
-      onSuccessCallback?.(data.token);
-    },
-  });
+export function useLogin(onSuccess: (token: string)=> void, onFail:(error:string)=> void) {
+    return useMutation<Loginresponse,AxiosError,Logindata>({        mutationFn: async ({rut, contraseña}: Logindata): Promise<Loginresponse> => {
+            const respuesta = await api.post('/api/auth/login', {rut, contraseña});
+            return respuesta.data;
+        },
+        onSuccess: (data) => {
+            onSuccess(data.data.token);
+        },
+        onError:(error) => {
+            const mensaje = (error.response?.data as {message?: string})?.message || 'no se pudo identificar el error xd';
+            onFail(mensaje);
+        }
+
+    });
 }

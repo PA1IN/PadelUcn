@@ -20,7 +20,7 @@ let Equipamiento = class Equipamiento {
 };
 exports.Equipamiento = Equipamiento;
 __decorate([
-    (0, typeorm_1.PrimaryGeneratedColumn)(),
+    (0, typeorm_1.PrimaryGeneratedColumn)({ name: 'id_equipamiento' }),
     __metadata("design:type", Number)
 ], Equipamiento.prototype, "id", void 0);
 __decorate([
@@ -40,6 +40,6 @@ __decorate([
     __metadata("design:type", Number)
 ], Equipamiento.prototype, "costo", void 0);
 exports.Equipamiento = Equipamiento = __decorate([
-    (0, typeorm_1.Entity)()
+    (0, typeorm_1.Entity)('equipamiento')
 ], Equipamiento);
 //# sourceMappingURL=equipamiento.entity.js.map
