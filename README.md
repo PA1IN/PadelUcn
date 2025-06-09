@@ -213,7 +213,7 @@ El sistema ahora maneja un modelo unificado para usuarios, donde se distinguen u
 ```json
 {
   "rut": "11111111-1",
-  "contraseña": "password123"
+  "contrasena": "password123"
 }
 ```
 
@@ -508,11 +508,10 @@ El sistema permite la gestión de reservas de canchas con su respectivo historia
 ```json
 {
   "fecha": "2025-06-09",
-  "hora_inicio": "09:00:00",
-  "hora_termino": "10:30:00",
+  "hora_inicio": "09:00",
+  "hora_termino": "10:30",
   "rut_usuario": "22222222-2",
-  "numero_cancha": 2,
-  "id_bloque": 2
+  "numero_cancha": 2
 }
 ```
 
