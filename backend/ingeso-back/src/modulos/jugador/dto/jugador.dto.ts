@@ -21,6 +21,10 @@ export class CreateJugadorDto {
   @Min(10, { message: 'La edad mínima es 10 años' })
   @Max(80, { message: 'La edad máxima es 80 años' })
   edad: number;
+  
+  @IsNotEmpty({ message: 'El ID de reserva es requerido' })
+  @IsNumber({}, { message: 'El ID de reserva debe ser un número' })
+  id_reserva: number;
 }
 
 export class UpdateJugadorDto {

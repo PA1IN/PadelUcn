@@ -9,6 +9,7 @@ import { AuthModule } from './modulos/auth/auth.module';
 import { ReservaModule } from './modulos/reserva/reserva.module';
 import { EquipamientoModule } from './modulos/equipamiento/equipamiento.module';
 import { BloqueModule } from './modulos/bloque/bloque.module';
+import { JugadorModule } from './modulos/jugador/jugador.module';
 
 @Module({  imports: [
     ConfigModule.forRoot({
@@ -29,10 +30,10 @@ import { BloqueModule } from './modulos/bloque/bloque.module';
         retryAttempts: 5,
         retryDelay: 3000,
         connectTimeoutMS: 10000,
-      }),    }),    CanchaModule,
-    UsuarioModule,    AuthModule,    ReservaModule,
+      }),    }),    CanchaModule,    UsuarioModule,    AuthModule,    ReservaModule,
     EquipamientoModule,
     BloqueModule,
+    JugadorModule,
   ],
   controllers: [AppController],
   providers: [AppService],

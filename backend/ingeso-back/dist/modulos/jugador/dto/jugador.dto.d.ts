@@ -3,6 +3,7 @@ export declare class CreateJugadorDto {
     apellido: string;
     rut: string;
     edad: number;
+    id_reserva: number;
 }
 export declare class UpdateJugadorDto {
     nombre?: string;

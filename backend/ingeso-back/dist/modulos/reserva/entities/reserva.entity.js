@@ -31,7 +31,7 @@ let Reserva = class Reserva {
 };
 exports.Reserva = Reserva;
 __decorate([
-    (0, typeorm_1.PrimaryGeneratedColumn)(),
+    (0, typeorm_1.PrimaryGeneratedColumn)({ name: 'id_reserva' }),
     __metadata("design:type", Number)
 ], Reserva.prototype, "id", void 0);
 __decorate([
@@ -48,20 +48,20 @@ __decorate([
 ], Reserva.prototype, "hora_termino", void 0);
 __decorate([
     (0, typeorm_1.ManyToOne)(() => usuario_entity_1.Usuario, (usuario) => usuario.reservas),
-    (0, typeorm_1.JoinColumn)({ name: 'idUsuario' }),
+    (0, typeorm_1.JoinColumn)({ name: 'id_usuario' }),
     __metadata("design:type", usuario_entity_1.Usuario)
 ], Reserva.prototype, "usuario", void 0);
 __decorate([
-    (0, typeorm_1.Column)(),
+    (0, typeorm_1.Column)({ name: 'id_usuario' }),
     __metadata("design:type", Number)
 ], Reserva.prototype, "idUsuario", void 0);
 __decorate([
     (0, typeorm_1.ManyToOne)(() => cancha_entity_1.Cancha, (cancha) => cancha.reservas),
-    (0, typeorm_1.JoinColumn)({ name: 'idCancha' }),
+    (0, typeorm_1.JoinColumn)({ name: 'id_cancha' }),
     __metadata("design:type", cancha_entity_1.Cancha)
 ], Reserva.prototype, "cancha", void 0);
 __decorate([
-    (0, typeorm_1.Column)(),
+    (0, typeorm_1.Column)({ name: 'id_cancha' }),
     __metadata("design:type", Number)
 ], Reserva.prototype, "idCancha", void 0);
 __decorate([
@@ -77,6 +77,6 @@ __decorate([
     __metadata("design:type", Array)
 ], Reserva.prototype, "jugadores", void 0);
 exports.Reserva = Reserva = __decorate([
-    (0, typeorm_1.Entity)()
+    (0, typeorm_1.Entity)('reserva')
 ], Reserva);
 //# sourceMappingURL=reserva.entity.js.map

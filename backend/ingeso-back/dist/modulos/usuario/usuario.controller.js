@@ -19,7 +19,6 @@ const usuario_dto_1 = require("./dto/usuario.dto");
 const jwt_auth_guard_1 = require("../auth/guards/jwt-auth.guard");
 const roles_guard_1 = require("../auth/guards/roles.guard");
 const roles_decorator_1 = require("../auth/decorators/roles.decorator");
-const api_response_util_1 = require("../../utils/api-response.util");
 let UsuarioController = class UsuarioController {
     usuarioService;
     constructor(usuarioService) {
@@ -28,61 +27,67 @@ let UsuarioController = class UsuarioController {
     async create(createUsuarioDto) {
         try {
             const usuario = await this.usuarioService.create(createUsuarioDto);
-            return (0, api_response_util_1.CreateResponse)('Usuario creado exitosamente', usuario, 'CREATED');
+            return usuario;
         }
         catch (error) {
-            return (0, api_response_util_1.CreateResponse)('Error al crear el usuario', null, 'BAD_REQUEST', error.message, false);
+            throw new common_1.HttpException(error.message, common_1.HttpStatus.BAD_REQUEST);
         }
     }
     async findAll() {
         try {
             const usuarios = await this.usuarioService.findAll();
-            return (0, api_response_util_1.CreateResponse)('Usuarios obtenidos exitosamente', usuarios, 'OK');
+            return usuarios;
         }
         catch (error) {
-            return (0, api_response_util_1.CreateResponse)('Error al obtener usuarios', null, 'BAD_REQUEST', error.message, false);
+            throw new common_1.HttpException(error.message, common_1.HttpStatus.BAD_REQUEST);
         }
     }
     async setAdmin(rut, updateAdminDto, req) {
         try {
             const usuario = await this.usuarioService.setAdmin(rut, updateAdminDto, req.user);
-            return (0, api_response_util_1.CreateResponse)(`Estado de administrador de usuario ${rut} actualizado exitosamente`, usuario, 'OK');
+            return usuario;
         }
         catch (error) {
-            return (0, api_response_util_1.CreateResponse)('Error al actualizar estado de administrador', null, 'BAD_REQUEST', error.message, false);
+            throw new common_1.HttpException(error.message, common_1.HttpStatus.BAD_REQUEST);
         }
     }
-    async findOne(id, req) {
+    async findOne(rut, req) {
         try {
-            if (!req.user.isAdmin && req.user.id !== +id) {
-                return (0, api_response_util_1.CreateResponse)('No autorizado', null, 'FORBIDDEN', 'No tiene permisos para acceder a este recurso', false);
+            if (!req.user.isAdmin && req.user.rut !== rut) {
+                throw new common_1.ForbiddenException('No tiene permisos para acceder a este recurso');
             }
-            const usuario = await this.usuarioService.findOne(+id);
-            return (0, api_response_util_1.CreateResponse)('Usuario obtenido exitosamente', usuario, 'OK');
+            const usuario = await this.usuarioService.findByRut(rut);
+            return usuario;
         }
         catch (error) {
-            return (0, api_response_util_1.CreateResponse)('Error al obtener el usuario', null, 'BAD_REQUEST', error.message, false);
-        }
-    }
-    async update(id, updateUsuarioDto, req) {
-        try {
-            if (!req.user.isAdmin && req.user.id !== +id) {
-                return (0, api_response_util_1.CreateResponse)('No autorizado', null, 'FORBIDDEN', 'No tiene permisos para acceder a este recurso', false);
+            if (error instanceof common_1.ForbiddenException) {
+                throw error;
             }
-            const usuario = await this.usuarioService.update(+id, updateUsuarioDto, req.user);
-            return (0, api_response_util_1.CreateResponse)('Usuario actualizado exitosamente', usuario, 'OK');
-        }
-        catch (error) {
-            return (0, api_response_util_1.CreateResponse)('Error al actualizar el usuario', null, 'BAD_REQUEST', error.message, false);
+            throw new common_1.HttpException(error.message, common_1.HttpStatus.BAD_REQUEST);
         }
     }
-    async remove(id, req) {
+    async update(rut, updateUsuarioDto, req) {
         try {
-            const usuario = await this.usuarioService.remove(+id, req.user);
-            return (0, api_response_util_1.CreateResponse)('Usuario eliminado exitosamente', usuario, 'OK');
+            if (!req.user.isAdmin && req.user.rut !== rut) {
+                throw new common_1.ForbiddenException('No tiene permisos para acceder a este recurso');
+            }
+            const usuario = await this.usuarioService.updateByRut(rut, updateUsuarioDto, req.user);
+            return usuario;
         }
         catch (error) {
-            return (0, api_response_util_1.CreateResponse)('Error al eliminar el usuario', null, 'BAD_REQUEST', error.message, false);
+            if (error instanceof common_1.ForbiddenException) {
+                throw error;
+            }
+            throw new common_1.HttpException(error.message, common_1.HttpStatus.BAD_REQUEST);
+        }
+    }
+    async remove(rut, req) {
+        try {
+            await this.usuarioService.removeByRut(rut, req.user);
+            return null;
+        }
+        catch (error) {
+            throw new common_1.HttpException(error.message, common_1.HttpStatus.BAD_REQUEST);
         }
     }
 };
@@ -114,18 +119,18 @@ __decorate([
     __metadata("design:returntype", Promise)
 ], UsuarioController.prototype, "setAdmin", null);
 __decorate([
-    (0, common_1.Get)(':id'),
+    (0, common_1.Get)(':rut'),
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
-    __param(0, (0, common_1.Param)('id')),
+    __param(0, (0, common_1.Param)('rut')),
     __param(1, (0, common_1.Request)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String, Object]),
     __metadata("design:returntype", Promise)
 ], UsuarioController.prototype, "findOne", null);
 __decorate([
-    (0, common_1.Patch)(':id'),
+    (0, common_1.Patch)(':rut'),
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
-    __param(0, (0, common_1.Param)('id')),
+    __param(0, (0, common_1.Param)('rut')),
     __param(1, (0, common_1.Body)()),
     __param(2, (0, common_1.Request)()),
     __metadata("design:type", Function),
@@ -133,10 +138,10 @@ __decorate([
     __metadata("design:returntype", Promise)
 ], UsuarioController.prototype, "update", null);
 __decorate([
-    (0, common_1.Delete)(':id'),
+    (0, common_1.Delete)(':rut'),
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),
     (0, roles_decorator_1.Roles)('admin'),
-    __param(0, (0, common_1.Param)('id')),
+    __param(0, (0, common_1.Param)('rut')),
     __param(1, (0, common_1.Request)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String, Object]),

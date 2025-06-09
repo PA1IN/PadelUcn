@@ -54,6 +54,16 @@ let UsuarioService = class UsuarioService {
         }
         return usuario;
     }
+    async findByRut(rut) {
+        const usuario = await this.usuarioRepository.findOne({
+            where: { rut },
+            select: ['id', 'rut', 'nombre', 'correo', 'telefono', 'saldo', 'isAdmin'],
+        });
+        if (!usuario) {
+            throw new common_1.NotFoundException(`Usuario con RUT ${rut} no encontrado`);
+        }
+        return usuario;
+    }
     async update(id, updateUsuarioDto, currentUser) {
         const usuario = await this.usuarioRepository.findOne({
             where: { id },
@@ -62,6 +72,19 @@ let UsuarioService = class UsuarioService {
             throw new common_1.NotFoundException(`Usuario con ID ${id} no encontrado`);
         }
         if (usuario.id !== currentUser.id && !currentUser.isAdmin) {
+            throw new common_1.ForbiddenException('No tiene permisos para actualizar este usuario');
+        }
+        Object.assign(usuario, updateUsuarioDto);
+        return await this.usuarioRepository.save(usuario);
+    }
+    async updateByRut(rut, updateUsuarioDto, currentUser) {
+        const usuario = await this.usuarioRepository.findOne({
+            where: { rut },
+        });
+        if (!usuario) {
+            throw new common_1.NotFoundException(`Usuario con RUT ${rut} no encontrado`);
+        }
+        if (usuario.rut !== currentUser.rut && !currentUser.isAdmin) {
             throw new common_1.ForbiddenException('No tiene permisos para actualizar este usuario');
         }
         Object.assign(usuario, updateUsuarioDto);
@@ -99,6 +122,18 @@ let UsuarioService = class UsuarioService {
         });
         if (!usuario) {
             throw new common_1.NotFoundException(`Usuario con ID ${id} no encontrado`);
+        }
+        if (!currentUser.isAdmin) {
+            throw new common_1.ForbiddenException('No tiene permisos para eliminar usuarios');
+        }
+        await this.usuarioRepository.remove(usuario);
+    }
+    async removeByRut(rut, currentUser) {
+        const usuario = await this.usuarioRepository.findOne({
+            where: { rut },
+        });
+        if (!usuario) {
+            throw new common_1.NotFoundException(`Usuario con RUT ${rut} no encontrado`);
         }
         if (!currentUser.isAdmin) {
             throw new common_1.ForbiddenException('No tiene permisos para eliminar usuarios');

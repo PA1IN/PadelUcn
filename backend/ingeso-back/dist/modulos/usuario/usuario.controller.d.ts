@@ -7,7 +7,7 @@ export declare class UsuarioController {
     create(createUsuarioDto: CreateUsuarioDto): Promise<Usuario>;
     findAll(): Promise<Usuario[]>;
     setAdmin(rut: string, updateAdminDto: UpdateAdminDto, req: any): Promise<Usuario>;
-    findOne(id: string, req: any): Promise<Usuario>;
-    update(id: string, updateUsuarioDto: UpdateUsuarioDto, req: any): Promise<Usuario>;
-    remove(id: string, req: any): Promise<null>;
+    findOne(rut: string, req: any): Promise<Usuario>;
+    update(rut: string, updateUsuarioDto: UpdateUsuarioDto, req: any): Promise<Usuario>;
+    remove(rut: string, req: any): Promise<null>;
 }

@@ -20,64 +20,69 @@ const jwt_auth_guard_1 = require("../auth/guards/jwt-auth.guard");
 const roles_guard_1 = require("../auth/guards/roles.guard");
 const roles_decorator_1 = require("../auth/decorators/roles.decorator");
 const public_decorator_1 = require("../auth/decorators/public.decorator");
-const api_response_util_1 = require("../../utils/api-response.util");
 let CanchaController = class CanchaController {
     canchaService;
     constructor(canchaService) {
         this.canchaService = canchaService;
     }
     async create(createCanchaDto) {
-        try {
-            const cancha = await this.canchaService.create(createCanchaDto);
-            return (0, api_response_util_1.CreateResponse)('Cancha creada exitosamente', cancha, 'CREATED');
-        }
-        catch (error) {
-            return (0, api_response_util_1.CreateResponse)('Error al crear la cancha', null, 'BAD_REQUEST', error.message, false);
-        }
+        return await this.canchaService.create(createCanchaDto);
     }
     async findAll() {
-        try {
-            const canchas = await this.canchaService.findAll();
-            return (0, api_response_util_1.CreateResponse)('Canchas obtenidas exitosamente', canchas, 'OK');
-        }
-        catch (error) {
-            return (0, api_response_util_1.CreateResponse)('Error al obtener las canchas', null, 'BAD_REQUEST', error.message, false);
-        }
+        const canchas = await this.canchaService.findAll();
+        return canchas.map(cancha => ({
+            id_cancha: cancha.id,
+            numero_cancha: cancha.numero,
+            nombre: cancha.nombre,
+            descripcion: cancha.descripcion,
+            valor: cancha.valor,
+            maxJugadores: 4
+        }));
     }
     async findAvailable() {
-        try {
-            const canchas = await this.canchaService.findAvailableCourts();
-            return (0, api_response_util_1.CreateResponse)('Canchas disponibles obtenidas exitosamente', canchas, 'OK');
-        }
-        catch (error) {
-            return (0, api_response_util_1.CreateResponse)('Error al obtener canchas disponibles', null, 'BAD_REQUEST', error.message, false);
-        }
+        const canchas = await this.canchaService.findAvailableCourts();
+        return canchas.map(cancha => ({
+            id_cancha: cancha.id,
+            numero_cancha: cancha.numero,
+            nombre: cancha.nombre,
+            descripcion: cancha.descripcion,
+            valor: cancha.valor,
+            maxJugadores: 4
+        }));
     }
     async findOne(numero) {
         try {
             const cancha = await this.canchaService.findByNumero(numero);
-            return (0, api_response_util_1.CreateResponse)('Cancha obtenida exitosamente', cancha, 'OK');
+            if (!cancha)
+                return null;
+            return {
+                id_cancha: cancha.id,
+                numero_cancha: cancha.numero,
+                nombre: cancha.nombre,
+                descripcion: cancha.descripcion,
+                valor: cancha.valor,
+                maxJugadores: 4
+            };
         }
         catch (error) {
-            return (0, api_response_util_1.CreateResponse)('Error al obtener la cancha', null, 'NOT_FOUND', error.message, false);
+            return null;
         }
     }
     async update(numero, updateCanchaDto) {
         try {
-            const cancha = await this.canchaService.update(numero, updateCanchaDto);
-            return (0, api_response_util_1.CreateResponse)('Cancha actualizada exitosamente', cancha, 'OK');
+            return await this.canchaService.update(numero, updateCanchaDto);
         }
         catch (error) {
-            return (0, api_response_util_1.CreateResponse)('Error al actualizar la cancha', null, 'BAD_REQUEST', error.message, false);
+            return null;
         }
     }
     async remove(numero) {
         try {
             await this.canchaService.remove(numero);
-            return (0, api_response_util_1.CreateResponse)('Cancha eliminada exitosamente', null, 'OK');
+            return null;
         }
         catch (error) {
-            return (0, api_response_util_1.CreateResponse)('Error al eliminar la cancha', null, 'BAD_REQUEST', error.message, false);
+            return null;
         }
     }
 };

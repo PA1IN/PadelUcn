@@ -24,23 +24,29 @@ let BloqueController = class BloqueController {
     constructor(bloqueService) {
         this.bloqueService = bloqueService;
     }
-    create(createBloqueDto) {
-        return this.bloqueService.create(createBloqueDto);
+    async create(createBloqueDto) {
+        const result = await this.bloqueService.create(createBloqueDto);
+        return result.data;
     }
-    findAll() {
-        return this.bloqueService.findAll();
+    async findAll() {
+        const result = await this.bloqueService.findAll();
+        return result.data || [];
     }
-    findActivos() {
-        return this.bloqueService.findActivos();
+    async findActivos() {
+        const result = await this.bloqueService.findActivos();
+        return result.data || [];
     }
-    findOne(id) {
-        return this.bloqueService.findOne(+id);
+    async findOne(id) {
+        const result = await this.bloqueService.findOne(+id);
+        return result.data;
     }
-    update(id, updateBloqueDto) {
-        return this.bloqueService.update(+id, updateBloqueDto);
+    async update(id, updateBloqueDto) {
+        const result = await this.bloqueService.update(+id, updateBloqueDto);
+        return result.data;
     }
-    remove(id) {
-        return this.bloqueService.remove(+id);
+    async remove(id) {
+        await this.bloqueService.remove(+id);
+        return null;
     }
 };
 exports.BloqueController = BloqueController;

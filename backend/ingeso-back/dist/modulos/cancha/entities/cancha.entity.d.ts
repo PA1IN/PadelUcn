@@ -6,5 +6,6 @@ export declare class Cancha {
     descripcion: string;
     valor: number;
     mantenimiento: boolean;
+    cantidadMaxJugador: number;
     reservas: Reserva[];
 }
