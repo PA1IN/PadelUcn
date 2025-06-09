@@ -8,7 +8,7 @@ export class LoginDto {
   @IsNotEmpty({ message: 'La contraseña es requerida' })
   @IsString({ message: 'La contraseña debe ser una cadena de texto' })
   @MinLength(6, { message: 'La contraseña debe tener al menos 6 caracteres' })
-  contraseña: string;
+  contrasena: string;
 }
 
 export class RegisterDto {
@@ -25,11 +25,10 @@ export class RegisterDto {
   @IsNotEmpty({ message: 'El correo es requerido' })
   @IsEmail({}, { message: 'El correo debe tener un formato válido' })
   correo: string;
-
   @IsNotEmpty({ message: 'La contraseña es requerida' })
   @IsString({ message: 'La contraseña debe ser una cadena de texto' })
   @MinLength(6, { message: 'La contraseña debe tener al menos 6 caracteres' })
-  contraseña: string;
+  contrasena: string;
 
   @IsOptional()
   @IsString({ message: 'El teléfono debe ser una cadena de texto' })

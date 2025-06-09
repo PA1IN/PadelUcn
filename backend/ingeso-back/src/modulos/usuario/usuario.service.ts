@@ -3,6 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Usuario } from './entities/usuario.entity';
 import { AddSaldoUsuarioDto, CreateUsuarioDto, UpdateAdminDto, UpdateUsuarioDto } from './dto/usuario.dto';
+import { ApiResponse } from '../../interface/Apiresponce';
 import * as bcrypt from 'bcrypt';
 
 @Injectable()
@@ -102,7 +103,6 @@ export class UsuarioService {
 
     return await this.usuarioRepository.save(usuario);
   }
-
   async addSaldo(rut: string, addSaldoDto: AddSaldoUsuarioDto): Promise<Usuario> {
     const usuario = await this.usuarioRepository.findOne({
       where: { rut },
@@ -117,7 +117,12 @@ export class UsuarioService {
       throw new ForbiddenException('El monto debe ser mayor que cero');
     }
 
+    // Agregar el saldo
+    const montoAnterior = usuario.saldo;
     usuario.saldo += addSaldoDto.monto;
+    
+    console.log(`Agregando saldo al usuario ${usuario.nombre} (${usuario.rut}): $${montoAnterior} + $${addSaldoDto.monto} = $${usuario.saldo}`);
+    
     return await this.usuarioRepository.save(usuario);
   }
 

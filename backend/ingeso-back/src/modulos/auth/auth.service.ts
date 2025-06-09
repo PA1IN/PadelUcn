@@ -34,7 +34,7 @@ export class AuthService {
     console.log('Password validation failed');
     return null;
   }  async login(loginDto: LoginDto): Promise<LoginResponseDto> {
-    const usuario = await this.validateUser(loginDto.rut, loginDto.contraseña);
+    const usuario = await this.validateUser(loginDto.rut, loginDto.contrasena);
     
     if (!usuario) {
       throw new UnauthorizedException('Credenciales inválidas');
@@ -66,10 +66,8 @@ export class AuthService {
     
     if (existingUser) {
       throw new ConflictException('El usuario ya existe');
-    }
-
-    // Crear nuevo usuario con contraseña encriptada
-    const hashedPassword = await bcrypt.hash(registerDto.contraseña, 10);
+    }    // Crear nuevo usuario con contraseña encriptada
+    const hashedPassword = await bcrypt.hash(registerDto.contrasena, 10);
     const newUser = this.usuarioRepository.create({
       rut: registerDto.rut,
       nombre: registerDto.nombre_usuario,

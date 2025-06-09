@@ -18,12 +18,11 @@ DROP TABLE IF EXISTS "usuario" CASCADE;
 -- ======================
 
 -- Usuario table (Users)
-CREATE TABLE "usuario" (
-    "id_usuario" SERIAL PRIMARY KEY,
+CREATE TABLE "usuario" (    "id_usuario" SERIAL PRIMARY KEY,
     "rut" VARCHAR(12) NOT NULL UNIQUE,
     "nombre_usuario" VARCHAR NOT NULL,
     "correo" VARCHAR NOT NULL,
-    "contraseña" VARCHAR NOT NULL,
+    "contrasena" VARCHAR NOT NULL,
     "telefono" VARCHAR,
     "saldo" INT NOT NULL DEFAULT 0,
     "is_admin" BOOLEAN NOT NULL DEFAULT false

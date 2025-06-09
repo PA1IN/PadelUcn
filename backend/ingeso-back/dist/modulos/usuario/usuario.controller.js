@@ -19,6 +19,7 @@ const usuario_dto_1 = require("./dto/usuario.dto");
 const jwt_auth_guard_1 = require("../auth/guards/jwt-auth.guard");
 const roles_guard_1 = require("../auth/guards/roles.guard");
 const roles_decorator_1 = require("../auth/decorators/roles.decorator");
+const api_response_util_1 = require("../../utils/api-response.util");
 let UsuarioController = class UsuarioController {
     usuarioService;
     constructor(usuarioService) {
@@ -27,19 +28,19 @@ let UsuarioController = class UsuarioController {
     async create(createUsuarioDto) {
         try {
             const usuario = await this.usuarioService.create(createUsuarioDto);
-            return usuario;
+            return (0, api_response_util_1.CreateResponse)('Usuario creado exitosamente', usuario, 'CREATED');
         }
         catch (error) {
-            throw new common_1.HttpException(error.message, common_1.HttpStatus.BAD_REQUEST);
+            throw new common_1.HttpException((0, api_response_util_1.CreateResponse)('Error al crear usuario', null, 'BAD_REQUEST', error.message, false), common_1.HttpStatus.BAD_REQUEST);
         }
     }
     async findAll() {
         try {
             const usuarios = await this.usuarioService.findAll();
-            return usuarios;
+            return (0, api_response_util_1.CreateResponse)('Usuarios obtenidos exitosamente', usuarios, 'OK');
         }
         catch (error) {
-            throw new common_1.HttpException(error.message, common_1.HttpStatus.BAD_REQUEST);
+            throw new common_1.HttpException((0, api_response_util_1.CreateResponse)('Error al obtener usuarios', null, 'BAD_REQUEST', error.message, false), common_1.HttpStatus.BAD_REQUEST);
         }
     }
     async setAdmin(rut, updateAdminDto, req) {
@@ -88,6 +89,21 @@ let UsuarioController = class UsuarioController {
         }
         catch (error) {
             throw new common_1.HttpException(error.message, common_1.HttpStatus.BAD_REQUEST);
+        }
+    }
+    async addSaldo(rut, addSaldoDto, req) {
+        try {
+            if (!req.user.isAdmin && req.user.rut !== rut) {
+                throw new common_1.ForbiddenException('No tiene permisos para agregar saldo a este usuario');
+            }
+            const usuario = await this.usuarioService.addSaldo(rut, addSaldoDto);
+            return (0, api_response_util_1.CreateResponse)(`Saldo agregado exitosamente: $${addSaldoDto.monto}`, usuario, 'OK');
+        }
+        catch (error) {
+            if (error instanceof common_1.ForbiddenException) {
+                throw error;
+            }
+            throw new common_1.HttpException((0, api_response_util_1.CreateResponse)('Error al agregar saldo', null, 'BAD_REQUEST', error.message, false), common_1.HttpStatus.BAD_REQUEST);
         }
     }
 };
@@ -147,6 +163,16 @@ __decorate([
     __metadata("design:paramtypes", [String, Object]),
     __metadata("design:returntype", Promise)
 ], UsuarioController.prototype, "remove", null);
+__decorate([
+    (0, common_1.Post)(':rut/add-saldo'),
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
+    __param(0, (0, common_1.Param)('rut')),
+    __param(1, (0, common_1.Body)()),
+    __param(2, (0, common_1.Request)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, usuario_dto_1.AddSaldoUsuarioDto, Object]),
+    __metadata("design:returntype", Promise)
+], UsuarioController.prototype, "addSaldo", null);
 exports.UsuarioController = UsuarioController = __decorate([
     (0, common_1.Controller)('usuarios'),
     __metadata("design:paramtypes", [usuario_service_1.UsuarioService])

@@ -100,7 +100,9 @@ let UsuarioService = class UsuarioService {
         if (addSaldoDto.monto <= 0) {
             throw new common_1.ForbiddenException('El monto debe ser mayor que cero');
         }
+        const montoAnterior = usuario.saldo;
         usuario.saldo += addSaldoDto.monto;
+        console.log(`Agregando saldo al usuario ${usuario.nombre} (${usuario.rut}): $${montoAnterior} + $${addSaldoDto.monto} = $${usuario.saldo}`);
         return await this.usuarioRepository.save(usuario);
     }
     async setAdmin(rut, updateAdminDto, currentUser) {

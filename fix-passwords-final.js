@@ -20,16 +20,13 @@ async function updatePasswords() {  const client = new Client({
     // Update passwords for test users
     const testUsers = ['11111111-1', '22222222-2', '33333333-3', '44444444-4'];
     
-    for (const rut of testUsers) {
-      // Use column index instead of name to avoid encoding issues
-      const updateQuery = `UPDATE usuario SET "contrase??a" = $1 WHERE rut = $2`;
+    for (const rut of testUsers) {      // Use column index instead of name to avoid encoding issues
+      const updateQuery = `UPDATE usuario SET "contrasena" = $1 WHERE rut = $2`;
       const result = await client.query(updateQuery, [hashedPassword, rut]);
       console.log(`Updated password for user ${rut}, rows affected: ${result.rowCount}`);
-    }
-
-    // Verify the updates
+    }    // Verify the updates
     console.log('\nVerifying password updates:');
-    const verifyQuery = `SELECT rut, LENGTH("contrase??a") as pwd_length FROM usuario WHERE rut = ANY($1)`;
+    const verifyQuery = `SELECT rut, LENGTH("contrasena") as pwd_length FROM usuario WHERE rut = ANY($1)`;
     const verifyResult = await client.query(verifyQuery, [testUsers]);
     
     verifyResult.rows.forEach(row => {

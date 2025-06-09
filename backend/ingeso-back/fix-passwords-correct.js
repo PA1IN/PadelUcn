@@ -19,10 +19,9 @@ async function updatePasswords() {
 
     // Update all test users with the properly hashed password
     const users = ['11111111-1', '22222222-2', '33333333-3', '44444444-4'];
-    
-    for (const rut of users) {
+      for (const rut of users) {
       const result = await client.query(
-        'UPDATE usuario SET "contrase??a" = $1 WHERE rut = $2',
+        'UPDATE usuario SET "contrasena" = $1 WHERE rut = $2',
         [hashedPassword, rut]
       );
       console.log(`Updated user ${rut}: ${result.rowCount} rows affected`);
