@@ -26,12 +26,15 @@ let AuthController = class AuthController {
         this.usuarioService = usuarioService;
     }
     async login(loginDto) {
+        console.log('Login request received:', loginDto);
         try {
             const result = await this.authService.login(loginDto);
-            return (0, api_response_util_1.CreateResponse)('Inicio de sesión exitoso', result, 'OK');
+            console.log('Login successful');
+            return result;
         }
         catch (error) {
-            return (0, api_response_util_1.CreateResponse)('Error al iniciar sesión', null, 'UNAUTHORIZED', error.message, false);
+            console.error('Login error:', error);
+            throw error;
         }
     }
     async register(createUserDto) {

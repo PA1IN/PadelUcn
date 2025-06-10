@@ -1,12 +1,12 @@
 export declare class LoginDto {
     rut: string;
-    contraseña: string;
+    contrasena: string;
 }
 export declare class RegisterDto {
     rut: string;
     nombre_usuario: string;
     correo: string;
-    contraseña: string;
+    contrasena: string;
     telefono?: string;
 }
 export declare class LoginResponseDto {

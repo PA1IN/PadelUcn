@@ -16,7 +16,7 @@ CREATE TABLE "usuario" (
     "rut" VARCHAR(12) NOT NULL UNIQUE,
     "nombre_usuario" VARCHAR NOT NULL,
     "correo" VARCHAR NOT NULL,
-    "contraseña" VARCHAR NOT NULL,
+    "contrasena" VARCHAR NOT NULL,
     "telefono" VARCHAR,
     "saldo" INT NOT NULL DEFAULT 0,
     "is_admin" BOOLEAN NOT NULL DEFAULT false

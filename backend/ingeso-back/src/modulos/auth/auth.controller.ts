@@ -10,25 +10,17 @@ export class AuthController {
     private readonly authService: AuthService,
     private readonly usuarioService: UsuarioService,
   ) {}  @Post('login')
-  async login(@Body() loginDto: LoginDto) {
-    try {
-      const result = await this.authService.login(loginDto);
-      
-      return CreateResponse(
-        'Inicio de sesión exitoso',
-        result,
-        'OK'
-      );
-    } catch (error) {
-      return CreateResponse(
-        'Error al iniciar sesión',
-        null,
-        'UNAUTHORIZED',
-        error.message,
-        false
-      );
-    }
-  }  @Post('register')
+async login(@Body() loginDto: LoginDto) {
+  console.log('Login request received:', loginDto);
+  try {
+    const result = await this.authService.login(loginDto);
+    console.log('Login successful');
+    return result;
+  } catch (error) {
+    console.error('Login error:', error);
+    throw error;
+  }
+}  @Post('register')
   async register(@Body() createUserDto: RegisterDto) {
     try {
       const result = await this.authService.register(createUserDto);

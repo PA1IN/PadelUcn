@@ -13,7 +13,7 @@ exports.RegisterResponseDto = exports.LoginResponseDto = exports.RegisterDto = e
 const class_validator_1 = require("class-validator");
 class LoginDto {
     rut;
-    contraseña;
+    contrasena;
 }
 exports.LoginDto = LoginDto;
 __decorate([
@@ -27,12 +27,12 @@ __decorate([
     (0, class_validator_1.IsString)({ message: 'La contraseña debe ser una cadena de texto' }),
     (0, class_validator_1.MinLength)(6, { message: 'La contraseña debe tener al menos 6 caracteres' }),
     __metadata("design:type", String)
-], LoginDto.prototype, "contrase\u00F1a", void 0);
+], LoginDto.prototype, "contrasena", void 0);
 class RegisterDto {
     rut;
     nombre_usuario;
     correo;
-    contraseña;
+    contrasena;
     telefono;
 }
 exports.RegisterDto = RegisterDto;
@@ -58,7 +58,7 @@ __decorate([
     (0, class_validator_1.IsString)({ message: 'La contraseña debe ser una cadena de texto' }),
     (0, class_validator_1.MinLength)(6, { message: 'La contraseña debe tener al menos 6 caracteres' }),
     __metadata("design:type", String)
-], RegisterDto.prototype, "contrase\u00F1a", void 0);
+], RegisterDto.prototype, "contrasena", void 0);
 __decorate([
     (0, class_validator_1.IsOptional)(),
     (0, class_validator_1.IsString)({ message: 'El teléfono debe ser una cadena de texto' }),

@@ -42,7 +42,7 @@ let AuthService = class AuthService {
         return null;
     }
     async login(loginDto) {
-        const usuario = await this.validateUser(loginDto.rut, loginDto.contraseña);
+        const usuario = await this.validateUser(loginDto.rut, loginDto.contrasena);
         if (!usuario) {
             throw new common_1.UnauthorizedException('Credenciales inválidas');
         }
@@ -72,7 +72,7 @@ let AuthService = class AuthService {
         if (existingUser) {
             throw new common_1.ConflictException('El usuario ya existe');
         }
-        const hashedPassword = await bcrypt.hash(registerDto.contraseña, 10);
+        const hashedPassword = await bcrypt.hash(registerDto.contrasena, 10);
         const newUser = this.usuarioRepository.create({
             rut: registerDto.rut,
             nombre: registerDto.nombre_usuario,
