@@ -2,12 +2,12 @@ export declare class CreateUsuarioDto {
     rut: string;
     nombre: string;
     correo: string;
-    password: string;
+    contrasena: string;
     telefono?: string;
 }
 export declare class LoginUsuarioDto {
     rut: string;
-    password: string;
+    contrasena: string;
 }
 export declare class AddSaldoUsuarioDto {
     monto: number;

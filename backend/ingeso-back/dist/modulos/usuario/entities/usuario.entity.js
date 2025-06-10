@@ -18,7 +18,7 @@ let Usuario = class Usuario {
     rut;
     nombre;
     correo;
-    password;
+    contrasena;
     telefono;
     saldo;
     isAdmin;
@@ -45,7 +45,7 @@ __decorate([
 __decorate([
     (0, typeorm_1.Column)({ name: 'contrasena' }),
     __metadata("design:type", String)
-], Usuario.prototype, "password", void 0);
+], Usuario.prototype, "contrasena", void 0);
 __decorate([
     (0, typeorm_1.Column)({ nullable: true }),
     __metadata("design:type", String)

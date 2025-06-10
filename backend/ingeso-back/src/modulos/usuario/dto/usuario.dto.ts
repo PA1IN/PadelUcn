@@ -10,7 +10,6 @@ export class CreateUsuarioDto {
   @IsString({ message: 'El nombre debe ser una cadena de texto' })
   @MinLength(2, { message: 'El nombre debe tener al menos 2 caracteres' })
   nombre: string;
-
   @IsNotEmpty({ message: 'El correo es requerido' })
   @IsEmail({}, { message: 'El correo debe tener un formato válido' })
   correo: string;
@@ -18,7 +17,7 @@ export class CreateUsuarioDto {
   @IsNotEmpty({ message: 'La contraseña es requerida' })
   @IsString({ message: 'La contraseña debe ser una cadena de texto' })
   @MinLength(6, { message: 'La contraseña debe tener al menos 6 caracteres' })
-  password: string;
+  contrasena: string;
 
   @IsOptional()
   @IsString({ message: 'El teléfono debe ser una cadena de texto' })
@@ -35,7 +34,7 @@ export class LoginUsuarioDto {
   @IsNotEmpty({ message: 'La contraseña es requerida' })
   @IsString({ message: 'La contraseña debe ser una cadena de texto' })
   @MinLength(6, { message: 'La contraseña debe tener al menos 6 caracteres' })
-  password: string;
+  contrasena: string;
 }
 
 export class AddSaldoUsuarioDto {

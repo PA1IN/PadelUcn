@@ -34,7 +34,7 @@ let JwtStrategy = class JwtStrategy extends (0, passport_1.PassportStrategy)(pas
             where: { id: payload.sub },
         });
         if (usuario) {
-            const { password, ...result } = usuario;
+            const { contrasena, ...result } = usuario;
             return result;
         }
         return null;

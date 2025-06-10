@@ -5,7 +5,7 @@ export declare class Usuario {
     rut: string;
     nombre: string;
     correo: string;
-    password: string;
+    contrasena: string;
     telefono: string;
     saldo: number;
     isAdmin: boolean;

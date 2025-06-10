@@ -15,7 +15,7 @@ class CreateUsuarioDto {
     rut;
     nombre;
     correo;
-    password;
+    contrasena;
     telefono;
 }
 exports.CreateUsuarioDto = CreateUsuarioDto;
@@ -41,7 +41,7 @@ __decorate([
     (0, class_validator_1.IsString)({ message: 'La contraseña debe ser una cadena de texto' }),
     (0, class_validator_1.MinLength)(6, { message: 'La contraseña debe tener al menos 6 caracteres' }),
     __metadata("design:type", String)
-], CreateUsuarioDto.prototype, "password", void 0);
+], CreateUsuarioDto.prototype, "contrasena", void 0);
 __decorate([
     (0, class_validator_1.IsOptional)(),
     (0, class_validator_1.IsString)({ message: 'El teléfono debe ser una cadena de texto' }),
@@ -50,7 +50,7 @@ __decorate([
 ], CreateUsuarioDto.prototype, "telefono", void 0);
 class LoginUsuarioDto {
     rut;
-    password;
+    contrasena;
 }
 exports.LoginUsuarioDto = LoginUsuarioDto;
 __decorate([
@@ -64,7 +64,7 @@ __decorate([
     (0, class_validator_1.IsString)({ message: 'La contraseña debe ser una cadena de texto' }),
     (0, class_validator_1.MinLength)(6, { message: 'La contraseña debe tener al menos 6 caracteres' }),
     __metadata("design:type", String)
-], LoginUsuarioDto.prototype, "password", void 0);
+], LoginUsuarioDto.prototype, "contrasena", void 0);
 class AddSaldoUsuarioDto {
     monto;
 }

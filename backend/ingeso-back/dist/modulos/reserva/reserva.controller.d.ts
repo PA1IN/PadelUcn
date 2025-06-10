@@ -3,10 +3,10 @@ import { CreateReservaDto, UpdateReservaDto } from './dto/reserva.dto';
 export declare class ReservaController {
     private readonly reservaService;
     constructor(reservaService: ReservaService);
-    create(createReservaDto: CreateReservaDto, req: any): Promise<import("../../interface/Apiresponce").ApiResponse<null> | import("../../interface/Apiresponce").ApiResponse<import("../../interface/Apiresponce").ApiResponse<import("./entities/reserva.entity").Reserva>>>;
+    create(createReservaDto: CreateReservaDto, req: any): Promise<import("../../interface/Apiresponce").ApiResponse<import("../../interface/Apiresponce").ApiResponse<import("./entities/reserva.entity").Reserva>> | import("../../interface/Apiresponce").ApiResponse<null>>;
     findAll(): Promise<import("../../interface/Apiresponce").ApiResponse<null> | import("../../interface/Apiresponce").ApiResponse<import("../../interface/Apiresponce").ApiResponse<import("./entities/reserva.entity").Reserva[]>>>;
-    findOne(id: string, req: any): Promise<import("../../interface/Apiresponce").ApiResponse<null> | import("../../interface/Apiresponce").ApiResponse<import("./entities/reserva.entity").Reserva>>;
-    update(id: string, updateReservaDto: UpdateReservaDto, req: any): Promise<import("../../interface/Apiresponce").ApiResponse<null> | import("../../interface/Apiresponce").ApiResponse<import("../../interface/Apiresponce").ApiResponse<import("./entities/reserva.entity").Reserva>>>;
+    findOne(id: string, req: any): Promise<import("../../interface/Apiresponce").ApiResponse<import("./entities/reserva.entity").Reserva> | import("../../interface/Apiresponce").ApiResponse<null>>;
+    update(id: string, updateReservaDto: UpdateReservaDto, req: any): Promise<import("../../interface/Apiresponce").ApiResponse<import("../../interface/Apiresponce").ApiResponse<import("./entities/reserva.entity").Reserva>> | import("../../interface/Apiresponce").ApiResponse<null>>;
     remove(id: string, req: any): Promise<import("../../interface/Apiresponce").ApiResponse<null>>;
     findByUsuario(rut: string, req: any): Promise<import("../../interface/Apiresponce").ApiResponse<null> | import("../../interface/Apiresponce").ApiResponse<import("../../interface/Apiresponce").ApiResponse<import("./entities/reserva.entity").Reserva[]>>>;
     findByCancha(numero: string): Promise<import("../../interface/Apiresponce").ApiResponse<null> | import("../../interface/Apiresponce").ApiResponse<import("../../interface/Apiresponce").ApiResponse<import("./entities/reserva.entity").Reserva[]>>>;

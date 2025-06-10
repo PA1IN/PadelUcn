@@ -18,16 +18,15 @@ export class AuthService {
     
     if (!usuario) {
       return null;
-    }
-    
+    }    
     // Add logging to debug password comparison
     console.log('Validating user: ', rut);
     console.log('Password provided: ', password);
-    console.log('Stored password hash: ', usuario.password);
+    console.log('Stored password hash: ', usuario.contrasena);
     
-    if (usuario && await bcrypt.compare(password, usuario.password)) {
+    if (usuario && await bcrypt.compare(password, usuario.contrasena)) {
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      const { password: _, ...result } = usuario;
+      const { contrasena: _, ...result } = usuario;
       return result;
     }
     
@@ -73,7 +72,7 @@ export class AuthService {
       nombre: registerDto.nombre_usuario,
       correo: registerDto.correo,
       telefono: registerDto.telefono,
-      password: hashedPassword,
+      contrasena: hashedPassword,
       isAdmin: false,
       saldo: 0,
     });

@@ -11,10 +11,8 @@ export class UsuarioService {
   constructor(
     @InjectRepository(Usuario)
     private usuarioRepository: Repository<Usuario>,
-  ) {}
-
-  async create(createUsuarioDto: CreateUsuarioDto): Promise<Usuario> {
-    const { password, ...rest } = createUsuarioDto;
+  ) {}  async create(createUsuarioDto: CreateUsuarioDto): Promise<Usuario> {
+    const { contrasena, ...rest } = createUsuarioDto;
 
     // Verificar si el usuario ya existe
     const existingUser = await this.usuarioRepository.findOne({
@@ -26,10 +24,10 @@ export class UsuarioService {
     }
 
     // Crear nuevo usuario con contraseña encriptada
-    const hashedPassword = await bcrypt.hash(password, 10);
+    const hashedPassword = await bcrypt.hash(contrasena, 10);
     const newUser = this.usuarioRepository.create({
       ...rest,
-      password: hashedPassword,
+      contrasena: hashedPassword,
       isAdmin: false,
     });
 

@@ -24,17 +24,17 @@ let UsuarioService = class UsuarioService {
         this.usuarioRepository = usuarioRepository;
     }
     async create(createUsuarioDto) {
-        const { password, ...rest } = createUsuarioDto;
+        const { contrasena, ...rest } = createUsuarioDto;
         const existingUser = await this.usuarioRepository.findOne({
             where: { rut: createUsuarioDto.rut },
         });
         if (existingUser) {
             throw new common_1.ForbiddenException('El usuario con este RUT ya existe');
         }
-        const hashedPassword = await bcrypt.hash(password, 10);
+        const hashedPassword = await bcrypt.hash(contrasena, 10);
         const newUser = this.usuarioRepository.create({
             ...rest,
-            password: hashedPassword,
+            contrasena: hashedPassword,
             isAdmin: false,
         });
         return await this.usuarioRepository.save(newUser);

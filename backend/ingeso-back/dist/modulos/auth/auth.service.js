@@ -33,9 +33,9 @@ let AuthService = class AuthService {
         }
         console.log('Validating user: ', rut);
         console.log('Password provided: ', password);
-        console.log('Stored password hash: ', usuario.password);
-        if (usuario && await bcrypt.compare(password, usuario.password)) {
-            const { password: _, ...result } = usuario;
+        console.log('Stored password hash: ', usuario.contrasena);
+        if (usuario && await bcrypt.compare(password, usuario.contrasena)) {
+            const { contrasena: _, ...result } = usuario;
             return result;
         }
         console.log('Password validation failed');
@@ -78,7 +78,7 @@ let AuthService = class AuthService {
             nombre: registerDto.nombre_usuario,
             correo: registerDto.correo,
             telefono: registerDto.telefono,
-            password: hashedPassword,
+            contrasena: hashedPassword,
             isAdmin: false,
             saldo: 0,
         });
