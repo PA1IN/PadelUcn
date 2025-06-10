@@ -135,7 +135,7 @@ CREATE INDEX idx_bloque_fecha ON "bloque"("fecha_date");
 
 -- Insert initial admin user and sample users
 INSERT INTO "usuario" ("rut", "nombre_usuario", "correo", "contrasena", "telefono", "saldo", "is_admin") VALUES
-  ('11111111-1', 'Admin Usuario', 'admin@padelucn.cl', '$2b$10$OQM/JtW2FC1NC7Fz26/tue6l/QL1glcJZpT0IjCflV8Os5sdoG3JG', '+56911111111', 100000, true),  -- password: admin123
+  ('11111111-1', 'Admin Usuario', 'admin@padelucn.cl', '$2b$10$2oo4rbS.bKWuHA0XzK.wJOdrZBz6tuXcAMGe1oqxMrwQbcAJ/pHiC', '+56911111111', 100000, true),  -- password: admin123
   ('22222222-2', 'Juan Pérez', 'juan@example.com', '$2b$10$yTQC0.QKyGCbFLa0YcQnfuXRn/f4wBX5QFXs/MN9YJsLTc5P51XAO', '+56922222222', 50000, false),  -- password: usuario123
   ('33333333-3', 'María López', 'maria@example.com', '$2b$10$yTQC0.QKyGCbFLa0YcQnfuXRn/f4wBX5QFXs/MN9YJsLTc5P51XAO', '+56933333333', 30000, false),  -- password: usuario123
   ('44444444-4', 'Carlos Rodríguez', 'carlos@example.com', '$2b$10$yTQC0.QKyGCbFLa0YcQnfuXRn/f4wBX5QFXs/MN9YJsLTc5P51XAO', '+56944444444', 25000, false);  -- password: usuario123
