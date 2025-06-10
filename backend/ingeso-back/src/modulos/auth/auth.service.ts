@@ -13,24 +13,25 @@ export class AuthService {
     private usuarioRepository: Repository<Usuario>,
     private jwtService: JwtService,
   ) {}
-  async validateUser(rut: string, password: string): Promise<any> {
+  async validateUser(rut: string, contrasena: string): Promise<any> {
     const usuario = await this.usuarioRepository.findOne({ where: { rut } });
     
     if (!usuario) {
       return null;
-    }    
-    // Add logging to debug password comparison
-    console.log('Validating user: ', rut);
-    console.log('Password provided: ', password);
-    console.log('Stored password hash: ', usuario.contrasena);
+    }
     
-    if (usuario && await bcrypt.compare(password, usuario.contrasena)) {
+    // Add logging to debug contrasena comparison
+    console.log('Validating user: ', rut);
+    console.log('contrasena provided: ', contrasena);
+    console.log('Stored contrasena hash: ', usuario.contrasena);
+    
+    if (usuario && await bcrypt.compare(contrasena, usuario.contrasena)) {
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const { contrasena: _, ...result } = usuario;
       return result;
     }
     
-    console.log('Password validation failed');
+    console.log('contrasena validation failed');
     return null;
   }  async login(loginDto: LoginDto): Promise<LoginResponseDto> {
     const usuario = await this.validateUser(loginDto.rut, loginDto.contrasena);
@@ -66,13 +67,13 @@ export class AuthService {
     if (existingUser) {
       throw new ConflictException('El usuario ya existe');
     }    // Crear nuevo usuario con contraseña encriptada
-    const hashedPassword = await bcrypt.hash(registerDto.contrasena, 10);
+    const hashedcontrasena = await bcrypt.hash(registerDto.contrasena, 10);
     const newUser = this.usuarioRepository.create({
       rut: registerDto.rut,
       nombre: registerDto.nombre_usuario,
       correo: registerDto.correo,
       telefono: registerDto.telefono,
-      contrasena: hashedPassword,
+      contrasena: hashedcontrasena,
       isAdmin: false,
       saldo: 0,
     });
