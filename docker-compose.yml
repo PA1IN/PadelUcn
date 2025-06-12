@@ -10,7 +10,7 @@ services:
       POSTGRES_DB: padelucn
     volumes:
       - padelucn_data:/var/lib/postgresql/data
-      - ./backend/esquemafinal.sql:/docker-entrypoint-initdb.d/01-schema.sql
+      - ./backend/database/esquemafinal.sql:/docker-entrypoint-initdb.d/esquemafinal.sql
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ingeso -d padelucn"]
       interval: 10s
@@ -19,6 +19,7 @@ services:
     restart: unless-stopped
     networks:
       - padelucn-network
+
   padelucn-backend:
     platform: linux/amd64
     build:
@@ -44,7 +45,7 @@ services:
 
 volumes:
   padelucn_data:
-
+  
 networks:
   padelucn-network:
     driver: bridge
