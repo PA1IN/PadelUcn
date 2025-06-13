@@ -25,7 +25,7 @@ import { JugadorModule } from './modulos/jugador/jugador.module';
         port: parseInt(configService.get('DB_PORT', '5433')),
         username: configService.get('DB_USER', 'ingeso'),
         password: configService.get('DB_PASSWORD', '12342'),        database: configService.get('DB_NAME', 'padelucn'),        entities: [__dirname + '/**/*.entity{.ts,.js}'],
-        synchronize: false, // Disabled to avoid schema conflicts with existing tables
+        synchronize: false, // para el esquema SQL uu
         logging: true,
         retryAttempts: 5,
         retryDelay: 3000,

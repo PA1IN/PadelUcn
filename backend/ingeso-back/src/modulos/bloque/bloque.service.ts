@@ -13,8 +13,9 @@ export class BloqueService {
     private bloqueRepository: Repository<Bloque>,
   ) {
     // Inicializar bloques predeterminados si no existen
-    this.inicializarBloquesDefault();
-  }
+    //this.inicializarBloquesDefault();
+  } //probando cosas........
+  /*
   async inicializarBloquesDefault() {
     const count = await this.bloqueRepository.count();
     
@@ -24,11 +25,11 @@ export class BloqueService {
       
       for (let hora = 8; hora < 20; hora++) {
         const horaInicio = `${hora.toString().padStart(2, '0')}:00:00`;
-        const horaTermino = `${(hora + 1).toString().padStart(2, '0')}:00:00`;
+        const horaFin = `${(hora + 1).toString().padStart(2, '0')}:00:00`;
         
         const bloque = new Bloque();
         bloque.hora_inicio = horaInicio;
-        bloque.hora_termino = horaTermino;
+        bloque.hora_fin = horaFin;
         bloque.activo = true;
         bloque.dias = 'Lunes a Viernes';
         
@@ -38,6 +39,7 @@ export class BloqueService {
       await this.bloqueRepository.save(bloquesDefault);
     }
   }
+    */
   async create(createBloqueDto: CreateBloqueDto): Promise<ApiResponse<Bloque>> {
     try {
       const bloque = this.bloqueRepository.create(createBloqueDto);
@@ -83,7 +85,7 @@ export class BloqueService {
 
   async findOne(id: number): Promise<ApiResponse<Bloque>> {
     try {
-      const bloque = await this.bloqueRepository.findOne({ where: { id } });
+      const bloque = await this.bloqueRepository.findOne({ where: { id_bloque: id } });
       
       if (!bloque) {
         throw new NotFoundException(`No se encontró el bloque horario con ID ${id}`);
@@ -117,15 +119,15 @@ export class BloqueService {
 
   async update(id: number, updateBloqueDto: UpdateBloqueDto): Promise<ApiResponse<Bloque>> {
     try {
-      const bloque = await this.bloqueRepository.findOne({ where: { id } });
+      const bloque = await this.bloqueRepository.findOne({ where: { id_bloque: id} });
       
       if (!bloque) {
         throw new NotFoundException(`No se encontró el bloque horario con ID ${id}`);
       }
       
-      await this.bloqueRepository.update(id, updateBloqueDto);
+      await this.bloqueRepository.update({ id_bloque: id }, updateBloqueDto);
       
-      const updatedBloque = await this.bloqueRepository.findOne({ where: { id } });
+      const updatedBloque = await this.bloqueRepository.findOne({ where: { id_bloque: id } });
       
       return CreateResponse<Bloque>(
         'Bloque horario actualizado exitosamente',
@@ -155,13 +157,13 @@ export class BloqueService {
 
   async remove(id: number): Promise<ApiResponse<null>> {
     try {
-      const bloque = await this.bloqueRepository.findOne({ where: { id } });
+      const bloque = await this.bloqueRepository.findOne({ where: { id_bloque: id } });
       
       if (!bloque) {
         throw new NotFoundException(`No se encontró el bloque horario con ID ${id}`);
       }
       
-      await this.bloqueRepository.delete(id);
+      await this.bloqueRepository.delete({ id_bloque: id });
       
       return CreateResponse<null>(
         'Bloque horario eliminado exitosamente',

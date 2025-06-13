@@ -20,12 +20,12 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
 
   async validate(payload: any) {
     const usuario = await this.usuarioRepository.findOne({
-      where: { id: payload.sub },
+      where: { id_usuario: payload.sub },
     });
     
     // Excluimos la contraseña por seguridad
     if (usuario) {
-      const { password, ...result } = usuario;
+      const { contrasena, ...result } = usuario;
       return result;
     }
     

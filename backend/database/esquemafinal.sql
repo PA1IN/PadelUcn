@@ -35,10 +35,12 @@ CREATE TABLE IF NOT EXISTS cancha(
 
 -- Bloque table
 CREATE TABLE IF NOT EXISTS bloque (
-    id_bloque SERIAL PRIMARY KEY,
-    fecha_date DATE NOT NULL,
+      id_bloque SERIAL PRIMARY KEY,
+    fecha_date DATE,
     hora_inicio TIME NOT NULL,
-    hora_fin TIME NOT NULL
+    hora_fin TIME NOT NULL,
+    activo BOOLEAN DEFAULT true,
+    dias VARCHAR DEFAULT 'Lunes a Viernes'
 );
 
 -- Equipamiento table 

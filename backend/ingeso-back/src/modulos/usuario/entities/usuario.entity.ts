@@ -5,18 +5,18 @@ import { HistorialReserva } from '../../historial-reserva/entities/historial-res
 @Entity('usuario')
 export class Usuario {
   @PrimaryGeneratedColumn({ name: 'id_usuario' })
-  id: number;
+  id_usuario: number;
 
   @Column({ unique: true })
   rut: string;
 
   @Column({ name: 'nombre_usuario' })
-  nombre: string;
+  nombre_usuario: string;
   @Column()
   correo: string;
   
   @Column({ name: 'contrasena' })
-  password: string;
+  contrasena: string;
 
   @Column({ nullable: true })
   telefono: string;
@@ -25,7 +25,7 @@ export class Usuario {
   saldo: number;
 
   @Column({ name: 'is_admin', default: false })
-  isAdmin: boolean;
+  is_admin: boolean;
 
   @OneToMany(() => Reserva, (reserva) => reserva.usuario)
   reservas: Reserva[];

@@ -16,17 +16,20 @@ export class AuthService {
     const usuario = await this.usuarioRepository.findOne({ where: { rut } });
     
     if (!usuario) {
+      console.log('Usuario no encontrado ');
       return null;
     }
     
-    if (usuario && await bcrypt.compare(password, usuario.password)) {
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      const { password: _, ...result } = usuario;
+    
+    if (usuario.contrasena === password) {
+      console.log('✅ Contraseña válida');
+      const { contrasena, ...result } = usuario;
       return result;
     }
     
     return null;
-  }async login(loginDto: LoginDto): Promise<LoginResponseDto> {
+  }
+  async login(loginDto: LoginDto): Promise<LoginResponseDto> {
     const usuario = await this.validateUser(loginDto.rut, loginDto.contrasena);
     
     if (!usuario) {
@@ -34,21 +37,21 @@ export class AuthService {
     }
     
     const payload = { 
-      sub: usuario.id, 
+      sub: usuario.id_usuario,           
       rut: usuario.rut, 
-      nombre: usuario.nombre,
-      isAdmin: usuario.isAdmin 
+      nombre: usuario.nombre_usuario,    
+      isAdmin: usuario.is_admin         
     };
       return {
       access_token: this.jwtService.sign(payload, { expiresIn: '24h' }),
       user: {
-        id: usuario.id,
+        id: usuario.id_usuario,          
         rut: usuario.rut,
-        nombre: usuario.nombre,
+        nombre: usuario.nombre_usuario, 
         correo: usuario.correo,
         telefono: usuario.telefono,
         saldo: usuario.saldo,
-        isAdmin: usuario.isAdmin,
+        isAdmin: usuario.is_admin, 
       },
     };
   }  async register(registerDto: RegisterDto): Promise<RegisterResponseDto> {
@@ -63,26 +66,27 @@ export class AuthService {
 
     // Crear nuevo usuario con contraseña encriptada
     const hashedPassword = await bcrypt.hash(registerDto.contrasena, 10);
+
     const newUser = this.usuarioRepository.create({
       rut: registerDto.rut,
-      nombre: registerDto.nombre_usuario,
+      nombre_usuario: registerDto.nombre_usuario, 
       correo: registerDto.correo,
       telefono: registerDto.telefono,
-      password: hashedPassword,
-      isAdmin: false,
+      contrasena: hashedPassword,  
+      is_admin: false,    
       saldo: 0,
     });
 
     const savedUser = await this.usuarioRepository.save(newUser);
     
     return {
-      id: savedUser.id,
+      id: savedUser.id_usuario,         
       rut: savedUser.rut,
-      nombre: savedUser.nombre,
+      nombre: savedUser.nombre_usuario,  
       correo: savedUser.correo,
       telefono: savedUser.telefono,
       saldo: savedUser.saldo,
-      isAdmin: savedUser.isAdmin,
+      isAdmin: savedUser.is_admin, 
     };
   }
 }

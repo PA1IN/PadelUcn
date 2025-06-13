@@ -25,13 +25,13 @@ npm run start:dev
 ```
 
 #### 2. **Acceder al Sistema**
-- **Backend API**: `http://localhost:8080/api`
+- **Backend API**: `http://localhost:8081/api`
 - **Base de datos**: PostgreSQL en puerto `5433`
 
 #### 3. **Usuarios de Prueba**
 | RUT | Contraseña | Rol |
 |-----|------------|-----|
-| `11111111-1` | `password123` | **Administrador** |
+| `11111111-1` | `admin123` | **Administrador** |
 | `22222222-2` | `password123` | Usuario regular |
 | `33333333-3` | `password123` | Usuario regular |
 | `44444444-4` | `password123` | Usuario regular |

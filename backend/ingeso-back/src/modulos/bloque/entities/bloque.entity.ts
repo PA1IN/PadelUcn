@@ -1,15 +1,18 @@
 import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
 
-@Entity()
+@Entity('bloque')
 export class Bloque {
   @PrimaryGeneratedColumn()
-  id: number;
+  id_bloque: number;
 
-  @Column()
+  @Column({ type: 'date', nullable: true })
+  fecha_date: Date;
+
+  @Column({ type: 'time' })
   hora_inicio: string;
 
-  @Column()
-  hora_termino: string;
+  @Column({ type: 'time' })
+  hora_fin: string;
   
   @Column({ default: true })
   activo: boolean;

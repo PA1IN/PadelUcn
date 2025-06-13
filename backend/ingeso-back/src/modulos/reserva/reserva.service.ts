@@ -102,7 +102,7 @@ export class ReservaService {
       if (!isAdmin) {
         const reservasUsuarioDia = await this.reservaRepository.find({
           where: {
-            usuario: { id: usuario.id },
+            usuario: {id_usuario: usuario.id_usuario },
             fecha: fechaFormateada
           }
         });
@@ -123,7 +123,7 @@ export class ReservaService {
       // 8. Verificar que el usuario no tenga reservas concurrentes
       const reservasConcurrentes = await this.reservaRepository
         .createQueryBuilder('reserva')
-        .where('reserva.idUsuario = :idUsuario', { idUsuario: usuario.id })
+        .where('reserva.idUsuario = :idUsuario', { idUsuario: usuario.id_usuario })
         .andWhere('reserva.fecha = :fecha', { fecha: fechaFormateada })
         .andWhere('(reserva.hora_inicio < :horaTermino AND reserva.hora_termino > :horaInicio)', {
           horaInicio: createReservaDto.hora_inicio,
@@ -167,7 +167,7 @@ export class ReservaService {
         await this.historialReservaService.create({
           estado: 'Pendiente',
           idReserva: savedReserva.id,
-          idUsuario: usuario.id
+          idUsuario: usuario.id_usuario
         });
       } catch (historialError) {
         console.error('Error al crear historial de reserva:', historialError);
@@ -420,7 +420,7 @@ export class ReservaService {
         // Verificar que el usuario no exceda 180 min de reserva diarios
         if (!isAdmin) {          const reservasUsuarioDia = await this.reservaRepository
             .createQueryBuilder('reserva')
-            .where('reserva.idUsuario = :idUsuario', { idUsuario: reserva.usuario.id })
+            .where('reserva.idUsuario = :idUsuario', { idUsuario: reserva.usuario.id_usuario })
             .andWhere('reserva.fecha = :fecha', { fecha: fechaFormateada })
             .andWhere('reserva.id != :id', { id })
             .getMany();
@@ -449,7 +449,7 @@ export class ReservaService {
         if (!isAdmin) {
           const reservasConcurrentes = await this.reservaRepository
             .createQueryBuilder('reserva')
-            .where('reserva.idUsuario = :idUsuario', { idUsuario: reserva.usuario.id })
+            .where('reserva.idUsuario = :idUsuario', { idUsuario: reserva.usuario.id_usuario })
             .andWhere('reserva.id != :id', { id })
             .andWhere('reserva.fecha = :fecha', { fecha: fechaFormateada })
             .andWhere('(reserva.hora_inicio < :horaTermino AND reserva.hora_termino > :horaInicio)', {
@@ -495,7 +495,7 @@ export class ReservaService {
           await this.historialReservaService.create({
             estado: 'Modificado',
             idReserva: id,
-            idUsuario: reserva.usuario.id
+            idUsuario: reserva.usuario.id_usuario
           });
         } catch (historialError) {
           console.error('Error al crear historial de modificación:', historialError);
@@ -659,7 +659,7 @@ export class ReservaService {
         await this.historialReservaService.create({
           estado: 'Cancelado',
           idReserva: id,
-          idUsuario: reserva.usuario.id
+          idUsuario: reserva.usuario.id_usuario
         });
       } catch (historialError) {
         console.error('Error al crear historial de cancelación:', historialError);

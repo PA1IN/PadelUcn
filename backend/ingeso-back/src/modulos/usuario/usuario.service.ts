@@ -13,7 +13,7 @@ export class UsuarioService {
   ) {}
 
   async create(createUsuarioDto: CreateUsuarioDto): Promise<Usuario> {
-    const { password, ...rest } = createUsuarioDto;
+    const {contrasena, ...rest } = createUsuarioDto;
 
     // Verificar si el usuario ya existe
     const existingUser = await this.usuarioRepository.findOne({
@@ -25,11 +25,15 @@ export class UsuarioService {
     }
 
     // Crear nuevo usuario con contraseña encriptada
-    const hashedPassword = await bcrypt.hash(password, 10);
+    const hashedPassword = await bcrypt.hash(contrasena, 10);
     const newUser = this.usuarioRepository.create({
-      ...rest,
-      password: hashedPassword,
-      isAdmin: false,
+      rut: createUsuarioDto.rut,
+      nombre_usuario: createUsuarioDto.nombre_usuario,
+      correo: createUsuarioDto.correo,
+      telefono: createUsuarioDto.telefono,
+      contrasena: hashedPassword,                    
+      saldo: 0,
+      is_admin: false, 
     });
 
     return await this.usuarioRepository.save(newUser);
@@ -37,12 +41,12 @@ export class UsuarioService {
 
   async findAll(): Promise<Usuario[]> {
     return await this.usuarioRepository.find({
-      select: ['id', 'rut', 'nombre', 'correo', 'telefono', 'saldo', 'isAdmin'],
+      select: ['id_usuario', 'rut', 'nombre_usuario', 'correo', 'telefono', 'saldo', 'is_admin'],
     });
   }  async findOne(id: number): Promise<Usuario> {
     const usuario = await this.usuarioRepository.findOne({
-      where: { id },
-      select: ['id', 'rut', 'nombre', 'correo', 'telefono', 'saldo', 'isAdmin'],
+      where: { id_usuario: id },
+      select: ['id_usuario', 'rut', 'nombre_usuario', 'correo', 'telefono', 'saldo', 'is_admin'],
     });
 
     if (!usuario) {
@@ -55,7 +59,7 @@ export class UsuarioService {
   async findByRut(rut: string): Promise<Usuario> {
     const usuario = await this.usuarioRepository.findOne({
       where: { rut },
-      select: ['id', 'rut', 'nombre', 'correo', 'telefono', 'saldo', 'isAdmin'],
+      select: ['id_usuario', 'rut', 'nombre_usuario', 'correo', 'telefono', 'saldo', 'is_admin'],
     });
 
     if (!usuario) {
@@ -65,7 +69,7 @@ export class UsuarioService {
     return usuario;
   }  async update(id: number, updateUsuarioDto: UpdateUsuarioDto, currentUser: any): Promise<Usuario> {
     const usuario = await this.usuarioRepository.findOne({
-      where: { id },
+      where: { id_usuario: id },
     });
 
     if (!usuario) {
@@ -73,14 +77,27 @@ export class UsuarioService {
     }
 
     // Solo el propio usuario o un administrador pueden actualizar un perfil
-    if (usuario.id !== currentUser.id && !currentUser.isAdmin) {
+    if (usuario.id_usuario !== currentUser.id_usuario && !currentUser.is_admin) {
       throw new ForbiddenException('No tiene permisos para actualizar este usuario');
     }
+    
+    
+  if (updateUsuarioDto.contrasena) {
+    updateUsuarioDto.contrasena = await bcrypt.hash(updateUsuarioDto.contrasena, 10);
+  }
 
-    // Actualizar los campos proporcionados
-    Object.assign(usuario, updateUsuarioDto);
+  
+  await this.usuarioRepository.update({ id_usuario: id }, updateUsuarioDto);
 
-    return await this.usuarioRepository.save(usuario);
+  const updatedUser = await this.usuarioRepository.findOne({
+    where: { id_usuario: id },
+    select: ['id_usuario', 'rut', 'nombre_usuario', 'correo', 'telefono', 'saldo', 'is_admin'],
+  });
+  //para evitar nulls
+  if (!updatedUser) {
+    throw new NotFoundException(`Error al obtener el usuario actualizado con ID ${id}`);
+  }
+  return updatedUser;
   }
 
   async updateByRut(rut: string, updateUsuarioDto: UpdateUsuarioDto, currentUser: any): Promise<Usuario> {
@@ -93,9 +110,13 @@ export class UsuarioService {
     }
 
     // Solo el propio usuario o un administrador pueden actualizar un perfil
-    if (usuario.rut !== currentUser.rut && !currentUser.isAdmin) {
+    if (usuario.rut !== currentUser.rut && !currentUser.is_admin) {
       throw new ForbiddenException('No tiene permisos para actualizar este usuario');
     }
+
+    if (updateUsuarioDto.contrasena) {
+    updateUsuarioDto.contrasena = await bcrypt.hash(updateUsuarioDto.contrasena, 10);
+  }
 
     // Actualizar los campos proporcionados
     Object.assign(usuario, updateUsuarioDto);
@@ -123,7 +144,7 @@ export class UsuarioService {
 
   async setAdmin(rut: string, updateAdminDto: UpdateAdminDto, currentUser: any): Promise<Usuario> {
     // Solo un administrador puede hacer a otro usuario administrador
-    if (!currentUser.isAdmin) {
+    if (!currentUser.is_admin) {
       throw new ForbiddenException('No tiene permisos para realizar esta acción');
     }
 
@@ -135,11 +156,11 @@ export class UsuarioService {
       throw new NotFoundException(`Usuario con RUT ${rut} no encontrado`);
     }
 
-    usuario.isAdmin = updateAdminDto.isAdmin;
+    usuario.is_admin = updateAdminDto.isAdmin;
     return await this.usuarioRepository.save(usuario);
   }  async remove(id: number, currentUser: any): Promise<void> {
     const usuario = await this.usuarioRepository.findOne({
-      where: { id },
+      where: { id_usuario: id },
     });
 
     if (!usuario) {
@@ -147,7 +168,7 @@ export class UsuarioService {
     }
 
     // Solo un administrador puede eliminar usuarios
-    if (!currentUser.isAdmin) {
+    if (!currentUser.is_admin) {
       throw new ForbiddenException('No tiene permisos para eliminar usuarios');
     }
 
@@ -164,7 +185,7 @@ export class UsuarioService {
     }
 
     // Solo un administrador puede eliminar usuarios
-    if (!currentUser.isAdmin) {
+    if (!currentUser.is_admin) {
       throw new ForbiddenException('No tiene permisos para eliminar usuarios');
     }
 

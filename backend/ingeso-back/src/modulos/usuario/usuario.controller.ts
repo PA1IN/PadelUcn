@@ -45,7 +45,7 @@ export class UsuarioController {
   async findOne(@Param('rut') rut: string, @Request() req): Promise<Usuario> {
     try {
       // Solo administradores o el propio usuario pueden ver un usuario específico
-      if (!req.user.isAdmin && req.user.rut !== rut) {
+      if (!req.user.is_admin && req.user.rut !== rut) {
         throw new ForbiddenException('No tiene permisos para acceder a este recurso');
       }
       
@@ -62,7 +62,7 @@ export class UsuarioController {
   async update(@Param('rut') rut: string, @Body() updateUsuarioDto: UpdateUsuarioDto, @Request() req): Promise<Usuario> {
     try {
       // Solo administradores o el propio usuario pueden actualizar un usuario
-      if (!req.user.isAdmin && req.user.rut !== rut) {
+      if (!req.user.is_admin && req.user.rut !== rut) {
         throw new ForbiddenException('No tiene permisos para acceder a este recurso');
       }
       
