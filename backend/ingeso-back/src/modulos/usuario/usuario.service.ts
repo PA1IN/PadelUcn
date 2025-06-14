@@ -23,6 +23,7 @@ export class UsuarioService {
     if (existingUser) {
       throw new ForbiddenException('El usuario con este RUT ya existe');
     }
+    
 
     // Crear nuevo usuario con contraseña encriptada
     const hashedPassword = await bcrypt.hash(contrasena, 10);

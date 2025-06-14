@@ -20,13 +20,14 @@ export class AuthService {
       return null;
     }
     
-    
-    if (usuario.contrasena === password) {
-      console.log('✅ Contraseña válida');
+    const isPasswordValid = await bcrypt.compare(password, usuario.contrasena);
+
+    if (isPasswordValid) {
+      console.log('Contraseña válida');
       const { contrasena, ...result } = usuario;
       return result;
     }
-    
+    console.log('Contraseña inválida');
     return null;
   }
   async login(loginDto: LoginDto): Promise<LoginResponseDto> {
@@ -39,19 +40,19 @@ export class AuthService {
     const payload = { 
       sub: usuario.id_usuario,           
       rut: usuario.rut, 
-      nombre: usuario.nombre_usuario,    
-      isAdmin: usuario.is_admin         
+      nombre_usuario: usuario.nombre_usuario,
+      is_admin: usuario.is_admin           
     };
       return {
       access_token: this.jwtService.sign(payload, { expiresIn: '24h' }),
       user: {
-        id: usuario.id_usuario,          
+        id_usuario: usuario.id_usuario,         
         rut: usuario.rut,
-        nombre: usuario.nombre_usuario, 
+        nombre_usuario: usuario.nombre_usuario,
         correo: usuario.correo,
         telefono: usuario.telefono,
         saldo: usuario.saldo,
-        isAdmin: usuario.is_admin, 
+        is_admin: usuario.is_admin,
       },
     };
   }  async register(registerDto: RegisterDto): Promise<RegisterResponseDto> {
@@ -80,13 +81,13 @@ export class AuthService {
     const savedUser = await this.usuarioRepository.save(newUser);
     
     return {
-      id: savedUser.id_usuario,         
+      id_usuario: savedUser.id_usuario,         
       rut: savedUser.rut,
-      nombre: savedUser.nombre_usuario,  
+      nombre_usuario: savedUser.nombre_usuario,
       correo: savedUser.correo,
       telefono: savedUser.telefono,
       saldo: savedUser.saldo,
-      isAdmin: savedUser.is_admin, 
+      is_admin: savedUser.is_admin, 
     };
   }
 }

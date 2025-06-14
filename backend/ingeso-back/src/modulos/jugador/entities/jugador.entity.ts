@@ -17,10 +17,9 @@ export class Jugador {
 
   @Column()
   edad: number;
-  @ManyToOne(() => Reserva, (reserva) => reserva.jugadores)
-  @JoinColumn({ name: 'idReserva' })
-  reserva: Reserva;
 
-  @Column()
-  idReserva: number;
+  @ManyToOne(() => Reserva, (reserva) => reserva.jugadores)
+  @JoinColumn({ name: 'id_reserva' }) 
+  reserva: Reserva;
+  
 }

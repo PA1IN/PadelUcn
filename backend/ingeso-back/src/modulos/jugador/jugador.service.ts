@@ -33,16 +33,16 @@ export class JugadorService {
 
       // Obtener la cancha para verificar la cantidad máxima de jugadores
       const cancha = await this.canchaRepository.findOne({
-        where: { id: reserva.idCancha }
+        where: { id: reserva.cancha.id }
       });
 
       if (!cancha) {
-        throw new NotFoundException(`Cancha con ID ${reserva.idCancha} no encontrada`);
+        throw new NotFoundException(`Cancha con ID ${reserva.cancha.id} no encontrada`);
       }
 
       // Contar jugadores actuales
       const jugadoresActuales = await this.jugadorRepository.count({
-        where: { idReserva: createJugadorDto.id_reserva }
+        where: { reserva: { id: createJugadorDto.id_reserva } }
       });
 
       // Verificar si se excede la cantidad máxima permitida
@@ -55,10 +55,10 @@ export class JugadorService {
       // Crear nuevo jugador
       const nuevoJugador = this.jugadorRepository.create({
         nombre: createJugadorDto.nombre,
-        apellido: createJugadorDto.apellido,
+        apellido: createJugadorDto.apellido, 
         rut: createJugadorDto.rut,
         edad: createJugadorDto.edad,
-        idReserva: createJugadorDto.id_reserva
+        reserva: { id: createJugadorDto.id_reserva }
       });
 
       const jugadorGuardado = await this.jugadorRepository.save(nuevoJugador);

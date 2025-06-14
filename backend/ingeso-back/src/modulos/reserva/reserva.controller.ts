@@ -25,14 +25,10 @@ export class ReservaController {
   async create(@Body() createReservaDto: CreateReservaDto, @Request() req) {
     try {
       // Verificar si el usuario es administrador
-      const isAdmin = req.user.isAdmin;
+      const is_admin = req.user.is_admin;
+
+      return await this.reservaService.create(createReservaDto, is_admin);
       
-      const reserva = await this.reservaService.create(createReservaDto, isAdmin);
-      return CreateResponse(
-        'Reserva creada exitosamente',
-        reserva,
-        'CREATED'
-      );
     } catch (error) {
       return CreateResponse(
         'Error al crear la reserva',
@@ -48,12 +44,7 @@ export class ReservaController {
   @Roles('admin')
   async findAll() {
     try {
-      const reservas = await this.reservaService.findAll();
-      return CreateResponse(
-        'Reservas obtenidas exitosamente',
-        reservas,
-        'OK'
-      );
+      return await this.reservaService.findAll();
     } catch (error) {
       return CreateResponse(
         'Error al obtener reservas',
@@ -67,7 +58,7 @@ export class ReservaController {
 
   @Get(':id')
   async findOne(@Param('id') id: string, @Request() req) {
-    try {      const response = await this.reservaService.findOne(+id);
+    try {const response = await this.reservaService.findOne(+id);
       const reserva = response.data;
       
       // Solo permitir acceso a la reserva si es admin o es el propietario
@@ -81,7 +72,7 @@ export class ReservaController {
         );
       }
       
-      if (!req.user.isAdmin && reserva.idUsuario !== req.user.id) {
+      if (!req.user.is_admin && reserva.usuario.id_usuario !== req.user.id_usuario) {
         return CreateResponse(
           'No tienes permisos para ver esta reserva',
           null,
@@ -90,12 +81,7 @@ export class ReservaController {
           false
         );
       }
-      
-      return CreateResponse(
-        'Reserva obtenida exitosamente',
-        reserva,
-        'OK'
-      );
+      return response;
     } catch (error) {
       return CreateResponse(
         'Error al obtener la reserva',
@@ -115,12 +101,12 @@ export class ReservaController {
   ) {
     try {
       // Verificar si el usuario es administrador
-      const isAdmin = req.user.isAdmin;
+      const is_admin = req.user.is_admin;
       
       // Si no es admin, verificar que el usuario sea dueño de la reserva
-      if (!isAdmin) {
+      if (!is_admin) {
         const reservaResponse = await this.reservaService.findOne(+id);
-        if (reservaResponse.data && reservaResponse.data.idUsuario !== req.user.id) {
+        if (reservaResponse.data && reservaResponse.data.usuario.id_usuario !== req.user.id_usuario) {
           return CreateResponse(
             'No tienes permisos para modificar esta reserva',
             null,
@@ -131,12 +117,7 @@ export class ReservaController {
         }
       }
       
-      const reserva = await this.reservaService.update(+id, updateReservaDto, isAdmin);
-      return CreateResponse(
-        'Reserva actualizada exitosamente',
-        reserva,
-        'OK'
-      );
+      return await this.reservaService.update(+id, updateReservaDto, is_admin);
     } catch (error) {
       return CreateResponse(
         'Error al actualizar la reserva',
@@ -152,12 +133,12 @@ export class ReservaController {
   async remove(@Param('id') id: string, @Request() req) {
     try {
       // Verificar si el usuario es administrador
-      const isAdmin = req.user.isAdmin;
+      const is_admin = req.user.is_admin;
       
       // Si no es admin, verificar que el usuario sea dueño de la reserva
-      if (!isAdmin) {
+      if (!is_admin) {
         const reservaResponse = await this.reservaService.findOne(+id);
-        if (reservaResponse.data && reservaResponse.data.idUsuario !== req.user.id) {
+        if (reservaResponse.data && reservaResponse.data.usuario.id_usuario !== req.user.id_usuario) {
           return CreateResponse(
             'No tienes permisos para cancelar esta reserva',
             null,
@@ -168,7 +149,7 @@ export class ReservaController {
         }
       }
       
-      await this.reservaService.remove(+id, isAdmin);
+      await this.reservaService.remove(+id, is_admin);
       return CreateResponse(
         'Reserva cancelada exitosamente',
         null,
@@ -189,7 +170,7 @@ export class ReservaController {
   async findByUsuario(@Param('rut') rut: string, @Request() req) {
     try {
       // Solo permitir ver las reservas si es admin o es el mismo usuario
-      if (!req.user.isAdmin && req.user.rut !== rut) {
+      if (!req.user.is_admin && req.user.rut !== rut) {
         return CreateResponse(
           'No tienes permisos para ver estas reservas',
           null,
@@ -199,12 +180,7 @@ export class ReservaController {
         );
       }
       
-      const reservas = await this.reservaService.findByUsuario(rut);
-      return CreateResponse(
-        'Reservas del usuario obtenidas exitosamente',
-        reservas,
-        'OK'
-      );
+    return await this.reservaService.findByUsuario(rut);
     } catch (error) {
       return CreateResponse(
         'Error al obtener las reservas del usuario',
@@ -219,12 +195,7 @@ export class ReservaController {
   @Get('cancha/:numero')
   async findByCancha(@Param('numero') numero: string) {
     try {
-      const reservas = await this.reservaService.findByCancha(+numero);
-      return CreateResponse(
-        'Reservas de la cancha obtenidas exitosamente',
-        reservas,
-        'OK'
-      );
+      return await this.reservaService.findByCancha(+numero);
     } catch (error) {
       return CreateResponse(
         'Error al obtener las reservas de la cancha',

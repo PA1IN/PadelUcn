@@ -102,7 +102,7 @@ export class ReservaService {
       if (!isAdmin) {
         const reservasUsuarioDia = await this.reservaRepository.find({
           where: {
-            usuario: {id_usuario: usuario.id_usuario },
+            usuario: { id_usuario: usuario.id_usuario },
             fecha: fechaFormateada
           }
         });
@@ -123,7 +123,8 @@ export class ReservaService {
       // 8. Verificar que el usuario no tenga reservas concurrentes
       const reservasConcurrentes = await this.reservaRepository
         .createQueryBuilder('reserva')
-        .where('reserva.idUsuario = :idUsuario', { idUsuario: usuario.id_usuario })
+        .innerJoin('reserva.usuario', 'usuario')
+        .where('usuario.id_usuario = :idUsuario', { idUsuario: usuario.id_usuario })
         .andWhere('reserva.fecha = :fecha', { fecha: fechaFormateada })
         .andWhere('(reserva.hora_inicio < :horaTermino AND reserva.hora_termino > :horaInicio)', {
           horaInicio: createReservaDto.hora_inicio,
@@ -181,7 +182,7 @@ export class ReservaService {
             apellido: jugadorDto.apellido,
             rut: jugadorDto.rut,
             edad: jugadorDto.edad,
-            idReserva: savedReserva.id
+            reserva: { id: jugadorDto.id_reserva }
           });
           
           await this.jugadorRepository.save(nuevoJugador);
@@ -209,7 +210,7 @@ export class ReservaService {
           // Crear boleta de equipamiento
           const nuevaBoleta = this.boletaEquipamientoRepository.create({
             reserva: { id: savedReserva.id },
-            equipamiento: { id: item.id_equipamiento },
+            equipamiento: { id: item.id_equipamiento }, 
             cantidad: item.cantidad,
             montoTotal: costoItem,
           });
@@ -264,8 +265,8 @@ export class ReservaService {
   async findAll(): Promise<ApiResponse<Reserva[]>> {
     try {
       const reservas = await this.reservaRepository.find({
-        relations: ['usuario', 'cancha', 'historial'],
-      });
+      relations: ['usuario', 'cancha', 'historiales'],
+   });
       return CreateResponse('Reservas obtenidas exitosamente', reservas, 'OK');
     } catch (error) {
       throw new HttpException(
@@ -279,7 +280,7 @@ export class ReservaService {
     try {
       const reserva = await this.reservaRepository.findOne({
         where: { id: id },
-        relations: ['usuario', 'cancha', 'boletas', 'boletas.equipamiento', 'historial'],
+        relations: ['usuario', 'cancha', 'boletas', 'boletas.equipamiento', 'historiales'],
       });
       
       if (!reserva) {
@@ -320,7 +321,7 @@ export class ReservaService {
     try {
       const reservas = await this.reservaRepository.find({
         where: { cancha: { numero: numeroCancha } },
-        relations: ['usuario', 'boletas', 'historial'],
+        relations: ['usuario', 'boletas', 'historiales'],
         order: { fecha: 'ASC', hora_inicio: 'ASC' },
       });
       
@@ -420,7 +421,8 @@ export class ReservaService {
         // Verificar que el usuario no exceda 180 min de reserva diarios
         if (!isAdmin) {          const reservasUsuarioDia = await this.reservaRepository
             .createQueryBuilder('reserva')
-            .where('reserva.idUsuario = :idUsuario', { idUsuario: reserva.usuario.id_usuario })
+            .innerJoin('reserva.usuario', 'usuario')
+            .where('usuario.id_usuario = :idUsuario', { idUsuario: reserva.usuario.id_usuario })
             .andWhere('reserva.fecha = :fecha', { fecha: fechaFormateada })
             .andWhere('reserva.id != :id', { id })
             .getMany();
@@ -449,7 +451,8 @@ export class ReservaService {
         if (!isAdmin) {
           const reservasConcurrentes = await this.reservaRepository
             .createQueryBuilder('reserva')
-            .where('reserva.idUsuario = :idUsuario', { idUsuario: reserva.usuario.id_usuario })
+            .innerJoin('reserva.usuario', 'usuario')
+            .where('usuario.id_usuario = :idUsuario', { idUsuario: reserva.usuario.id_usuario }) 
             .andWhere('reserva.id != :id', { id })
             .andWhere('reserva.fecha = :fecha', { fecha: fechaFormateada })
             .andWhere('(reserva.hora_inicio < :horaTermino AND reserva.hora_termino > :horaInicio)', {
@@ -505,7 +508,12 @@ export class ReservaService {
       // Actualizar jugadores si se proporcionaron
       if (Array.isArray(updateReservaDto.jugadores)) {
         // Eliminar jugadores anteriores
-        await this.jugadorRepository.delete({ idReserva: id });
+        await this.jugadorRepository
+         .createQueryBuilder()
+          .delete()
+          .from(Jugador)
+          .where('idReserva = :reservaId', { reservaId: id })
+          .execute();
         
         // Agregar nuevos jugadores
         for (const jugadorDto of updateReservaDto.jugadores) {
@@ -514,7 +522,7 @@ export class ReservaService {
             apellido: jugadorDto.apellido,
             rut: jugadorDto.rut,
             edad: jugadorDto.edad,
-            idReserva: id
+            reserva: { id: id }
           });
           
           await this.jugadorRepository.save(nuevoJugador);
@@ -525,7 +533,7 @@ export class ReservaService {
       if (Array.isArray(updateReservaDto.equipamiento)) {
         // Obtener boletas actuales para devolver stock
         const boletasActuales = await this.boletaEquipamientoRepository.find({
-          where: { idReserva: id },
+          where: { reserva: { id: id }},
           relations: ['equipamiento']
         });
         
@@ -542,7 +550,12 @@ export class ReservaService {
         }
         
         // Eliminar boletas anteriores
-        await this.boletaEquipamientoRepository.delete({ idReserva: id });
+        await this.boletaEquipamientoRepository
+          .createQueryBuilder()
+          .delete()
+          .from(BoletaEquipamiento)
+          .where('idReserva = :reservaId', { reservaId: id })
+          .execute();
 
         // Procesar nuevo equipamiento
         let costoTotalEquipamiento = 0;
@@ -565,7 +578,7 @@ export class ReservaService {
 
           // Crear boleta de equipamiento
           const nuevaBoleta = this.boletaEquipamientoRepository.create({
-            idReserva: id,
+            reserva: { id: id }, // ✅ CORREGIR: usar objeto reserva
             equipamiento: { id: item.id_equipamiento },
             cantidad: item.cantidad,
             montoTotal: costoItem,

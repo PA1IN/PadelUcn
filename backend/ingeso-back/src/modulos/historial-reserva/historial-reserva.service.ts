@@ -20,8 +20,8 @@ export class HistorialReservaService {
     const newHistorial = this.historialRepository.create({
       estado: createHistorialDto.estado,
       fechaEstado: new Date(),
-      idReserva: createHistorialDto.idReserva,
-      idUsuario: createHistorialDto.idUsuario,
+      reserva: { id: createHistorialDto.idReserva },
+      usuario: { id_usuario: createHistorialDto.idUsuario },
     });
 
     return await this.historialRepository.save(newHistorial);
@@ -49,7 +49,7 @@ export class HistorialReservaService {
 
   async findByReserva(idReserva: number): Promise<HistorialReserva[]> {
     return await this.historialRepository.find({
-      where: { idReserva },
+      where: { reserva: { id: idReserva } },
       relations: ['usuario'],
       order: { fechaEstado: 'DESC' },
     });
@@ -57,7 +57,7 @@ export class HistorialReservaService {
 
   async findByUsuario(idUsuario: number): Promise<HistorialReserva[]> {
     return await this.historialRepository.find({
-      where: { idUsuario },
+      where: { usuario: { id_usuario: idUsuario } },
       relations: ['reserva'],
       order: { fechaEstado: 'DESC' },
     });

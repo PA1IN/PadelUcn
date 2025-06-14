@@ -40,22 +40,22 @@ export class RegisterDto {
 export class LoginResponseDto {
   access_token: string;
   user: {
-    id: number;
+    id_usuario: number;  
     rut: string;
-    nombre: string;
+    nombre_usuario: string; 
     correo: string;
     telefono?: string;
     saldo: number;
-    isAdmin: boolean;
+    is_admin: boolean;
   };
 }
 
 export class RegisterResponseDto {
-  id: number;
+  id_usuario: number;  
   rut: string;
-  nombre: string;
+  nombre_usuario: string; 
   correo: string;
   telefono?: string;
   saldo: number;
-  isAdmin: boolean;
+  is_admin: boolean;
 }

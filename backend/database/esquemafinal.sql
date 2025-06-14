@@ -118,10 +118,10 @@ CREATE INDEX idx_bloque_fecha ON bloque("fecha_date");
 
 -- Datos de usuarios
 INSERT INTO usuario (rut, nombre_usuario, correo, contrasena, telefono, saldo, is_admin) VALUES
-  ('11111111-1', 'Admin Usuario', 'admin@padelucn.cl', 'admin123', '+56911111111', 100000, true),
-  ('22222222-2', 'Juan Pérez', 'juan@example.com', 'usuario123', '+56922222222', 50000, false), 
-  ('33333333-3', 'María López', 'maria@example.com', 'usuario123', '+56933333333', 30000, false),
-  ('44444444-4', 'Carlos Rodríguez', 'carlos@example.com', 'usuario123', '+56944444444', 25000, false);
+  ('11111111-1', 'Admin Usuario', 'admin@padelucn.cl', '$2b$10$yLNEPCflLJ53G4efjiwxJu7JBehQtcWD2xkap3t8sYad3jNEP4WjK', '+56911111111', 100000, true),
+  ('22222222-2', 'Juan Pérez', 'juan@example.com', '$2b$10$nAnrkFmQgrj9rAOkEE4.z.8RwcIfih3YFmr9TkwcXjlaTMELLHlqO', '+56922222222', 50000, false), 
+  ('33333333-3', 'María López', 'maria@example.com', '$2b$10$nAnrkFmQgrj9rAOkEE4.z.8RwcIfih3YFmr9TkwcXjlaTMELLHlqO', '+56933333333', 30000, false),
+  ('44444444-4', 'Carlos Rodríguez', 'carlos@example.com', '$2b$10$nAnrkFmQgrj9rAOkEE4.z.8RwcIfih3YFmr9TkwcXjlaTMELLHlqO', '+56944444444', 25000, false);
 
 -- Insert sample courts
 INSERT INTO cancha (numero, nombre, descripcion, mantenimiento, cantidad_max_jugador, valor) VALUES

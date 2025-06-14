@@ -18,18 +18,16 @@ export class Reserva {
 
   @Column({ type: 'time' })
   hora_termino: string;
+
+ 
   @ManyToOne(() => Usuario, (usuario) => usuario.reservas)
   @JoinColumn({ name: 'id_usuario' })
   usuario: Usuario;
 
-  @Column({ name: 'id_usuario' })
-  idUsuario: number;
+
   @ManyToOne(() => Cancha, (cancha) => cancha.reservas)
   @JoinColumn({ name: 'id_cancha' })
   cancha: Cancha;
-
-  @Column({ name: 'id_cancha' })
-  idCancha: number;
 
   @OneToMany(() => HistorialReserva, (historial) => historial.reserva)
   historiales: HistorialReserva[];
