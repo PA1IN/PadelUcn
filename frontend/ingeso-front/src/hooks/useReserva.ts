@@ -1,122 +1,137 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import api from '@/api/axios';
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
+import api from "@/api/axios"
+
+// 🔄 USAR ESTE HOOK PARA OBTENER RESERVAS DEL USUARIO
+export function useObtenerReservas(rut_usuario: string) {
+  return useQuery({
+    queryKey: ["reservas", rut_usuario],
+    queryFn: async () => {
+      const respuesta = await api.get(`/api/reserva/usuario/${rut_usuario}`)
+      return respuesta.data.data
+    },
+    enabled: Boolean(rut_usuario),
+  })
+}
 
 export interface Jugador {
-  nombre: string;
-  apellido: string;
-  rut: string;
-  edad: number;
+  nombre: string
+  apellido: string
+  rut: string
+  edad: number
 }
 
-export interface EquipamientoSeleccionado {
-  id_equipamiento: number;
-  nombre: string;
-  cantidad: number;
-  costo: number;
+export interface Datosreserva {
+  fecha: string
+  hora_inicio: string
+  hora_termino: string
+  rut_usuario: string
+  numero_cancha: number
+  equipamiento: { id: number; cantidad: number; costo: number }[]
+  jugadores: Jugador[]
 }
 
-export interface Cancha {
-  id_cancha: number;
-  numero_cancha: number;
-  nombre: string;
-  valor: number;
-  maxJugadores: number;
-}
-
-export interface Reserva {
-  id_reserva: number;
-  fecha: string;
-  hora_inicio: string;
-  hora_termino: string;
-  rut_usuario: string;
-  numero_cancha: number;
-  costo_total: number;
-  estado?: string;
-  jugadores: Jugador[];
-  equipamiento: EquipamientoSeleccionado[];
-  cancha: Cancha;
-}
-
-export interface CrearReservaInput {
-  fecha: string;
-  hora_inicio: string;
-  hora_termino: string;
-  rut_usuario: string;
-  numero_cancha: number;
-  equipamiento_id: {id: number, cantidad: number}[];
-  jugadores: Jugador[];
-}
-
-export interface ModificarReservaInput {
-  id_reserva: number;
-  fecha: string;
-  hora_inicio: string;
-  hora_termino: string;
-  numero_cancha: number;
-  equipamiento_id?: {id: number, cantidad: number}[];
-  jugadores?: Jugador[];
-}
-
-export function useObtenerReservas(rutUsuario: string) {
-  return useQuery<Reserva[], Error>({
-    queryKey: ['reservas', rutUsuario],
-    queryFn: async () => {
-      const { data } = await api.get(`/reservas?rut=${rutUsuario}`);
-      return data;
-    },
-    enabled: !!rutUsuario,
-  });
-}
-
-export function useCrearReserva() {
-  const queryClient = useQueryClient();
-
-  return useMutation<Reserva, Error, CrearReservaInput>({
-    mutationFn: async (newReserva) => {
-      const { data } = await api.post('/reservas', newReserva);
-      return data;
-    },
-    onSuccess: (_data, variables) => {
-      queryClient.invalidateQueries({ queryKey: ['reservas', variables.rut_usuario] });
-    },
-  });
-}
-
-export function useModificarReserva() {
-  const queryClient = useQueryClient();
-
-  return useMutation<Reserva, Error, ModificarReservaInput>({
-    mutationFn: async (updReserva) => {
-      const { data } = await api.put(`/reservas/${updReserva.id_reserva}`, updReserva);
-      return data;
-    },
-    onSuccess: (_data, variables) => {
-      queryClient.invalidateQueries({ queryKey: ['reservas', variables.id_reserva] });
-      queryClient.invalidateQueries({ queryKey: ['reservas', _data.rut_usuario] });
-    },
-  });
-}
-
-export function useEliminarReserva(rutUsuario: string) {
-  const queryClient = useQueryClient();
-
-  return useMutation<void, Error, number>({
-    mutationFn: async (id_reserva) => {
-      await api.delete(`/reservas/${id_reserva}`);
+// 🔄 USAR ESTE HOOK PARA CREAR RESERVAS
+export function useCrearReserva(onSuccess?: () => void, onError?: (error: string) => void) {
+  const clienteQuery = useQueryClient()
+  return useMutation({
+    mutationFn: async (reserva: Datosreserva) => {
+      const respuesta = await api.post("api/reserva", reserva)
+      return respuesta.data
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['reservas', rutUsuario] });
+      clienteQuery.invalidateQueries({ queryKey: ["reservas"] })
+      if (onSuccess) onSuccess()
     },
-  });
+    onError: (error: string) => {
+      if (onError) onError(error)
+    },
+  })
 }
 
-export function useObtenerReservaPorId(id_reserva: number | undefined) {
-  return useQuery<Reserva, Error>({
-    queryKey: ['reserva', id_reserva],
-    queryFn: async () => {
-      const { data } = await api.get(`/reservas/${id_reserva}`);
-      return data;
+// 🔄 USAR ESTE HOOK PARA ELIMINAR RESERVAS
+export function useEliminarReserva(rut: string) {
+  const clienteQuery = useQueryClient()
+
+  return useMutation({
+    mutationFn: async (id: number) => {
+      const respuesta = await api.delete(`api/reserva/${id}`)
+      return respuesta.data
     },
-    enabled: !!id_reserva,
-  });
+    onSuccess: () => {
+      clienteQuery.invalidateQueries({ queryKey: ["reservas", rut] })
+    },
+  })
+}
+
+// 🔄 USAR ESTE HOOK PARA OBTENER UNA RESERVA POR ID
+export function useReservaPorId(id: number) {
+  return useQuery({
+    queryKey: ["reserva", id],
+    queryFn: async () => {
+      const respuesta = await api.get(`/api/reserva/${id}`)
+      return respuesta.data.data
+    },
+    enabled: !!id,
+  })
+}
+
+export interface DatosReservaParcial {
+  rut_usuario:string
+  fecha?: string
+  hora_inicio?: string
+  hora_termino?: string
+  numero_cancha?: number
+  equipamiento?: { id: number; cantidad: number; costo: number }[]
+  jugadores?: Jugador[]
+}
+
+// 🔄 USAR ESTE HOOK PARA MODIFICAR RESERVAS
+export function useModificarReserva(rut: string) {
+  const clienteQuery = useQueryClient()
+  return useMutation({
+    mutationFn: async ({ id, data }: { id: number; data: DatosReservaParcial }) => {
+      const respuesta = await api.patch(`api/reserva/${id}`, data)
+      return respuesta.data
+    },
+    onSuccess: () => {
+      clienteQuery.invalidateQueries({ queryKey: ["reservas", rut] })
+    },
+  })
+}
+
+// 🔄 USAR ESTE HOOK PARA OBTENER EL MÁXIMO DE JUGADORES POR CANCHA
+export function useMaximoJugadoresPorCancha(numero_cancha: number) {
+  return useQuery({
+    queryKey: ["maximoJugadores", numero_cancha],
+    queryFn: async () => {
+      const respuesta = await api.get(`/api/canchas/${numero_cancha}/maxJugadores`)
+      return respuesta.data.data.maximoJugadores
+    },
+    enabled: !!numero_cancha,
+  })
+}
+
+// 🔄 NUEVO HOOK PARA VERIFICAR DISPONIBILIDAD
+export function useVerificarDisponibilidad(fecha: string, hora: string, numeroPersonas: number) {
+  return useQuery({
+    queryKey: ["disponibilidad", fecha, hora, numeroPersonas],
+    queryFn: async () => {
+      const respuesta = await api.get(
+        `/api/disponibilidad?fecha=${fecha}&hora=${hora}&numeroPersonas=${numeroPersonas}`,
+      )
+      return respuesta.data.data
+    },
+    enabled: !!(fecha && hora && numeroPersonas > 0),
+  })
+}
+
+// 🔄 NUEVO HOOK PARA OBTENER FECHAS DISPONIBLES
+export function useFechasDisponibles() {
+  return useQuery({
+    queryKey: ["fechasDisponibles"],
+    queryFn: async () => {
+      const respuesta = await api.get("/api/fechas-disponibles")
+      return respuesta.data.data
+    },
+  })
 }
