@@ -1,9 +1,9 @@
 import { Column, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
 import { Reserva } from '../../reserva/entities/reserva.entity';
 
-@Entity()
+@Entity('jugador')
 export class Jugador {
-  @PrimaryGeneratedColumn()
+  @PrimaryGeneratedColumn({ name: 'id_jugador' })
   id: number;
 
   @Column()

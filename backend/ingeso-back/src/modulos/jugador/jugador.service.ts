@@ -18,14 +18,14 @@ export class JugadorService {
     @InjectRepository(Cancha)
     private canchaRepository: Repository<Cancha>
   ) {}
-
+  
   async create(createJugadorDto: CreateJugadorDto): Promise<ApiResponse<Jugador>> {
     try {
       // Verificar que la reserva existe
       const reserva = await this.reservaRepository.findOne({
         where: { id: createJugadorDto.id_reserva },
-        relations: ['cancha', 'jugadores']
-      });
+        relations: ['cancha']  
+    });
 
       if (!reserva) {
         throw new NotFoundException(`Reserva con ID ${createJugadorDto.id_reserva} no encontrada`);
@@ -71,7 +71,7 @@ export class JugadorService {
       throw new BadRequestException(`Error al crear jugador: ${error.message}`);
     }
   }
-
+  
   async findAll(): Promise<ApiResponse<Jugador[]>> {
     try {
       const jugadores = await this.jugadorRepository.find({
@@ -103,4 +103,62 @@ export class JugadorService {
       throw new BadRequestException(`Error al obtener jugador: ${error.message}`);
     }
   }
+  
+async createBatch(createJugadoresDto: CreateJugadorDto[]): Promise<ApiResponse<any>> {
+  if (!Array.isArray(createJugadoresDto) || createJugadoresDto.length === 0) {
+    throw new BadRequestException('Debe proporcionar al menos un jugador');
+  }
+
+  const primerIdReserva = createJugadoresDto[0].id_reserva;
+  const todosLaMismaReserva = createJugadoresDto.every(j => j.id_reserva === primerIdReserva);
+  
+  if (!todosLaMismaReserva) {
+    throw new BadRequestException('Todos los jugadores deben pertenecer a la misma reserva');
+  }
+
+  const reserva = await this.reservaRepository.findOne({
+    where: { id: primerIdReserva },
+    relations: ['cancha']
+  });
+
+  if (!reserva) {
+    throw new BadRequestException(`Reserva con ID ${primerIdReserva} no encontrada`);
+  }
+
+  const jugadoresActuales = await this.jugadorRepository.count({
+    where: { reserva: { id: primerIdReserva } }
+  });
+
+  const totalDespues = jugadoresActuales + createJugadoresDto.length;
+  
+  if (totalDespues > reserva.cancha.cantidadMaxJugador) {
+    throw new BadRequestException(
+      `No se pueden agregar ${createJugadoresDto.length} jugadores. ` +
+      `Actuales: ${jugadoresActuales}, Máximo: ${reserva.cancha.cantidadMaxJugador}`
+    );
+  }
+
+  try {
+    // ✅ CREAR TODOS DE UNA VEZ (MÁS EFICIENTE)
+    const nuevosJugadores = createJugadoresDto.map(dto => 
+      this.jugadorRepository.create({
+        nombre: dto.nombre,
+        apellido: dto.apellido, 
+        rut: dto.rut,
+        edad: dto.edad,
+        reserva: { id: dto.id_reserva }
+      })
+    );
+
+    const jugadoresGuardados = await this.jugadorRepository.save(nuevosJugadores);
+    
+    return CreateResponse(
+      `${jugadoresGuardados.length} jugadores creados exitosamente`,
+      jugadoresGuardados,
+      'CREATED'
+    );
+  } catch (error) {
+    throw new BadRequestException(`Error al crear jugadores en lote: ${error.message}`);
+  }
+}
 }

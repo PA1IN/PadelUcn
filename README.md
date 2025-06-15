@@ -1625,3 +1625,22 @@ Este proyecto está bajo la Licencia MIT. Ver el archivo `LICENSE` para más det
 Desarrollado para la Universidad Católica del Norte
 
 
+POST /api/jugador/batch
+[
+  {
+    "nombre": "Juan",
+    "apellido": "Pérez", 
+    "rut": "12345678-9",
+    "edad": 25,
+    "id_reserva": 1
+  },
+  {
+    "nombre": "María",
+    "apellido": "González",
+    "rut": "98765432-1", 
+    "edad": 28,
+    "id_reserva": 1
+  },
+  // ... más jugadores
+]
+
