@@ -16,7 +16,7 @@ import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { CreateResponse } from '../../utils/api-response.util';
 
-@Controller('reservas')
+@Controller('reserva')
 @UseGuards(JwtAuthGuard, RolesGuard)
 export class ReservaController {
   constructor(private readonly reservaService: ReservaService) {}

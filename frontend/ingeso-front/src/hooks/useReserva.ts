@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import api from "@/api/axios"
 
-// 🔄 USAR ESTE HOOK PARA OBTENER RESERVAS DEL USUARIO
+
 export function useObtenerReservas(rut_usuario: string) {
   return useQuery({
     queryKey: ["reservas", rut_usuario],
@@ -30,7 +30,7 @@ export interface Datosreserva {
   jugadores: Jugador[]
 }
 
-// 🔄 USAR ESTE HOOK PARA CREAR RESERVAS
+
 export function useCrearReserva(onSuccess?: () => void, onError?: (error: string) => void) {
   const clienteQuery = useQueryClient()
   return useMutation({
@@ -48,7 +48,7 @@ export function useCrearReserva(onSuccess?: () => void, onError?: (error: string
   })
 }
 
-// 🔄 USAR ESTE HOOK PARA ELIMINAR RESERVAS
+
 export function useEliminarReserva(rut: string) {
   const clienteQuery = useQueryClient()
 

@@ -11,6 +11,7 @@ import { EquipamientoModule } from './modulos/equipamiento/equipamiento.module';
 import { BloqueModule } from './modulos/bloque/bloque.module';
 import { JugadorModule } from './modulos/jugador/jugador.module';
 import { BoletaEquipamientoModule } from './modulos/boleta-equipamiento/boleta-equipamiento.module';
+import { NotificacionesModule } from './modulos/notificaciones/notificaciones.module';
 
 @Module({  imports: [
     ConfigModule.forRoot({
@@ -35,7 +36,9 @@ import { BoletaEquipamientoModule } from './modulos/boleta-equipamiento/boleta-e
     EquipamientoModule,
     BloqueModule,
     JugadorModule,
+    NotificacionesModule,
     BoletaEquipamientoModule,
+    NotificacionesModule,
   ],
   controllers: [AppController],
   providers: [AppService],

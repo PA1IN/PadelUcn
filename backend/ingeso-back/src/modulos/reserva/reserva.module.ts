@@ -9,6 +9,7 @@ import { Cancha } from '../cancha/entities/cancha.entity';
 import { BoletaEquipamiento } from '../boleta-equipamiento/entities/boleta-equipamiento.entity';
 import { Equipamiento } from '../equipamiento/entities/equipamiento.entity';
 import { Jugador } from '../jugador/entities/jugador.entity';
+import { NotificacionesModule } from '../notificaciones/notificaciones.module';
 
 @Module({
   imports: [
@@ -20,7 +21,8 @@ import { Jugador } from '../jugador/entities/jugador.entity';
       Equipamiento, 
       Jugador
     ]),
-    HistorialReservaModule
+    HistorialReservaModule,
+    NotificacionesModule
   ],
   controllers: [ReservaController],
   providers: [ReservaService],
