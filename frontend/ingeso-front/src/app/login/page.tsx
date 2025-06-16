@@ -13,18 +13,25 @@ export default function Login() {
   const router = useRouter()
 
   const login = useLogin(
-    (token) => {
+    (token: string) => {
       setToken(token)
-      router.push("/home") // Modificado: ahora redirecciona a reservaTabla en lugar de /home
+      sessionStorage.setItem("token", token)
+      
+      router.push("/home")
     },
-    (error) => {
-      setErrorMsg(error)
-    },
+    (mensajeError: string) => {
+      setErrorMsg(mensajeError)
+    }
   )
+
   const submit = (e: SyntheticEvent) => {
     e.preventDefault()
     setErrorMsg("")
-    login.mutate({ rut, contraseña: password })
+
+    login.mutate({
+      rut,
+      contraseña: password,
+    })
   }
 
   return (
@@ -80,15 +87,12 @@ export default function Login() {
               login.isPending ? "bg-gray-400 cursor-not-allowed" : "bg-black hover:bg-gray-900"
             }`}
           >
-            {login.isPending ? "Iniciando sesión... 🗣️🗣️" : "Login"}
+            {login.isPending ? "Iniciando sesión..." : "Login"}
           </button>
         </form>
 
-        {/* Errores */}
-        {login.isError && <p className="mt-4 text-sm text-red-600 text-center">Usuario o contraseña incorrectas</p>}
-        {errorMsg && <p className="mt-2 text-sm text-red-600 text-center">{errorMsg}</p>}
+        {errorMsg && <p className="mt-4 text-sm text-red-600 text-center">{errorMsg}</p>}
 
-        {/* Enlaces */}
         <div className="mt-6 text-sm text-center text-gray-600 space-y-1">
           <p>
             ¿No tienes cuenta?{" "}
@@ -96,17 +100,8 @@ export default function Login() {
               Regístrate aquí
             </a>
           </p>
-          <p>
-            ¿Olvidaste tu contraseña?{" "}
-            <a href="/ForgotPassword" className="text-blue-600 hover:underline">
-              Recupérala
-            </a>
-          </p>
         </div>
       </div>
     </div>
   )
 }
-
-
-//export default Login;
