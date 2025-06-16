@@ -1,9 +1,10 @@
 import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Request, HttpException, HttpStatus, ForbiddenException } from '@nestjs/common';
 import { UsuarioService } from './usuario.service';
-import { CreateUsuarioDto, UpdateUsuarioDto, UpdateAdminDto } from './dto/usuario.dto';
+import { CreateUsuarioDto, UpdateUsuarioDto, UpdateAdminDto, AddSaldoUsuarioDto } from './dto/usuario.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
+import { ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { Usuario } from './entities/usuario.entity';
 
 @Controller('usuarios')
@@ -74,7 +75,20 @@ export class UsuarioController {
       }
       throw new HttpException(error.message, HttpStatus.BAD_REQUEST);
     }
-  }  @Delete(':rut')
+  } @Patch(':rut/addSaldo') 
+    @ApiOperation ({summary: 'Agregar saldo a la cuenta de un usuario'})
+    @ApiResponse({status: 200, description: 'Saldo actulizado exitosamente'})
+    @ApiResponse({status:404, description: 'Usuario no encontrado'})
+    @ApiResponse({status: 400, description: 'Datos invalidos'})
+    @ApiResponse({status: 401, description: 'No autorizado'})
+    async addSaldo(
+      @Param('rut') rut: string,
+      @Body() addSaldoDto: AddSaldoUsuarioDto
+    ){
+      return this.usuarioService.addSaldo(rut, addSaldoDto);
+    }
+  
+  @Delete(':rut')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('admin')
   async remove(@Param('rut') rut: string, @Request() req): Promise<null> {
