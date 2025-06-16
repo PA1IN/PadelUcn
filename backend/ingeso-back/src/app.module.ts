@@ -10,6 +10,7 @@ import { ReservaModule } from './modulos/reserva/reserva.module';
 import { EquipamientoModule } from './modulos/equipamiento/equipamiento.module';
 import { BloqueModule } from './modulos/bloque/bloque.module';
 import { JugadorModule } from './modulos/jugador/jugador.module';
+import { BoletaEquipamientoModule } from './modulos/boleta-equipamiento/boleta-equipamiento.module';
 
 @Module({  imports: [
     ConfigModule.forRoot({
@@ -34,6 +35,7 @@ import { JugadorModule } from './modulos/jugador/jugador.module';
     EquipamientoModule,
     BloqueModule,
     JugadorModule,
+    BoletaEquipamientoModule,
   ],
   controllers: [AppController],
   providers: [AppService],

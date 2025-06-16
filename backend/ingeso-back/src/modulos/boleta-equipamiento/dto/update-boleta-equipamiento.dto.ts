@@ -1,8 +1,6 @@
-import { PartialType } from '@nestjs/mapped-types';
-import { IsNotEmpty, IsNumber, IsOptional } from 'class-validator';
-import { CreateBoletaEquipamientoDto } from './create-boleta-equipamiento.dto';
+import { IsNumber, IsOptional } from 'class-validator';
 
-export class UpdateBoletaEquipamientoDto extends PartialType(CreateBoletaEquipamientoDto) {
+export class UpdateBoletaEquipamientoDto {
   @IsNumber()
   @IsOptional()
   cantidad?: number;
