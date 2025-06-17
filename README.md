@@ -794,6 +794,35 @@ El sistema mantiene un registro detallado del historial de cambios de estado de 
 }
 ```
 
+## Módulo de Notificacion
+
+El sistema muestra notificaciones a los usuario por creaciones o modificaciones a sus reservas:
+
+## Atributos de Notificacion
+- **ID**
+- **Titulo**
+- **Mensaje**
+- **TipoEvento**
+- **FechaCreacion**
+- **Leida**
+- **Usuario**
+- **IDUsuario**
+- **Reserva**
+- **IDReserva**
+
+### Endpoints de la API para Notificiacion
+
+| Método HTTP | Endpoint | Descripción |
+|-------------|----------|-------------|
+| GET | `/api/notificaciones/no-leidas/:IdUsuario` | Mostar notificaciones que leida = false, para cierto usuario |
+| GET | `/api/notificaciones/historial/:idUsuario` | Mostrar historial de notificaciones para cierto usuario |
+| GET | `/api/notificaciones/estadisticas/:idUsuario` | Mostrar estadisticas ? (en Desarrollo) |
+| POST | `/api/notificaciones` | Crear notificaciones desde Admin |
+| PATCH | `/api/notificaciones/:id/marcar-leida` | Actualiza notificaciones cambiando leida = true |
+| PATCH | `/api/notificaciones/marcar-todas-leidas/:idUsuario` | Actualiza notificaciones cambiando a todas leida = true |
+| DELETE | `/api/notificaciones/:id` | Elimina una notificacion |
+
+
 ## Módulo de Equipamiento
 
 El sistema permite la gestión de equipamiento deportivo disponible para alquiler durante las reservas:

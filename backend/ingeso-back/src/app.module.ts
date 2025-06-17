@@ -37,8 +37,7 @@ import { NotificacionesModule } from './modulos/notificaciones/notificaciones.mo
     BloqueModule,
     JugadorModule,
     NotificacionesModule,
-    BoletaEquipamientoModule,
-    NotificacionesModule,
+    BoletaEquipamientoModule
   ],
   controllers: [AppController],
   providers: [AppService],
