@@ -1,4 +1,4 @@
-import { IsNotEmpty, IsString, IsNumber, IsOptional, IsArray, ValidateNested, Matches, IsDateString, Min, Max } from 'class-validator';
+import { IsNotEmpty, IsBoolean, IsString, IsNumber, IsOptional, IsArray, ValidateNested, Matches, IsDateString, Min, Max } from 'class-validator';
 import { Type, Transform } from 'class-transformer';
 import { CreateJugadorDto } from '../../jugador/dto/jugador.dto';
 
@@ -78,6 +78,10 @@ export class UpdateReservaDto {
   @ValidateNested({ each: true })
   @Type(() => EquipamientoReservaDto)
   equipamiento?: EquipamientoReservaDto[];
+
+  @IsBoolean()
+  @IsOptional()
+  existe?: boolean;
 
   @IsOptional()
   @IsArray({ message: 'Los jugadores deben ser un arreglo' })

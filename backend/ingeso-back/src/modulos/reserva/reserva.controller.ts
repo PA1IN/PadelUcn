@@ -129,6 +129,13 @@ export class ReservaController {
     }
   }
 
+  @Patch('eliminar/:id')
+  @Roles('admin', 'user')
+  eliminar(@Param('id') id: string) {
+    return this.reservaService.eliminarReserva(+id);
+  }
+
+
   @Delete(':id')
   async remove(@Param('id') id: string, @Request() req) {
     try {
@@ -190,6 +197,13 @@ export class ReservaController {
         false
       );
     }
+  }
+
+  //Muestra las reservas que existen
+  @Get('activas')
+  @Roles('admin', 'user')
+  obtenerActivas() {
+    return this.reservaService.obtenerReservasActivas();
   }
 
   @Get('cancha/:numero')

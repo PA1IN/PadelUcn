@@ -19,6 +19,8 @@ export class Reserva {
   @Column({ type: 'time' })
   hora_termino: string;
 
+  @Column({ default: true})
+  existe: boolean;
  
   @ManyToOne(() => Usuario, (usuario) => usuario.reservas)
   @JoinColumn({ name: 'id_usuario' })

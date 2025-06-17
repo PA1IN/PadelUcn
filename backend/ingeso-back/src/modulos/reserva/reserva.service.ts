@@ -911,6 +911,31 @@ export class ReservaService {
     }
   }
 
+  //"Eliminar" reserva
+    async eliminarReserva(id: number) {
+      await this.reservaRepository.update(id, { existe: true });
+      return CreateResponse(
+        'Reserva eliminada',
+        null, // o datos mínimos si querés
+        'NO_CONTENT'
+      );
+    }
+
+  //Ver reservas que existen
+    async obtenerReservasActivas() {
+      const reservas = await this.reservaRepository.find({
+        where: { existe: true },
+        relations: ['usuario', 'cancha'],
+        order: { fecha: 'DESC' },
+      });
+
+      return CreateResponse(
+        `${reservas.length} reservas existentes`,
+        reservas,
+        'OK'
+      );
+    }
+
   async findOneByIdForCheckout(id: number): Promise<ApiResponse<Reserva>> {
     try {
       const reserva = await this.reservaRepository.findOne({ where: { id: id } });
