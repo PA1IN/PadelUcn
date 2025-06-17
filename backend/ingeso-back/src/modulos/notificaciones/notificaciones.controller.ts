@@ -39,7 +39,7 @@ export class NotificacionesController {
     return this.notificacionesService.marcarTodasComoLeidas(+idUsuario);
   }
 
-  //elimina la notificacion del historial
+  //elimina la notificacion del historial //Creo que no se utilizara
   @Delete(':id')
   @Roles('admin', 'user')
   eliminarDelHistorial(@Param('id') id: string) {

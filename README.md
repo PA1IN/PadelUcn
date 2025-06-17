@@ -822,7 +822,133 @@ El sistema muestra notificaciones a los usuario por creaciones o modificaciones 
 | PATCH | `/api/notificaciones/marcar-todas-leidas/:idUsuario` | Actualiza notificaciones cambiando a todas leida = true |
 | DELETE | `/api/notificaciones/:id` | Elimina una notificacion |
 
+### Formato de datos
 
+#### Creación de notificacion (Post `/api/notificaciones`)
+```json
+//hacer json, da problemas con dto
+```
+#### Actualizacion de notificacion (Patch `/api/notificaciones/marcar-todas-leidas/:idUsuario`)
+```json
+{
+  "statusCode": 200,
+  "message": "2 notificaciones marcadas como leídas",
+  "data": {
+    "actualizadas": 2
+  },
+  "success": true
+}
+```
+
+#### Actualizacion de notificacion (Patch `/api/notificaciones/:id/marcar-leida`)
+```json
+{
+  "statusCode": 200,
+  "message": "Notificación marcada como leída",
+  "data": {
+    "id": 12,
+    "leida": true
+  },
+  "success": true
+}
+```
+
+#### Mostrar historial de notificaciones (GET `/api/notificaciones/historial/:idUsuario`)
+```json
+{
+  "statusCode": 200,
+  "message": "10 notificaciones encontradas",
+  "data": [
+    {
+      "id": 12,
+      "titulo": "Reserva Creada y Pagada",
+      "mensaje": "Tu reserva para la cancha #1 el 12/25/2028 de 10:00 a 12:00 ha sido creada y pagada exitosamente. Costo: $30000",
+      "tipoEvento": "RESERVA_CREADA",
+      "fechaCreacion": "2025-06-17T06:19:28.067Z",
+      "leida": true,
+      "idUsuario": 1,
+      "reserva": {
+        "id": 8,
+        "fecha": "2028-12-25",
+        "hora_inicio": "10:00:00",
+        "hora_termino": "12:00:00",
+        "cancha": {
+          "id": 1,
+          "numero": 1,
+          "nombre": "Cancha Principal",
+          "descripcion": "Cancha de pádel profesional con paredes de cristal",
+          "valor": 15000,
+          "mantenimiento": false,
+          "cantidadMaxJugador": 4
+        }
+      },
+      "idReserva": 8
+    },
+    {
+      "id": 11,
+      "titulo": "Reserva Creada y Pagada",
+      "mensaje": "Tu reserva para la cancha #1 el 12/27/2027 de 10:00 a 12:00 ha sido creada y pagada exitosamente. Costo: $30000",
+      "tipoEvento": "RESERVA_CREADA",
+      "fechaCreacion": "2025-06-17T06:16:48.007Z",
+      "leida": true,
+      "idUsuario": 1,
+      "reserva": {
+        "id": 7,
+        "fecha": "2027-12-27",
+        "hora_inicio": "10:00:00",
+        "hora_termino": "12:00:00",
+        "cancha": {
+          "id": 1,
+          "numero": 1,
+          "nombre": "Cancha Principal",
+          "descripcion": "Cancha de pádel profesional con paredes de cristal",
+          "valor": 15000,
+          "mantenimiento": false,
+          "cantidadMaxJugador": 4
+        }
+      },
+      "idReserva": 7
+    }
+  ]
+}
+```
+
+
+#### Mostrar notificaciones no leidas (GET `/api/notificaciones/no-leidas/:IdUsuario`)
+```json
+{
+  "statusCode": 200,
+  "message": "1 notificaciones no leídas",
+  "data": [
+    {
+      "id": 12,
+      "titulo": "Reserva Creada y Pagada",
+      "mensaje": "Tu reserva para la cancha #1 el 12/25/2028 de 10:00 a 12:00 ha sido creada y pagada exitosamente. Costo: $30000",
+      "tipoEvento": "RESERVA_CREADA",
+      "fechaCreacion": "2025-06-17T06:19:28.067Z",
+      "leida": false,
+      "idUsuario": 1,
+      "reserva": {
+        "id": 8,
+        "fecha": "2028-12-25",
+        "hora_inicio": "10:00:00",
+        "hora_termino": "12:00:00",
+        "cancha": {
+          "id": 1,
+          "numero": 1,
+          "nombre": "Cancha Principal",
+          "descripcion": "Cancha de pádel profesional con paredes de cristal",
+          "valor": 15000,
+          "mantenimiento": false,
+          "cantidadMaxJugador": 4
+        }
+      },
+      "idReserva": 8
+    }
+  ],
+  "success": true
+}
+```
 ## Módulo de Equipamiento
 
 El sistema permite la gestión de equipamiento deportivo disponible para alquiler durante las reservas:
