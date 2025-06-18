@@ -5,14 +5,15 @@ import { BoletaEquipamientoController } from './boleta-equipamiento.controller';
 import { BoletaEquipamiento } from './entities/boleta-equipamiento.entity';
 import { EquipamientoModule } from '../equipamiento/equipamiento.module';
 import { Reserva } from '../reserva/entities/reserva.entity';
+import { Equipamiento } from '../equipamiento/entities/equipamiento.entity'; 
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([BoletaEquipamiento, Reserva]),
-    EquipamientoModule, // Importar el módulo de equipamiento para usar su servicio
+    TypeOrmModule.forFeature([BoletaEquipamiento, Reserva, Equipamiento]),
+    EquipamientoModule
   ],
-  controllers: [BoletaEquipamientoController],
+  controllers: [BoletaEquipamientoController],  
   providers: [BoletaEquipamientoService],
-  exports: [BoletaEquipamientoService],
+  exports: [BoletaEquipamientoService]
 })
 export class BoletaEquipamientoModule {}

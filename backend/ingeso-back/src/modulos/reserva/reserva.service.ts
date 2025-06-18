@@ -18,23 +18,25 @@ import { BoletaEquipamiento } from '../boleta-equipamiento/entities/boleta-equip
 import { Equipamiento } from '../equipamiento/entities/equipamiento.entity';
 import { Jugador } from '../jugador/entities/jugador.entity';
 import { ApiResponse } from '../../interface/Apiresponce';
+import { NotificacionesService } from '../notificaciones/notificaciones.service';
 
 @Injectable()
 export class ReservaService {
   constructor(
-    @InjectRepository(BoletaEquipamiento)
-    private boletaEquipamientoRepository: Repository<BoletaEquipamiento>,
-    @InjectRepository(Usuario)
-    private usuarioRepository: Repository<Usuario>,
-    @InjectRepository(Cancha)
-    private canchaRespository: Repository<Cancha>,
     @InjectRepository(Reserva)
-    private reservaRepository: Repository<Reserva>,
+    private readonly reservaRepository: Repository<Reserva>,
+    @InjectRepository(Usuario)
+    private readonly usuarioRepository: Repository<Usuario>,
+    @InjectRepository(Cancha)
+    private readonly canchaRepository: Repository<Cancha>,
+    @InjectRepository(BoletaEquipamiento)
+    private readonly boletaEquipamientoRepository: Repository<BoletaEquipamiento>,
     @InjectRepository(Equipamiento)
-    private equipamientoRepository: Repository<Equipamiento>,
+    private readonly equipamientoRepository: Repository<Equipamiento>,
     @InjectRepository(Jugador)
-    private jugadorRepository: Repository<Jugador>,
+    private readonly jugadorRepository: Repository<Jugador>,
     private historialReservaService: HistorialReservaService,
+    private readonly notificacionesService: NotificacionesService,  
   ) {}
   async create(createReservaDto: CreateReservaDto, isAdmin: boolean = false): Promise<ApiResponse<Reserva>> {
     try {
@@ -48,7 +50,7 @@ export class ReservaService {
         throw new BadRequestException('Las reservas solo están disponibles de lunes a viernes');
       }
 
-      // 2. Validar que la reserva sea con 1 semana de anticipación (a menos que sea admin)
+      // Validar que la reserva sea con 1 semana de anticipación (a menos que sea admin)
       if (!isAdmin) {
         const oneWeekFromNow = new Date();
         oneWeekFromNow.setDate(today.getDate() + 7);
@@ -136,19 +138,19 @@ export class ReservaService {
         throw new BadRequestException('Ya tiene una reserva en ese horario');
       }
 
-      // 9. Obtener la cancha
-      const cancha = await this.canchaRespository.findOne({ where: { numero: createReservaDto.numero_cancha } });
+      //  Obtener la cancha
+      const cancha = await this.canchaRepository.findOne({ where: { numero: createReservaDto.numero_cancha } });
       if (!cancha) {
         throw new BadRequestException(`Cancha número ${createReservaDto.numero_cancha} no encontrada`);
-      }      // 10. Calcular el costo de la reserva (precio por hora x duración)
+      }      
       const costoReserva = cancha.valor * (duracionMinutos / 60);
 
-      // 11. Verificar que el usuario tenga saldo suficiente
+      // Verificar que el usuario tenga saldo suficiente
       if (!isAdmin && usuario.saldo < costoReserva) {
         throw new BadRequestException(`Saldo insuficiente para realizar la reserva. Saldo actual: $${usuario.saldo}, Costo: $${costoReserva}`);
       }
 
-      // 12. Crear la reserva
+      //Crear la reserva
       const newReserva = this.reservaRepository.create({
         fecha: fechaFormateada,
         hora_inicio: createReservaDto.hora_inicio,
@@ -159,11 +161,11 @@ export class ReservaService {
 
       const savedReserva = await this.reservaRepository.save(newReserva);
 
-      // 13. Procesar el pago (descontar del saldo) si no es admin
+      //Procesar el pago (descontar del saldo) si no es admin
       if (!isAdmin) {
         usuario.saldo -= costoReserva;
         await this.usuarioRepository.save(usuario);
-      }      // 14. Crear el historial de la reserva
+      }      //Crear el historial de la reserva
       try {
         await this.historialReservaService.create({
           estado: 'Pendiente',
@@ -174,7 +176,7 @@ export class ReservaService {
         console.error('Error al crear historial de reserva:', historialError);
       }
 
-      // 15. Procesar los jugadores si se proporcionaron
+      // Procesar los jugadores
       if (Array.isArray(createReservaDto.jugadores) && createReservaDto.jugadores.length > 0) {
         for (const jugadorDto of createReservaDto.jugadores) {
           const nuevoJugador = this.jugadorRepository.create({
@@ -187,7 +189,7 @@ export class ReservaService {
           
           await this.jugadorRepository.save(nuevoJugador);
         }
-      }      // 16. Procesar el equipamiento si se proporcionó
+      }      //Procesar el equipamiento si se proporcionó
       let costoTotalEquipamiento = 0;
       if (Array.isArray(createReservaDto.equipamiento) && createReservaDto.equipamiento.length > 0) {
         for (const item of createReservaDto.equipamiento) {
@@ -244,6 +246,19 @@ export class ReservaService {
 
       if (!reservaCompleta) {
         throw new Error('Error al cargar la reserva completa');
+      }
+
+      //genera la notificacion
+      try {
+        await this.notificacionesService.create({
+          titulo: 'Reserva Creada y Pagada',
+          mensaje: `Tu reserva para la cancha #${createReservaDto.numero_cancha} el ${fechaFormateada.toLocaleDateString()} de ${createReservaDto.hora_inicio} a ${createReservaDto.hora_termino} ha sido creada y pagada exitosamente. Costo: $${costoReserva}`,
+          tipoEvento: 'RESERVA_CREADA',
+          idUsuario: usuario.id_usuario,
+          idReserva: savedReserva.id
+        });
+      } catch (notifError) {
+        console.error('Error al crear notificación:', notifError);
       }
 
       return CreateResponse(
@@ -468,7 +483,7 @@ export class ReservaService {
 
         // Asignar nueva cancha si se cambia
         if (updateReservaDto.numero_cancha) {
-          const nuevaCancha = await this.canchaRespository.findOne({
+          const nuevaCancha = await this.canchaRepository.findOne({
             where: { numero: updateReservaDto.numero_cancha }
           });
 
@@ -613,6 +628,19 @@ export class ReservaService {
         throw new Error('Error al cargar la reserva actualizada');
       }
 
+      //notificacoin de modificacion 
+      try {
+        await this.notificacionesService.create({
+          titulo: 'Reserva Modificada',
+          mensaje: `Tu reserva #${id} ha sido modificada exitosamente`,
+          tipoEvento: 'RESERVA_MODIFICADA',
+          idUsuario: reserva.usuario.id_usuario,
+          idReserva: id
+        });
+      } catch (notifError) {
+        console.error('Error al crear notificación de modificación:', notifError);
+      }
+
       return CreateResponse('Reserva modificada exitosamente', reservaActualizada, 'OK');
     } catch (error) {
       if (error instanceof BadRequestException) {
@@ -680,6 +708,20 @@ export class ReservaService {
       
       // No hay reembolso según las reglas de negocio, así que no devolvemos el saldo al usuario
       
+      // 🔔 AGREGAR ANTES DE: await this.reservaRepository.delete(id);
+      // 🔔 GENERAR NOTIFICACIÓN DE CANCELACIÓN
+      try {
+        await this.notificacionesService.create({
+          titulo: 'Reserva Cancelada',
+          mensaje: `Tu reserva #${id} ha sido cancelada exitosamente.`,
+          tipoEvento: 'RESERVA_ELIMINADA',
+          idUsuario: reserva.usuario.id_usuario,
+          idReserva: id
+        });
+      } catch (notifError) {
+        console.error('Error al crear notificación de cancelación:', notifError);
+      }
+
       // Eliminar la reserva
       await this.reservaRepository.delete(id);
       return CreateResponse('Reserva cancelada exitosamente', null, 'OK');
@@ -868,6 +910,31 @@ export class ReservaService {
       );
     }
   }
+
+  //"Eliminar" reserva
+    async eliminarReserva(id: number) {
+      await this.reservaRepository.update(id, { existe: true });
+      return CreateResponse(
+        'Reserva eliminada',
+        null, // o datos mínimos si querés
+        'NO_CONTENT'
+      );
+    }
+
+  //Ver reservas que existen
+    async obtenerReservasActivas() {
+      const reservas = await this.reservaRepository.find({
+        where: { existe: true },
+        relations: ['usuario', 'cancha'],
+        order: { fecha: 'DESC' },
+      });
+
+      return CreateResponse(
+        `${reservas.length} reservas existentes`,
+        reservas,
+        'OK'
+      );
+    }
 
   async findOneByIdForCheckout(id: number): Promise<ApiResponse<Reserva>> {
     try {

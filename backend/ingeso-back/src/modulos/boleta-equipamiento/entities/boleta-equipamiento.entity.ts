@@ -2,28 +2,30 @@ import { Column, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn } from 't
 import { Reserva } from '../../reserva/entities/reserva.entity';
 import { Equipamiento } from '../../equipamiento/entities/equipamiento.entity';
 
-@Entity()
+@Entity('boleta_equipamiento')
 export class BoletaEquipamiento {
-  @PrimaryGeneratedColumn()
+  @PrimaryGeneratedColumn({ name: 'id_boleta' })
   id: number;
 
   @Column()
   cantidad: number;
 
-  @Column()
+  @Column({ name: 'monto_total' })
   montoTotal: number;
+  
 
   @ManyToOne(() => Reserva, (reserva) => reserva.boletas)
-  @JoinColumn({ name: 'idReserva' })
+  @JoinColumn({ name: 'id_reserva' })
   reserva: Reserva;
 
-  @Column()
+  @Column({ name: 'id_reserva' })
   idReserva: number;
 
   @ManyToOne(() => Equipamiento)
-  @JoinColumn({ name: 'idEquipamiento' })
+  @JoinColumn({ name: 'id_equipamiento' })
   equipamiento: Equipamiento;
+  
 
-  @Column()
+  @Column({ name: 'id_equipamiento' })
   idEquipamiento: number;
 }

@@ -2,9 +2,7 @@ import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { CreateBoletaEquipamientoDto } from './dto/create-boleta-equipamiento.dto';
-
-// Import from controller to ensure we're using the same definition
-import { UpdateBoletaEquipamientoDto } from './boleta-equipamiento.controller';
+import { UpdateBoletaEquipamientoDto } from './dto/update-boleta-equipamiento.dto';
 import { BoletaEquipamiento } from './entities/boleta-equipamiento.entity';
 import { ApiResponse } from '../../interface/Apiresponce';
 import { CreateResponse } from '../../utils/api-response.util';
@@ -51,10 +49,10 @@ export class BoletaEquipamientoService {
       console.log('Valor Total:', monto_total);
 
       const newBoleta = this.boletaRepository.create({
-        idReserva: createBoletaDto.id_reserva,
-        idEquipamiento: createBoletaDto.id_equipamiento,
+        idReserva: createBoletaDto.id_reserva,           
+        idEquipamiento: createBoletaDto.id_equipamiento, 
         cantidad: createBoletaDto.cantidad,
-        montoTotal: monto_total
+        montoTotal: monto_total  
       });
 
       const savedBoleta = await this.boletaRepository.save(newBoleta);

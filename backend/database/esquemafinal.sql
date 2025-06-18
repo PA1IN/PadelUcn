@@ -60,6 +60,7 @@ CREATE TABLE IF NOT EXISTS reserva(
     id_cancha INT NOT NULL,
     id_usuario INT NOT NULL,
     id_bloque INT,
+    existe BOOLEAN,
     FOREIGN KEY (id_cancha) REFERENCES cancha(id_cancha) ON DELETE CASCADE,
     FOREIGN KEY (id_usuario) REFERENCES usuario(id_usuario) ON DELETE CASCADE,
     FOREIGN KEY (id_bloque) REFERENCES bloque(id_bloque) ON DELETE SET NULL
