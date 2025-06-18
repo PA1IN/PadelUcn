@@ -1,62 +1,51 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards } from '@nestjs/common';
-import { NotificacionesService } from './notificaciones.service';
-import { CreateNotificacioneDto } from './dto/create-notificacione.dto';
-import { UpdateNotificacioneDto } from './dto/update-notificacione.dto';
+import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, ParseIntPipe } from '@nestjs/common';
+import { NotificacionesService, CrearNotificacionDto } from './notificaciones.service'; // ✅ IMPORTAR DTO
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
-import { RolesGuard } from '../auth/guards/roles.guard';
-import { Roles } from '../auth/decorators/roles.decorator';
 
 @Controller('notificaciones')
-@UseGuards(JwtAuthGuard, RolesGuard)
+@UseGuards(JwtAuthGuard)
 export class NotificacionesController {
   constructor(private readonly notificacionesService: NotificacionesService) {}
 
-  //historial de notificaciones
-  @Get('historial/:idUsuario')
-  @Roles('admin', 'user')
-  getHistorial(@Param('idUsuario') idUsuario: string) {
-    return this.notificacionesService.getHistorialUsuario(+idUsuario);
-  }
-
-  // notificaciones leidas
-  @Get('no-leidas/:idUsuario')
-  @Roles('admin', 'user')
-  getNoLeidas(@Param('idUsuario') idUsuario: string) {
-    return this.notificacionesService.getNotificacionesNoLeidas(+idUsuario);
-  }
-
-  //Marca la notificación como leida
-  @Patch(':id/marcar-leida')
-  @Roles('admin', 'user')
-  marcarComoLeida(@Param('id') id: string) {
-    return this.notificacionesService.marcarComoLeida(+id);
-  }
-
-  //marca todas como leidas
-  @Patch('marcar-todas-leidas/:idUsuario')
-  @Roles('admin', 'user')
-  marcarTodasComoLeidas(@Param('idUsuario') idUsuario: string) {
-    return this.notificacionesService.marcarTodasComoLeidas(+idUsuario);
-  }
-
-  //elimina la notificacion del historial //Creo que no se utilizara
-  @Delete(':id')
-  @Roles('admin', 'user')
-  eliminarDelHistorial(@Param('id') id: string) {
-    return this.notificacionesService.eliminarNotificacion(+id);
-  }
-
-  //crear notificaciones (admin)
+  // ✅ CREAR NOTIFICACIÓN - CORREGIDO
   @Post()
-  @Roles('admin')
-  create(@Body() createNotificacioneDto: CreateNotificacioneDto) {
-    return this.notificacionesService.create(createNotificacioneDto);
+  async create(@Body() createNotificacionDto: CrearNotificacionDto) {
+    return await this.notificacionesService.create(createNotificacionDto);
   }
 
-  // estadisticas (en desarollo)
-  @Get('estadisticas/:idUsuario')
-  @Roles('admin', 'user')
-  getEstadisticas(@Param('idUsuario') idUsuario: string) {
-    return this.notificacionesService.getEstadisticasUsuario(+idUsuario);
+  // ✅ OBTENER NOTIFICACIONES NO VISTAS (ENDPOINT PRINCIPAL)
+  @Get('no-vistas/:idUsuario')
+  async getNotificacionesNoVistas(@Param('idUsuario', ParseIntPipe) idUsuario: number) {
+    return await this.notificacionesService.getNotificacionesNoVistas(idUsuario);
   }
+
+  // ✅ OBTENER HISTORIAL COMPLETO
+  @Get('historial/:idUsuario')
+  async getHistorialUsuario(@Param('idUsuario', ParseIntPipe) idUsuario: number) {
+    return await this.notificacionesService.getHistorialUsuario(idUsuario);
+  }
+
+  // ✅ CONTAR NO VISTAS
+  @Get('count/:idUsuario')
+  async contarNoVistas(@Param('idUsuario', ParseIntPipe) idUsuario: number) {
+    return await this.notificacionesService.contarNoVistas(idUsuario);
+  }
+
+  // ✅ MARCAR COMO LEÍDA
+  @Patch('marcar-leida/:idNotificacion')
+  async marcarComoLeida(@Param('idNotificacion', ParseIntPipe) idNotificacion: number) {
+    return await this.notificacionesService.marcarComoLeida(idNotificacion);
+  }
+
+  // ✅ MARCAR TODAS COMO LEÍDAS
+  @Patch('marcar-todas-leidas/:idUsuario')
+  async marcarTodasComoLeidas(@Param('idUsuario', ParseIntPipe) idUsuario: number) {
+    return await this.notificacionesService.marcarTodasComoLeidas(idUsuario);
+  }
+
+  /*
+  @Get('estadisticas/:idUsuario')
+  async getEstadisticasUsuario(@Param('idUsuario', ParseIntPipe) idUsuario: number) {
+    return await this.notificacionesService.getEstadisticasUsuario(idUsuario);
+  }*/
 }
