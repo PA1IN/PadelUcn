@@ -959,4 +959,21 @@ export class ReservaService {
       );
     }
   }
+
+  async verificarReservasActivasCancha(idCancha: number): Promise<boolean> {
+  try {
+    const reservasActivas = await this.reservaRepository.count({
+      where: {
+        cancha: { id: idCancha },
+        //agregar más condiciones para definir "reservas activas"
+        // fecha: MoreThanOrEqual(new Date().toISOString().split('T')[0])
+      }
+    });
+    
+    return reservasActivas > 0;
+  } catch (error) {
+    console.error('Error al verificar reservas activas:', error);
+    return false; // En caso de error, asumir que no hay reservas activas
+  }
+}
 }

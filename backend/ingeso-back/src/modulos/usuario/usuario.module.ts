@@ -13,6 +13,9 @@ import { Equipamiento } from '../equipamiento/entities/equipamiento.entity';
 import { Jugador } from '../jugador/entities/jugador.entity'; 
 import { HistorialReserva } from '../historial-reserva/entities/historial-reserva.entity'; 
 import { HistorialReservaService } from '../historial-reserva/historial-reserva.service'; 
+import { EquipamientoModule } from '../equipamiento/equipamiento.module';
+import { CanchaService } from '../cancha/cancha.service'; 
+import { EquipamientoService } from '../equipamiento/equipamiento.service';
 
 @Module({
   imports: [
@@ -24,7 +27,8 @@ import { HistorialReservaService } from '../historial-reserva/historial-reserva.
       BoletaEquipamiento,
       Equipamiento,      
       Jugador,          
-      HistorialReserva   
+      HistorialReserva,
+      EquipamientoModule   
     ]), 
   ],
   controllers: [UsuarioController],
@@ -32,7 +36,9 @@ import { HistorialReservaService } from '../historial-reserva/historial-reserva.
     UsuarioService, 
     NotificacionesService, 
     ReservaService,
-    HistorialReservaService
+    HistorialReservaService,
+    CanchaService, 
+    EquipamientoService,
   ], 
   exports: [UsuarioService], 
 })

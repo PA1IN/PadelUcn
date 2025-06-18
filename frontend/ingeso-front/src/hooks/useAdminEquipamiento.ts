@@ -20,8 +20,8 @@ export function useEquipamientos() {
     return useQuery<Equipamiento[], Error>({
         queryKey:["admin-equipamientos"],
         queryFn: async () => {
-            const { data } = await api.get("/api/admin/equipamientos");
-            return data.data
+            const { data } = await api.get("/api/usuarios/admin/equipamientos"); 
+                        return data.data
         },
     })
 }
@@ -33,7 +33,7 @@ export function useCrearEquipamiento(){
 
     return useMutation({
         mutationFn: async (equipamiento: nuevoEquipamiento) => {
-            const { data } = await api.post("/api/admin/equipamiento", equipamiento);
+            const { data } = await api.post("/api/usuarios/admin/equipamiento", equipamiento); // ✅ Ruta correcta
             return data;
         },
         onSuccess: () => {
@@ -49,7 +49,7 @@ export function useActualizarEquipamiento () {
 
     return useMutation({
         mutationFn: async ({id, equipamiento}: {id: number; equipamiento: Partial<nuevoEquipamiento>}) => {
-            const { data } = await api.patch(`/api/admin/equipamiento/${id}`, equipamiento);
+            const { data } = await api.patch(`/api/usuarios/admin/equipamiento/${id}`, equipamiento); // ✅ Ruta correcta
             return data;
         },
         onSuccess: () => {
