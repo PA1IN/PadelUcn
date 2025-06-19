@@ -16,6 +16,9 @@ import { HistorialReservaService } from '../historial-reserva/historial-reserva.
 import { EquipamientoModule } from '../equipamiento/equipamiento.module';
 import { CanchaService } from '../cancha/cancha.service'; 
 import { EquipamientoService } from '../equipamiento/equipamiento.service';
+import { TransaccionService } from '../transaccion/transaccion.service';
+import { Transaccion } from '../transaccion/entities/transaccion.entity';
+import { TransaccionModule } from '../transaccion/transaccion.module';
 
 @Module({
   imports: [
@@ -28,8 +31,9 @@ import { EquipamientoService } from '../equipamiento/equipamiento.service';
       Equipamiento,      
       Jugador,          
       HistorialReserva,
-      EquipamientoModule   
     ]), 
+    EquipamientoModule,
+    TransaccionModule,
   ],
   controllers: [UsuarioController],
   providers: [

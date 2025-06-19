@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Request, HttpException, HttpStatus, ForbiddenException } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Query, Delete, UseGuards, Request, HttpException, HttpStatus, ForbiddenException } from '@nestjs/common';
 import { UsuarioService } from './usuario.service';
 import { CreateUsuarioDto, UpdateUsuarioDto, UpdateAdminDto, AddSaldoUsuarioDto } from './dto/usuario.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
@@ -11,6 +11,7 @@ import { CreateResponse } from '../../common/helpers/create-response.helper';
 import { ReservaService } from '../reserva/reserva.service';
 import { CanchaService } from '../cancha/cancha.service';
 import { EquipamientoService } from '../equipamiento/equipamiento.service';
+import { TransaccionService } from '../transaccion/transaccion.service';
 
 
 interface ResultadoRecordatorio {
@@ -74,6 +75,7 @@ export class UsuarioController {
     private readonly reservaService: ReservaService,
     private readonly canchaService: CanchaService,
     private readonly equipamientoService: EquipamientoService,
+    private readonly transaccionService: TransaccionService,
   ) {}
 
   @Post()
@@ -813,7 +815,7 @@ export class UsuarioController {
     }
   }
 
-  // ✅ PATCH /api/usuarios/admin/clientes/:rut - ACTUALIZAR CLIENTE (ADMIN)
+  // PATCH /api/usuarios/admin/clientes/:rut - ACTUALIZAR CLIENTE (ADMIN)
   @Patch('admin/clientes/:rut')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('admin')
@@ -904,7 +906,7 @@ export class UsuarioController {
     }
   }
 
-  // ✅ DELETE /api/usuarios/admin/clientes/:rut - ELIMINAR CLIENTE (ADMIN)
+  // DELETE /api/usuarios/admin/clientes/:rut - ELIMINAR CLIENTE (ADMIN)
   @Delete('admin/clientes/:rut')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('admin')
@@ -950,6 +952,93 @@ export class UsuarioController {
     } catch (error) {
       return CreateResponse(
         'Error al actualizar saldo',
+        error.message,
+        'ERROR'
+      );
+    }
+  }
+
+  // GET /api/admin/estadisticas - COMPATIBLE CON FRONTEND
+  @Get('/admin/estadisticas')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('admin')
+  async obtenerEstadisticasAdmin() {
+    try {
+      const estadisticasResponse = await this.transaccionService.getEstadisticas();
+      
+      
+      if (estadisticasResponse.statusCode !== 200 || !estadisticasResponse.data) {
+        return CreateResponse(
+          'No se pudieron obtener las estadísticas',
+          null,
+          'ERROR'
+        );
+      }
+      
+      return estadisticasResponse; 
+    } catch (error) {
+      return CreateResponse(
+        'Error al obtener estadísticas',
+        error.message,
+        'ERROR'
+      );
+    }
+  }
+
+  // GET /api/admin/transacciones - COMPATIBLE CON FRONTEND
+  @Get('/admin/transacciones')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('admin')
+  async obtenerTransaccionesAdmin() {
+    try {
+      const transaccionesResponse = await this.transaccionService.findAllCompletas();
+      
+      
+      if (transaccionesResponse.statusCode !== 200 || !transaccionesResponse.data) {
+        return CreateResponse(
+          'No se pudieron obtener las transacciones',
+          [],
+          'ERROR'
+        );
+      }
+      
+      return transaccionesResponse; 
+    } catch (error) {
+      return CreateResponse(
+        'Error al obtener transacciones',
+        error.message,
+        'ERROR'
+      );
+    }
+  }
+
+  // GET /api/admin/transacciones/periodo - COMPATIBLE CON FRONTEND
+  @Get('/admin/transacciones/periodo')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('admin')
+  async obtenerTransaccionesPorPeriodo(
+    @Query('fechaInicio') fechaInicio: string,
+    @Query('fechaFin') fechaFin: string
+  ) {
+    try {
+      const transaccionesResponse = await this.transaccionService.findByPeriodo(fechaInicio, fechaFin);
+      
+      if (!transaccionesResponse.success || !transaccionesResponse.data) {
+        return CreateResponse(
+          'No se pudieron obtener las transacciones del período',
+          [],
+          'ERROR'
+        );
+      }
+      
+      return CreateResponse(
+        transaccionesResponse.message,
+        transaccionesResponse.data,
+        'SUCCESS'
+      );
+    } catch (error) {
+      return CreateResponse(
+        'Error al obtener transacciones por período',
         error.message,
         'ERROR'
       );

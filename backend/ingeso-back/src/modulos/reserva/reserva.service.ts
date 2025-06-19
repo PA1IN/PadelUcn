@@ -19,6 +19,8 @@ import { Equipamiento } from '../equipamiento/entities/equipamiento.entity';
 import { Jugador } from '../jugador/entities/jugador.entity';
 import { ApiResponse } from '../../interface/Apiresponce';
 import { NotificacionesService } from '../notificaciones/notificaciones.service';
+import { TransaccionService } from '../transaccion/transaccion.service';
+import { CreateTransaccionDto } from '../transaccion/dto/create-transaccion.dto';
 
 @Injectable()
 export class ReservaService {
@@ -36,8 +38,10 @@ export class ReservaService {
     @InjectRepository(Jugador)
     private readonly jugadorRepository: Repository<Jugador>,
     private historialReservaService: HistorialReservaService,
-    private readonly notificacionesService: NotificacionesService,  
+    private readonly notificacionesService: NotificacionesService,
+    private readonly transaccionService: TransaccionService, // ✅ AGREGAR
   ) {}
+
   async create(createReservaDto: CreateReservaDto, isAdmin: boolean = false): Promise<ApiResponse<Reserva>> {
     try {
       const fecha = new Date(createReservaDto.fecha);
@@ -246,6 +250,33 @@ export class ReservaService {
 
       if (!reservaCompleta) {
         throw new Error('Error al cargar la reserva completa');
+      }
+
+      // resgristra la transaccion
+      try {
+        let transaccionData: CreateTransaccionDto;
+
+        // Verificar si hay equipamiento
+        if (reservaCompleta.boletas && reservaCompleta.boletas.length > 0) {
+          const primeraBoletaId = reservaCompleta.boletas[0].id;
+          
+          // Crear transacción CON equipamiento
+          transaccionData = {
+            fecha: new Date(),
+            id_boleta_equipamiento: primeraBoletaId
+          };
+        } else {
+          // Crear transacción SIN equipamiento
+          transaccionData = {
+            fecha: new Date()
+            // ✅ NO INCLUIR id_boleta_equipamiento si no hay equipamiento
+          };
+        }
+
+        await this.transaccionService.create(transaccionData);
+        console.log(`✅ Transacción registrada para reserva #${savedReserva.id}`);
+      } catch (transaccionError) {
+        console.error('❌ Error al registrar transacción:', transaccionError);
       }
 
       //genera la notificacion

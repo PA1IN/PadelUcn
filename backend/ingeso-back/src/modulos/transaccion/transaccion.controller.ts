@@ -1,34 +1,45 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import { Controller, Get, Post, Body, Param, Query, UseGuards } from '@nestjs/common';
 import { TransaccionService } from './transaccion.service';
 import { CreateTransaccionDto } from './dto/create-transaccion.dto';
-import { UpdateTransaccionDto } from './dto/update-transaccion.dto';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { RolesGuard } from '../auth/guards/roles.guard';
+import { Roles } from '../auth/decorators/roles.decorator';
 
-@Controller('transaccion')
+@Controller('transacciones')
 export class TransaccionController {
   constructor(private readonly transaccionService: TransaccionService) {}
 
+  // crea transaccion (es parael tema de las reservas tengan una transaccion registrada)
   @Post()
-  create(@Body() createTransaccionDto: CreateTransaccionDto) {
-    return this.transaccionService.create(createTransaccionDto);
+  @UseGuards(JwtAuthGuard)
+  async create(@Body() createTransaccionDto: CreateTransaccionDto) {
+    return await this.transaccionService.create(createTransaccionDto);
   }
 
+  // obtener todas las transacciones
   @Get()
-  findAll() {
-    return this.transaccionService.findAll();
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('admin')
+  async findAllCompletas() {
+    return await this.transaccionService.findAllCompletas();
   }
 
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.transaccionService.findOne(+id);
+  // obtener estadisticas
+  @Get('estadisticas')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('admin')
+  async getEstadisticas() {
+    return await this.transaccionService.getEstadisticas();
   }
 
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() updateTransaccionDto: UpdateTransaccionDto) {
-    return this.transaccionService.update(+id, updateTransaccionDto);
-  }
-
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.transaccionService.remove(+id);
+  // obtener transacciones por periodo
+  @Get('periodo')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('admin')
+  async findByPeriodo(
+    @Query('fechaInicio') fechaInicio: string,
+    @Query('fechaFin') fechaFin: string
+  ) {
+    return await this.transaccionService.findByPeriodo(fechaInicio, fechaFin);
   }
 }

@@ -12,6 +12,7 @@ import { BloqueModule } from './modulos/bloque/bloque.module';
 import { JugadorModule } from './modulos/jugador/jugador.module';
 import { BoletaEquipamientoModule } from './modulos/boleta-equipamiento/boleta-equipamiento.module';
 import { NotificacionesModule } from './modulos/notificaciones/notificaciones.module';
+import { TransaccionModule } from './modulos/transaccion/transaccion.module';
 
 
 @Module({  imports: [
@@ -38,7 +39,9 @@ import { NotificacionesModule } from './modulos/notificaciones/notificaciones.mo
     BloqueModule,
     JugadorModule,
     NotificacionesModule,
-    BoletaEquipamientoModule
+    BoletaEquipamientoModule,
+    TransaccionModule,
+    ReservaModule
   ],
   controllers: [AppController],
   providers: [AppService],
