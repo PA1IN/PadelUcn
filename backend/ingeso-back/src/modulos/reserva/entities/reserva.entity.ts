@@ -5,6 +5,12 @@ import { HistorialReserva } from '../../historial-reserva/entities/historial-res
 import { BoletaEquipamiento } from '../../boleta-equipamiento/entities/boleta-equipamiento.entity';
 import { Jugador } from '../../jugador/entities/jugador.entity';
 
+export enum EstadoReserva {
+  PENDIENTE = 'PENDIENTE',
+  CONFIRMADA = 'CONFIRMADA', 
+  CANCELADA = 'CANCELADA'
+}
+
 @Entity('reserva')
 export class Reserva {
   @PrimaryGeneratedColumn({ name: 'id_reserva' })
@@ -15,6 +21,13 @@ export class Reserva {
 
   @Column({ type: 'time' })
   hora_inicio: string;
+
+   @Column({ 
+    type: 'varchar',
+    length: 20,
+    default: 'PENDIENTE'
+  })
+  estado: string;
 
   @Column({ type: 'time' })
   hora_termino: string;

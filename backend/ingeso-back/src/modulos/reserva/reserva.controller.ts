@@ -6,6 +6,7 @@ import {
   Patch, 
   Param, 
   Delete, 
+  Put, 
   UseGuards,
   Request
 } from '@nestjs/common';
@@ -294,5 +295,32 @@ export class ReservaController {
         false
       );
     }
+  }
+
+  //CONFIRMAR RESERVA
+  @Put(':id/confirmar')
+  async confirmarReserva(
+    @Param('id') id: string,
+    @Body() body: { observaciones?: string },
+    @Request() req
+  ) {
+    return await this.reservaService.confirmarReserva(+id, req.user.id_usuario, body.observaciones);
+  }
+
+  // CANCELAR RESERVA
+  @Put(':id/cancelar')
+  async cancelarReserva(
+    @Param('id') id: string,
+    @Body() body: { motivo?: string },
+    @Request() req
+  ) {
+    return await this.reservaService.cancelarReserva(+id, req.user.id_usuario, body.motivo);
+  }
+
+  // VER RESERVAS POR ESTADO (Solo Admin)
+  @Get('estado/:estado')
+  @Roles('admin')
+  async obtenerReservasPorEstado(@Param('estado') estado: string) {
+    return await this.reservaService.obtenerReservasPorEstado(estado);
   }
 }

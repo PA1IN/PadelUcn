@@ -21,6 +21,7 @@ import { ApiResponse } from '../../interface/Apiresponce';
 import { NotificacionesService } from '../notificaciones/notificaciones.service';
 import { TransaccionService } from '../transaccion/transaccion.service';
 import { CreateTransaccionDto } from '../transaccion/dto/create-transaccion.dto';
+import { EstadoReserva } from './entities/reserva.entity';
 
 @Injectable()
 export class ReservaService {
@@ -159,6 +160,7 @@ export class ReservaService {
         fecha: fechaFormateada,
         hora_inicio: createReservaDto.hora_inicio,
         hora_termino: createReservaDto.hora_termino,
+        estado: 'PENDIENTE',
         usuario,
         cancha,
       });
@@ -1007,4 +1009,134 @@ export class ReservaService {
     return false; // En caso de error, asumir que no hay reservas activas
   }
 }
-}
+ async confirmarReserva(idReserva: number, idUsuario: number, observaciones?: string): Promise<ApiResponse<Reserva>> {
+    try {
+      const reserva = await this.reservaRepository.findOne({
+        where: { id: idReserva },
+        relations: ['usuario', 'cancha']
+      });
+
+      if (!reserva) {
+        throw new BadRequestException('Reserva no encontrada');
+      }
+
+      // Solo el propietario o admin puede confirmar
+      if (reserva.usuario.id_usuario !== idUsuario) {
+        const usuario = await this.usuarioRepository.findOne({ where: { id_usuario: idUsuario } });
+        if (!usuario?.is_admin) {
+          throw new BadRequestException('Solo puedes confirmar tus propias reservas');
+        }
+      }
+
+      if (reserva.estado === 'CONFIRMADA') {
+        throw new BadRequestException('La reserva ya está confirmada');
+      }
+
+      if (reserva.estado === 'CANCELADA') {
+        throw new BadRequestException('No se puede confirmar una reserva cancelada');
+      }
+
+      // Actualizar estado
+      reserva.estado = 'CONFIRMADA';
+      await this.reservaRepository.save(reserva);
+
+      return CreateResponse('Reserva confirmada exitosamente', reserva, 'OK');
+    } catch (error) {
+      throw new HttpException(
+        CreateResponse('Error al confirmar reserva', null, 'BAD_REQUEST', error.message),
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+  }
+
+  // CANCELAR RESERVA
+  async cancelarReserva(idReserva: number, idUsuario: number, motivo?: string): Promise<ApiResponse<Reserva>> {
+    try {
+      const reserva = await this.reservaRepository.findOne({
+        where: { id: idReserva },
+        relations: ['usuario', 'cancha', 'boletas', 'boletas.equipamiento']
+      });
+
+      if (!reserva) {
+        throw new BadRequestException('Reserva no encontrada');
+      }
+
+      // Solo el propietario o admin puede cancelar
+      if (reserva.usuario.id_usuario !== idUsuario) {
+        const usuario = await this.usuarioRepository.findOne({ where: { id_usuario: idUsuario } });
+        if (!usuario?.is_admin) {
+          throw new BadRequestException('Solo puedes cancelar tus propias reservas');
+        }
+      }
+
+      if (reserva.estado === 'CANCELADA') {
+        throw new BadRequestException('La reserva ya está cancelada');
+      }
+
+      // Validar 1 semana de anticipación para usuarios normales
+      const fechaReserva = new Date(reserva.fecha);
+      const hoy = new Date();
+      const unaSemanaDespues = new Date(hoy);
+      unaSemanaDespues.setDate(hoy.getDate() + 7);
+
+      if (fechaReserva <= unaSemanaDespues) {
+        const usuario = await this.usuarioRepository.findOne({ where: { id_usuario: idUsuario } });
+        if (!usuario?.is_admin) {
+          throw new BadRequestException('Las reservas solo se pueden cancelar con al menos 1 semana de anticipación');
+        }
+      }
+
+      // Devolver equipamiento al stock (pero NO dinero)
+      if (reserva.boletas && reserva.boletas.length > 0) {
+        for (const boleta of reserva.boletas) {
+          if (boleta.equipamiento) {
+            const equipamiento = await this.equipamientoRepository.findOne({
+              where: { id: boleta.equipamiento.id }
+            });
+            
+            if (equipamiento) {
+              equipamiento.stock += boleta.cantidad;
+              await this.equipamientoRepository.save(equipamiento);
+            }
+          }
+        }
+      }
+
+      // Actualizar estado
+      reserva.estado = 'CANCELADA';
+      await this.reservaRepository.save(reserva);
+
+      return CreateResponse('Reserva cancelada exitosamente. NOTA: No se realiza devolución de dinero.', reserva, 'OK');
+    } catch (error) {
+      throw new HttpException(
+        CreateResponse('Error al cancelar reserva', null, 'BAD_REQUEST', error.message),
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+  }
+
+  //OBTENER RESERVAS POR ESTADO
+  async obtenerReservasPorEstado(estado: string): Promise<ApiResponse<Reserva[]>> {
+    try {
+      const estadosValidos = ['PENDIENTE', 'CONFIRMADA', 'CANCELADA'];
+      if (!estadosValidos.includes(estado)) {
+        throw new BadRequestException(`Estado inválido. Estados válidos: ${estadosValidos.join(', ')}`);
+      }
+
+      const reservas = await this.reservaRepository.find({
+        where: { estado: estado },
+        relations: ['usuario', 'cancha', 'boletas'],
+        order: { fecha: 'ASC', hora_inicio: 'ASC' }
+      });
+
+      return CreateResponse(`${reservas.length} reservas encontradas con estado: ${estado}`, reservas, 'OK');
+    } catch (error) {
+      throw new HttpException(
+        CreateResponse('Error al obtener reservas por estado', null, 'BAD_REQUEST', error.message),
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+  }
+
+} 
+
