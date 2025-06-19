@@ -5,6 +5,7 @@ import {
   useEnviarRecordatorioMasico,
   useHistorialRecordatorios,
   useRecordatoriosAnticipados,
+  nuevoRecordatorio,
 } from '@/hooks/useRecordatorios';
 import { useState } from 'react';
 
@@ -30,8 +31,8 @@ export default function RecordatoriosAdminPage() {
   const registarRecordatorio = (e: React.FormEvent) => {
     e.preventDefault();
 
-    const payload: any = {
-      tipo: formData.tipo,
+    const payload: nuevoRecordatorio = {
+      tipo: formData.tipo as 'reserva' | 'cancha_nueva' | 'pago_pendiente',
       mensaje: formData.mensaje,
       destinatarios: formData.destinatarios.split(',').map(s => s.trim()),
     };
@@ -44,7 +45,7 @@ export default function RecordatoriosAdminPage() {
 
   const handleSubmitMasivo = () => {
     enviarMasivo({
-      tipo: formData.tipo as any,
+      tipo: formData.tipo as 'reserva' | 'cancha_nueva' | 'pago_pendiente',
       mensaje: formData.mensaje,
       destinatarios: formData.destinatarios.split(',').map(s => s.trim()),
     });
