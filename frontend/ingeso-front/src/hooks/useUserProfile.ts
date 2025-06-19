@@ -2,6 +2,7 @@ import { useQuery } from '@tanstack/react-query';
 import api from '@/api/axios';
 
 export interface UserProfile {
+  id_usuario: number;
   rut: string;
   nombre: string;
   correo: string;
