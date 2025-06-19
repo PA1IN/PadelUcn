@@ -1,6 +1,6 @@
 import { Controller, Get, Post, Body, Patch, Param, Query, Delete, UseGuards, Request, HttpException, HttpStatus, ForbiddenException } from '@nestjs/common';
 import { UsuarioService } from './usuario.service';
-import { CreateUsuarioDto, UpdateUsuarioDto, UpdateAdminDto, AddSaldoUsuarioDto } from './dto/usuario.dto';
+import { CreateUsuarioDto, UpdateUsuarioDto, UpdateAdminDto, AddSaldoUsuarioDto, CreateUsuarioAdminDto } from './dto/usuario.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
@@ -237,6 +237,26 @@ export class UsuarioController {
         error.message,
         'ERROR'
       );
+    }
+  }
+
+  @Post ('/admin/register')
+  @Roles('admin')
+  async crearDesdeAdmin(@Body() dto: CreateUsuarioAdminDto){
+    console.log('🎯 Entrando a crearDesdeAdmin');
+    try{
+      const usuario = await this.usuarioService.crearUsuarioDesdeAdmin(dto);
+      const mensaje = dto.is_admin
+        ? 'Usuario administrador creado exitosamente'
+        : 'Usuario creado exitosamente';
+      return CreateResponse(
+        mensaje, usuario, 'CREATED'
+      );
+    }
+    catch (error) {
+      return CreateResponse(
+        'Error al crear usuario', error.message, 'ERROR'
+      )
     }
   }
 

@@ -1,8 +1,8 @@
-import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
+import { Injectable, NotFoundException, ForbiddenException, ConflictException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Usuario } from './entities/usuario.entity';
-import { AddSaldoUsuarioDto, CreateUsuarioDto, UpdateAdminDto, UpdateUsuarioDto } from './dto/usuario.dto';
+import { CreateUsuarioAdminDto, AddSaldoUsuarioDto, CreateUsuarioDto, UpdateAdminDto, UpdateUsuarioDto } from './dto/usuario.dto';
 import * as bcrypt from 'bcrypt';
 
 @Injectable()
@@ -38,6 +38,40 @@ export class UsuarioService {
     });
 
     return await this.usuarioRepository.save(newUser);
+  }
+
+  async crearUsuarioDesdeAdmin(dto: CreateUsuarioAdminDto) {
+    // Verificar si el usuario ya existe por RUT
+    const existente = await this.usuarioRepository.findOne({ where: { rut: dto.rut } });
+    if (existente) {
+      throw new ConflictException('El usuario ya existe');
+    }
+
+    // (Opcional) Verificar que el correo no esté duplicado
+    const correoUsado = await this.usuarioRepository.findOne({ where: { correo: dto.correo } });
+    if (correoUsado) {
+      throw new ConflictException('El correo ya está registrado');
+    }
+
+    // Hashear contraseña
+    const hashedPassword = await bcrypt.hash(dto.contrasena, 10);
+
+    // Crear usuario, respetando el flag is_admin si se incluyó
+    const nuevoUsuario = this.usuarioRepository.create({
+      rut: dto.rut,
+      nombre_usuario: dto.nombre_usuario,
+      correo: dto.correo,
+      telefono: dto.telefono,
+      contrasena: hashedPassword,
+      is_admin: dto.is_admin ?? false, // solo true si lo mandás explícitamente
+      saldo: 0,
+    });
+
+    const saved = await this.usuarioRepository.save(nuevoUsuario);
+
+    // Retornar sin exponer la contraseña
+    const { contrasena, ...limpio } = saved;
+    return limpio;
   }
 
   async findAll(): Promise<Usuario[]> {

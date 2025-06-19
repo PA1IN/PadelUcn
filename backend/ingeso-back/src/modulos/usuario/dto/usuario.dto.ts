@@ -26,6 +26,12 @@ export class CreateUsuarioDto {
   telefono?: string;
 }
 
+export class CreateUsuarioAdminDto extends CreateUsuarioDto {
+  @IsOptional()
+  @IsBoolean()
+  is_admin?: boolean;
+}
+
 export class LoginUsuarioDto {
   @IsNotEmpty({ message: 'El RUT es requerido' })
   @IsString({ message: 'El RUT debe ser una cadena de texto' })
