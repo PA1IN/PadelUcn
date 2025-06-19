@@ -7,11 +7,14 @@ export class HistorialReserva {
   @PrimaryGeneratedColumn({ name: 'id_historial' }) 
   id: number;
 
-  @Column()
+  @Column({type: 'varchar'})
   estado: string;
 
   @Column({ name: 'fecha_estado' })  
   fechaEstado: Date;
+
+   @Column({ type: 'text', nullable: true })
+  observaciones: string; 
 
   @ManyToOne(() => Reserva, (reserva) => reserva.historiales)
   @JoinColumn({ name: 'id_reserva' }) 

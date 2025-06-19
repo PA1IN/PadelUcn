@@ -57,10 +57,11 @@ CREATE TABLE IF NOT EXISTS reserva(
     fecha DATE NOT NULL,
     hora_inicio TIME NOT NULL,
     hora_termino TIME NOT NULL,
+    estado VARCHAR(20) DEFAULT 'PENDIENTE' CHECK (estado IN ('PENDIENTE', 'CONFIRMADA', 'CANCELADA')),
     id_cancha INT NOT NULL,
     id_usuario INT NOT NULL,
     id_bloque INT,
-    existe BOOLEAN,
+    existe BOOLEAN DEFAULT true,
     FOREIGN KEY (id_cancha) REFERENCES cancha(id_cancha) ON DELETE CASCADE,
     FOREIGN KEY (id_usuario) REFERENCES usuario(id_usuario) ON DELETE CASCADE,
     FOREIGN KEY (id_bloque) REFERENCES bloque(id_bloque) ON DELETE SET NULL
@@ -81,6 +82,7 @@ CREATE TABLE IF NOT EXISTS jugador (
 CREATE TABLE IF NOT EXISTS historial_reserva(
     id_historial SERIAL PRIMARY KEY,
     estado VARCHAR NOT NULL,
+    observaciones TEXT,
     fecha_estado DATE NOT NULL,
     id_reserva INT NOT NULL,
     id_usuario INT NOT NULL,
@@ -115,6 +117,7 @@ CREATE INDEX idx_historial_reserva ON historial_reserva("id_reserva");
 CREATE INDEX idx_jugador_reserva ON jugador("id_reserva");
 CREATE INDEX idx_boleta_reserva ON boleta_equipamiento("id_reserva");
 CREATE INDEX idx_bloque_fecha ON bloque("fecha_date");
+CREATE INDEX idx_reserva_estado ON reserva("estado");
 
 
 -- Datos de usuarios
@@ -242,9 +245,11 @@ INSERT INTO bloque (fecha_date, hora_inicio, hora_fin) VALUES
   (CURRENT_DATE + INTERVAL '6 days', '17:20:00', '19:20:00');
 
 
-INSERT INTO reserva (fecha, hora_inicio, hora_termino, id_cancha, id_usuario, id_bloque) VALUES
-  (CURRENT_DATE + INTERVAL '1 day', '09:00:00', '10:30:00', 2, 2, 2),
-  (CURRENT_DATE + INTERVAL '2 days', '10:00:00', '11:30:00', 1, 3, 3);
+INSERT INTO reserva (fecha, hora_inicio, hora_termino, estado, id_cancha, id_usuario, id_bloque) VALUES
+  (CURRENT_DATE + INTERVAL '1 day', '09:00:00', '10:30:00', 'PENDIENTE', 2, 2, 2),
+  (CURRENT_DATE + INTERVAL '2 days', '10:00:00', '11:30:00', 'CONFIRMADA', 1, 3, 3),
+  (CURRENT_DATE + INTERVAL '3 days', '14:00:00', '15:30:00', 'PENDIENTE', 1, 2, NULL),
+  (CURRENT_DATE + INTERVAL '4 days', '16:00:00', '17:30:00', 'CANCELADA', 3, 4, NULL);
 
 -- Insert sample players
 INSERT INTO jugador (nombre, apellido, rut, edad, id_reserva) VALUES
@@ -254,10 +259,11 @@ INSERT INTO jugador (nombre, apellido, rut, edad, id_reserva) VALUES
   ('Ana', 'García', '88888888-8', 27, 2);
 
 -- Insert sample reservation history
-INSERT INTO historial_reserva (estado, fecha_estado, id_reserva, id_usuario) VALUES
-  ('Pendiente', CURRENT_DATE, 1, 2),
-  ('Confirmada', CURRENT_DATE, 1, 1),
-  ('Pendiente', CURRENT_DATE, 2, 3);
+INSERT INTO historial_reserva (estado, observaciones, id_reserva, id_usuario) VALUES
+  ('PENDIENTE', 'Reserva creada automáticamente', 1, 2),
+  ('CONFIRMADA', 'Usuario confirmó su reserva', 2, 3),
+  ('PENDIENTE', 'Reserva en espera de confirmación', 3, 2),
+  ('CANCELADA', 'Usuario canceló por motivos personales', 4, 4);
 
 -- Insert sample equipment invoices
 INSERT INTO boleta_equipamiento (cantidad, monto_total, id_reserva, id_equipamiento) VALUES

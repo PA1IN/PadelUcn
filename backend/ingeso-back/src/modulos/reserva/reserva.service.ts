@@ -391,6 +391,21 @@ export class ReservaService {
         throw new BadRequestException(`No se encontró una reserva con el ID ${id}`);
       }
 
+      // ✅ VALIDAR ESTADO - NO MODIFICAR RESERVAS CANCELADAS
+      if (reserva.estado === 'CANCELADA') {
+        throw new BadRequestException('No se puede modificar una reserva cancelada');
+      }
+
+      // ✅ VALIDAR 1 SEMANA DE ANTICIPACIÓN PARA USUARIOS NORMALES
+      const fechaReserva = new Date(reserva.fecha);
+      const hoy = new Date();
+      const unaSemanaDespues = new Date(hoy);
+      unaSemanaDespues.setDate(hoy.getDate() + 7);
+
+      if (fechaReserva <= unaSemanaDespues && !isAdmin) {
+        throw new BadRequestException('Las reservas solo se pueden modificar con al menos 1 semana de anticipación');
+      }
+
       const today = new Date();
       let fechaFormateada = reserva.fecha;
       let horaInicio = reserva.hora_inicio;
@@ -1020,7 +1035,7 @@ export class ReservaService {
         throw new BadRequestException('Reserva no encontrada');
       }
 
-      // Solo el propietario o admin puede confirmar
+      //Solo el propietario o admin puede confirmar
       if (reserva.usuario.id_usuario !== idUsuario) {
         const usuario = await this.usuarioRepository.findOne({ where: { id_usuario: idUsuario } });
         if (!usuario?.is_admin) {
@@ -1028,6 +1043,7 @@ export class ReservaService {
         }
       }
 
+      
       if (reserva.estado === 'CONFIRMADA') {
         throw new BadRequestException('La reserva ya está confirmada');
       }
@@ -1036,12 +1052,50 @@ export class ReservaService {
         throw new BadRequestException('No se puede confirmar una reserva cancelada');
       }
 
-      // Actualizar estado
+    
+      const fechaReserva = new Date(reserva.fecha);
+      const hoy = new Date();
+      hoy.setHours(0, 0, 0, 0);
+
+      if (fechaReserva < hoy) {
+        throw new BadRequestException('No se puede confirmar una reserva que ya pasó');
+      }
+
+      // ✅ ACTUALIZAR ESTADO
       reserva.estado = 'CONFIRMADA';
       await this.reservaRepository.save(reserva);
 
+      // ✅ CREAR HISTORIAL (USAR ESTADO CONSISTENTE)
+      try {
+        await this.historialReservaService.create({
+          estado: 'CONFIRMADA', // ✅ CONSISTENTE CON ENUM
+          idReserva: idReserva,
+          idUsuario: idUsuario,
+          observaciones: observaciones
+        });
+      } catch (historialError) {
+        console.error('Error al crear historial (no crítico):', historialError);
+      }
+
+      // ✅ CREAR NOTIFICACIÓN
+      try {
+        await this.notificacionesService.create({
+          titulo: 'Reserva Confirmada ✅',
+          mensaje: `Tu reserva #${idReserva} ha sido confirmada exitosamente.${observaciones ? ` Observaciones: ${observaciones}` : ''}`,
+          tipoEvento: 'RESERVA_CONFIRMADA',
+          idUsuario: reserva.usuario.id_usuario,
+          idReserva: idReserva
+        });
+      } catch (notifError) {
+        console.error('Error al crear notificación (no crítico):', notifError);
+      }
+
       return CreateResponse('Reserva confirmada exitosamente', reserva, 'OK');
+      
     } catch (error) {
+      if (error instanceof BadRequestException) {
+        throw error;
+      }
       throw new HttpException(
         CreateResponse('Error al confirmar reserva', null, 'BAD_REQUEST', error.message),
         HttpStatus.BAD_REQUEST,
@@ -1069,11 +1123,12 @@ export class ReservaService {
         }
       }
 
+     
       if (reserva.estado === 'CANCELADA') {
         throw new BadRequestException('La reserva ya está cancelada');
       }
 
-      // Validar 1 semana de anticipación para usuarios normales
+      // ✅ VALIDAR 1 SEMANA DE ANTICIPACIÓN PARA USUARIOS NORMALES
       const fechaReserva = new Date(reserva.fecha);
       const hoy = new Date();
       const unaSemanaDespues = new Date(hoy);
@@ -1086,7 +1141,7 @@ export class ReservaService {
         }
       }
 
-      // Devolver equipamiento al stock (pero NO dinero)
+      // ✅ DEVOLVER EQUIPAMIENTO AL STOCK (PERO NO DINERO)
       if (reserva.boletas && reserva.boletas.length > 0) {
         for (const boleta of reserva.boletas) {
           if (boleta.equipamiento) {
@@ -1102,12 +1157,45 @@ export class ReservaService {
         }
       }
 
-      // Actualizar estado
+      // ✅ ACTUALIZAR ESTADO A CANCELADA
       reserva.estado = 'CANCELADA';
       await this.reservaRepository.save(reserva);
 
-      return CreateResponse('Reserva cancelada exitosamente. NOTA: No se realiza devolución de dinero.', reserva, 'OK');
+      // ✅ CREAR HISTORIAL (USAR ESTADO CONSISTENTE)
+      try {
+        await this.historialReservaService.create({
+          estado: 'CANCELADA', // ✅ CONSISTENTE CON ENUM
+          idReserva: idReserva,
+          idUsuario: idUsuario,
+          observaciones: motivo
+        });
+      } catch (historialError) {
+        console.error('Error al crear historial (no crítico):', historialError);
+      }
+
+      // ✅ CREAR NOTIFICACIÓN
+      try {
+        await this.notificacionesService.create({
+          titulo: 'Reserva Cancelada ❌',
+          mensaje: `Tu reserva #${idReserva} ha sido cancelada.${motivo ? ` Motivo: ${motivo}` : ''} NOTA: No se realiza devolución de dinero.`,
+          tipoEvento: 'RESERVA_CANCELADA',
+          idUsuario: reserva.usuario.id_usuario,
+          idReserva: idReserva
+        });
+      } catch (notifError) {
+        console.error('Error al crear notificación (no crítico):', notifError);
+      }
+
+      return CreateResponse(
+        'Reserva cancelada exitosamente. NOTA: No se realiza devolución de dinero.',
+        reserva,
+        'OK'
+      );
+
     } catch (error) {
+      if (error instanceof BadRequestException) {
+        throw error;
+      }
       throw new HttpException(
         CreateResponse('Error al cancelar reserva', null, 'BAD_REQUEST', error.message),
         HttpStatus.BAD_REQUEST,
@@ -1138,5 +1226,5 @@ export class ReservaService {
     }
   }
 
-} 
+}
 
