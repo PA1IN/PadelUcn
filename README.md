@@ -16,99 +16,140 @@ PadelUCN es una aplicación completa de reserva de canchas de pádel para la Uni
 
 #### 1. **Iniciar el Sistema**
 ```bash
+# Iniciar el sistema completo
+docker-compose up --build
+
+# O individualmente:
 # Iniciar base de datos
-docker-compose up -d padelucn-db
+docker-compose up -d padelucn-postgres
 
 # Iniciar backend (en otra terminal)
 cd backend/ingeso-back
 npm run start:dev
 ```
 
-#### 2. **Acceder al Sistema**
-- **Backend API**: `http://localhost:8081/api`
-- **Base de datos**: PostgreSQL en puerto `5433`
+### 👥 Usuarios de Prueba
+| RUT         | Contraseña  | Rol           |
+|-------------|-------------|---------------|
+| 11111111-1  | admin123    | Administrador |
+| 22222222-2  | password123 | Usuario       |
+| 33333333-3  | password123 | Usuario       |
+| 44444444-4  | password123 | Usuario       |
 
-#### 3. **Usuarios de Prueba**
-| RUT | Contraseña | Rol |
-|-----|------------|-----|
-| `11111111-1` | `admin123` | **Administrador** |
-| `22222222-2` | `password123` | Usuario regular |
-| `33333333-3` | `password123` | Usuario regular |
-| `44444444-4` | `password123` | Usuario regular |
+---
 
-#### 4. **Flujo de Uso Básico**
-1. **Registrarse/Iniciar sesión** con RUT y contraseña
-2. **Explorar canchas disponibles** con `GET /api/canchas`
-3. **Verificar disponibilidad** con endpoints de disponibilidad
-4. **Crear reserva** con equipamiento opcional
-5. **Gestionar reservas** y ver historial
+## 🔐 AUTENTICACIÓN
 
-## Endpoints API
+### **POST** `/api/auth/login`
+Inicia sesión y obtiene un token JWT
 
-Todos los endpoints están prefijados con `/api`. Por ejemplo, para acceder al endpoint de canchas, debes usar `/api/canchas`.
+**Request Body:**
+```json
+{
+  "rut": "11111111-1",
+  "contrasena": "admin123"
+}
+```
 
-La API retorna respuestas en formato JSON con la siguiente estructura:
-
+**Response Success (200):**
 ```json
 {
   "statusCode": 200,
-  "message": "Mensaje descriptivo",
+  "message": "Usuario autenticado exitosamente",
   "data": {
-    // Los datos retornados por el endpoint
+    "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+    "user": {
+      "id_usuario": 1,
+      "rut": "11111111-1",
+      "nombre_usuario": "Admin Usuario",
+      "correo": "admin@padelucn.cl",
+      "is_admin": true
+    }
   },
   "success": true
 }
 ```
 
-En caso de error:
+### **POST** `/api/auth/register`
+Registra un nuevo usuario
 
+**Request Body:**
 ```json
 {
-  "statusCode": 400,
-  "message": "Mensaje de error",
-  "data": null,
-  "success": false,
-  "error": "Descripción detallada del error"
+  "rut": "55555555-5",
+  "nombre_usuario": "Juan Pérez",
+  "correo": "juan@example.com",
+  "contrasena": "password123",
+  "telefono": "+56912345678"
 }
 ```
 
-## Módulo de Canchas
+---
 
-### Endpoints de la API para Canchas
+## 👤 GESTIÓN DE USUARIOS
 
-| Método HTTP | Endpoint | Descripción |
-|-------------|----------|-------------|
-| GET | `/api/canchas` | Obtiene todas las canchas disponibles |
-| GET | `/api/canchas/:numero` | Obtiene la información de una cancha específica por su número |
-| POST | `/api/canchas` | Crea una nueva cancha |
-| PATCH | `/api/canchas/:numero` | Actualiza la información de una cancha existente |
-| DELETE | `/api/canchas/:numero` | Elimina una cancha |
+### **GET** `/api/usuarios/perfil`
+🔒 *Requiere autenticación*
 
-### Formato de datos
+Obtiene el perfil del usuario autenticado
 
-#### Creación de cancha (POST `/api/canchas`)
+**Headers:**
+```
+Authorization: Bearer {token}
+```
+
+**Response Success (200):**
 ```json
 {
-  "numero": 1,
-  "nombre": "Cancha Principal",
-  "descripcion": "Cancha de pádel profesional con paredes de cristal",
-  "valor": 15000,
-  "mantenimiento": false,
-  "cantidad_max_jugador": 4
+  "statusCode": 200,
+  "message": "Perfil obtenido exitosamente",
+  "data": {
+    "id_usuario": 1,
+    "rut": "11111111-1",
+    "nombre_usuario": "Admin Usuario",
+    "correo": "admin@padelucn.cl",
+    "telefono": "+56911111111",
+    "saldo": 100000,
+    "is_admin": true
+  },
+  "success": true
 }
 ```
 
-#### Actualización de cancha (PATCH `/api/canchas/:numero`)
+### **PUT** `/api/usuarios/perfil`
+🔒 *Requiere autenticación*
+
+Actualiza el perfil del usuario
+
+**Request Body:**
 ```json
 {
-  "nombre": "Cancha Principal",
-  "descripcion": "Cancha techada con iluminación nocturna y bebedero",
-  "valor": 60000,
-  "mantenimiento": false
+  "nombre_usuario": "Nuevo Nombre",
+  "correo": "nuevo@email.com",
+  "telefono": "+56987654321"
 }
 ```
 
-#### Respuesta al obtener canchas (GET `/api/canchas`)
+### **POST** `/api/usuarios/cargar-saldo`
+🔒 *Requiere autenticación*
+
+Carga saldo a la cuenta del usuario
+
+**Request Body:**
+```json
+{
+  "monto": 50000
+}
+```
+
+---
+
+## 🏟️ GESTIÓN DE CANCHAS
+
+### **GET** `/api/canchas`
+Obtiene todas las canchas disponibles
+
+**Response Success (200):**
 ```json
 {
   "statusCode": 200,
@@ -118,1669 +159,487 @@ En caso de error:
       "id_cancha": 1,
       "numero": 1,
       "nombre": "Cancha Principal",
-      "descripcion": "Cancha de pádel profesional con paredes de cristal",
-      "mantenimiento": false,
-      "cantidad_max_jugador": 4,
-      "valor": 15000
-    },
-    {
-      "id_cancha": 2,
-      "numero": 2,
-      "nombre": "Cancha Secundaria",
-      "descripcion": "Cancha de pádel estándar",
-      "mantenimiento": false,
-      "cantidad_max_jugador": 4,
-      "valor": 12000
-    },
-    {
-      "id_cancha": 3,
-      "numero": 3,
-      "nombre": "Cancha Techada",
-      "descripcion": "Cancha de pádel techada para uso en días lluviosos",
-      "mantenimiento": false,
-      "cantidad_max_jugador": 4,
-      "valor": 18000
+      "descripcion": "Cancha techada con iluminación LED",
+      "mantenimiento": false
     }
   ],
   "success": true
 }
 ```
 
-## Módulo de Usuarios
+### **GET** `/api/canchas/{id}/disponibilidad?fecha=2024-12-20`
+Verifica disponibilidad de una cancha en fecha específica
 
-El sistema ahora maneja un modelo unificado para usuarios, donde se distinguen usuarios administradores y regulares:
-
-### Atributos de Usuario
-- **RUT**: Identificador único del usuario (formato chileno)
-- **Nombre**: Nombre completo del usuario
-- **Correo**: Correo electrónico del usuario
-- **Contraseña**: Contraseña del usuario (almacenada de forma segura)
-- **Saldo**: Saldo disponible para realizar reservas
-- **isAdmin**: Flag que indica si el usuario es administrador
-
-### Endpoints de la API para Usuarios
-
-| Método HTTP | Endpoint | Descripción |
-|-------------|----------|-------------|
-| GET | `/api/usuarios` | Obtiene todos los usuarios (requiere permisos de administrador) |
-| GET | `/api/usuarios/:rut` | Obtiene la información de un usuario específico por su RUT |
-| POST | `/api/usuarios` | Registra un nuevo usuario |
-| PATCH | `/api/usuarios/:rut` | Actualiza la información de un usuario existente |
-| DELETE | `/api/usuarios/:rut` | Elimina un usuario |
-
-### Endpoints de Autenticación
-
-| Método HTTP | Endpoint | Descripción |
-|-------------|----------|-------------|
-| POST | `/api/auth/login` | Inicia sesión y obtiene un token de acceso JWT |
-| POST | `/api/auth/register` | Registra un nuevo usuario y obtiene un token |
-
-### Formato de datos
-
-#### Registro de usuario (POST `/api/auth/register`)
-```json
-{
-  "rut": "22222222-2",
-  "nombre_usuario": "Juan Pérez",
-  "correo": "juan@example.com",
-  "contraseña": "usuario123",
-  "telefono": "+56922222222"
-}
-```
-
-**Respuesta exitosa (201 Created):**
-```json
-{
-  "statusCode": 201,
-  "message": "Usuario registrado exitosamente",
-  "data": {
-    "user": {
-      "id_usuario": 5,
-      "rut": "22222222-2",
-      "nombre_usuario": "Juan Pérez",
-      "correo": "juan@example.com",
-      "telefono": "+56922222222",
-      "saldo": 0,
-      "is_admin": false
-    },
-    "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjUsInJ1dCI6IjIyMjIyMjIyLTIiLCJpc0FkbWluIjpmYWxzZSwiaWF0IjoxNzM3MjIxNjIxLCJleHAiOjE3MzcyMjUyMjF9.ABC123..."
-  },
-  "success": true
-}
-```
-
-#### Inicio de sesión (POST `/api/auth/login`)
-```json
-{
-  "rut": "11111111-1",
-  "contrasena": "password123"
-}
-```
-
-**Respuesta exitosa (200 OK):**
+**Response Success (200):**
 ```json
 {
   "statusCode": 200,
-  "message": "Inicio de sesión exitoso",
+  "message": "Disponibilidad obtenida para la fecha 2024-12-20",
   "data": {
-    "user": {
-      "id_usuario": 1,
-      "rut": "11111111-1",
-      "nombre_usuario": "Admin User",
-      "correo": "admin@padelucn.cl",
-      "telefono": "+56911111111",
-      "saldo": 100000,
-      "is_admin": true
-    },
-    "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjEsInJ1dCI6IjExMTExMTExLTEiLCJpc0FkbWluIjp0cnVlLCJpYXQiOjE3MzcyMjE2MjEsImV4cCI6MTczNzIyNTIyMX0.XYZ789..."
-  },
-  "success": true
-}
-```
-
-**Respuesta de error (401 Unauthorized):**
-```json
-{
-  "statusCode": 401,
-  "message": "Credenciales inválidas",
-  "data": null,
-  "success": false,
-  "error": "RUT o contraseña incorrectos"
-}
-```
-
-**Respuesta de error de validación (400 Bad Request):**
-```json
-{
-  "statusCode": 400,
-  "message": "Error de validación",
-  "data": null,
-  "success": false,
-  "error": [
-    "El RUT debe tener formato chileno válido (ej: 12345678-9)",
-    "La contraseña debe tener al menos 6 caracteres"
-  ]
-}
-```
-
-> **Nota importante:** 
-> - Los campos de contraseña en la API utilizan `contraseña` tanto para login como para registro.
-> - Los siguientes usuarios de prueba están disponibles con la contraseña "password123":
->   - 11111111-1 (Admin)
->   - 22222222-2 (Usuario regular)
->   - 33333333-3 (Usuario regular)
->   - 44444444-4 (Usuario regular)
-
-#### Actualización de usuario (PATCH `/api/usuarios/:rut`)
-```json
-{
-  "nombre_usuario": "Juan Carlos Pérez",
-  "correo": "juan.perez@nuevoemail.com",
-  "telefono": "+56987654321",
-  "saldo": 50000
-}
-```
-
-#### Respuesta al obtener un usuario (GET `/api/usuarios/:rut`)
-```json
-{
-  "statusCode": 200,
-  "message": "Usuario obtenido exitosamente",
-  "data": {
-    "id_usuario": 2,
-    "rut": "22222222-2",
-    "nombre_usuario": "Juan Pérez",
-    "correo": "juan@example.com",
-    "telefono": "+56922222222",
-    "saldo": 50000,
-    "is_admin": false
-  },
-  "success": true
-}
-```
-
-## Módulo de Bloques de Tiempo
-
-El sistema maneja bloques de tiempo predefinidos para facilitar la reserva de canchas:
-
-### Atributos de Bloque
-- **ID**: Identificador único del bloque de tiempo
-- **Fecha**: Fecha del bloque
-- **Hora Inicio**: Hora de inicio del bloque
-- **Hora Fin**: Hora de término del bloque
-
-### Endpoints de la API para Bloques
-
-| Método HTTP | Endpoint | Descripción |
-|-------------|----------|-------------|
-| GET | `/api/bloques` | Obtiene todos los bloques disponibles |
-| GET | `/api/bloques/:id` | Obtiene la información de un bloque específico |
-| GET | `/api/bloques/fecha/:fecha` | Obtiene todos los bloques de una fecha específica |
-| POST | `/api/bloques` | Crea un nuevo bloque de tiempo |
-| PATCH | `/api/bloques/:id` | Actualiza la información de un bloque existente |
-| DELETE | `/api/bloques/:id` | Elimina un bloque de tiempo |
-
-### Formato de datos
-
-#### Creación de bloque (POST `/api/bloques`)
-```json
-{
-  "fecha_date": "2025-06-02",
-  "hora_inicio": "08:00:00",
-  "hora_fin": "09:00:00"
-}
-```
-
-#### Respuesta al obtener bloques por fecha (GET `/api/bloques/fecha/:fecha`)
-```json
-{
-  "statusCode": 200,
-  "message": "Bloques obtenidos exitosamente",
-  "data": [
-    {
-      "id_bloque": 1,
-      "fecha_date": "2025-06-02",
-      "hora_inicio": "08:00:00",
-      "hora_fin": "09:00:00"
-    },
-    {
-      "id_bloque": 2,
-      "fecha_date": "2025-06-02",
-      "hora_inicio": "09:00:00",
-      "hora_fin": "10:00:00"
-    },
-    {
-      "id_bloque": 3,
-      "fecha_date": "2025-06-02",
-      "hora_inicio": "10:00:00",
-      "hora_fin": "11:00:00"
-    }
-  ],
-  "success": true
-}
-```
-
-## 🔐 Sistema de Validaciones y Errores
-
-### Validaciones Implementadas
-
-El sistema cuenta con un completo sistema de validaciones con mensajes en español para mejorar la experiencia del usuario:
-
-#### **Validaciones de Usuario/Autenticación:**
-- **RUT**: Formato chileno válido (ej: 12345678-9)
-- **Nombre**: Mínimo 2 caracteres, máximo 100 caracteres
-- **Correo**: Formato de email válido
-- **Contraseña**: Mínimo 6 caracteres
-- **Teléfono**: Formato chileno (+56XXXXXXXXX)
-
-#### **Validaciones de Reserva:**
-- **Fecha**: Formato válido (YYYY-MM-DD), no puede ser en el pasado
-- **Horarios**: Formato HH:MM:SS, hora inicio debe ser menor que hora fin
-- **Duración**: Máximo 3 horas por reserva
-- **Referencias**: Usuario y cancha deben existir
-
-#### **Validaciones de Cancha:**
-- **Número**: Único en el sistema
-- **Nombre**: Mínimo 3 caracteres, máximo 100 caracteres
-- **Valor**: Entre $5,000 y $50,000 pesos chilenos
-- **Capacidad**: Entre 2 y 8 jugadores máximo
-
-#### **Validaciones de Equipamiento:**
-- **Tipo**: Solo valores permitidos (Raquetas, Pelotas, Accesorios, Protección)
-- **Stock**: Número positivo, máximo 100 unidades
-- **Costo**: Entre $100 y $10,000 pesos chilenos
-
-#### **Validaciones de Jugador:**
-- **Edad**: Entre 10 y 80 años
-- **RUT**: Formato chileno válido y único por reserva
-
-### Ejemplos de Respuestas de Error
-
-#### Error de Validación (400 Bad Request)
-```json
-{
-  "statusCode": 400,
-  "message": "Error de validación",
-  "data": null,
-  "success": false,
-  "error": [
-    "El RUT debe tener formato chileno válido (ej: 12345678-9)",
-    "El nombre debe tener entre 2 y 100 caracteres",
-    "El correo electrónico debe tener un formato válido",
-    "El teléfono debe tener formato chileno (+56XXXXXXXXX)"
-  ]
-}
-```
-
-#### Error de Autenticación (401 Unauthorized)
-```json
-{
-  "statusCode": 401,
-  "message": "No autorizado",
-  "data": null,
-  "success": false,
-  "error": "Token de acceso requerido o inválido"
-}
-```
-
-#### Error de Autorización (403 Forbidden)
-```json
-{
-  "statusCode": 403,
-  "message": "Acceso denegado",
-  "data": null,
-  "success": false,
-  "error": "Se requieren permisos de administrador para esta acción"
-}
-```
-
-#### Error de Recurso No Encontrado (404 Not Found)
-```json
-{
-  "statusCode": 404,
-  "message": "Recurso no encontrado",
-  "data": null,
-  "success": false,
-  "error": "El usuario con RUT 99999999-9 no existe"
-}
-```
-
-#### Error de Conflicto (409 Conflict)
-```json
-{
-  "statusCode": 409,
-  "message": "Conflicto de recursos",
-  "data": null,
-  "success": false,
-  "error": "La cancha ya está reservada en ese horario"
-}
-```
-
-#### Error del Servidor (500 Internal Server Error)
-```json
-{
-  "statusCode": 500,
-  "message": "Error interno del servidor",
-  "data": null,
-  "success": false,
-  "error": "Ha ocurrido un error inesperado. Contacte al administrador."
-}
-```
-
-## Módulo de Reservas
-
-El sistema permite la gestión de reservas de canchas con su respectivo historial:
-
-### Atributos de Reserva
-- **ID**: Identificador único de la reserva
-- **Fecha**: Fecha de la reserva
-- **Hora Inicio**: Hora de inicio de la reserva
-- **Hora Término**: Hora de término de la reserva
-- **ID Cancha**: ID de la cancha reservada
-- **ID Usuario**: ID del usuario que realiza la reserva
-
-### Atributos de Historial de Reserva
-- **ID**: Identificador único del registro de historial
-- **Estado**: Estado de la reserva (Cancelado, Modificado, Completado, Pendiente)
-- **Fecha Estado**: Fecha y hora del cambio de estado
-- **ID Reserva**: ID de la reserva relacionada
-- **ID Usuario**: ID del usuario que realizó el cambio
-
-### Endpoints de la API para Reservas
-
-| Método HTTP | Endpoint | Descripción |
-|-------------|----------|-------------|
-| GET | `/api/reservas` | Obtiene todas las reservas |
-| GET | `/api/reservas/:id` | Obtiene la información de una reserva específica |
-| POST | `/api/reservas` | Crea una nueva reserva |
-| PATCH | `/api/reservas/:id` | Actualiza la información de una reserva existente |
-| DELETE | `/api/reservas/:id` | Cancela una reserva |
-| GET | `/api/reservas/historial/:id` | Obtiene el historial de una reserva |
-| GET | `/api/reservas/usuario/:rut` | Obtiene todas las reservas de un usuario |
-| GET | `/api/reservas/cancha/:numero` | Obtiene todas las reservas de una cancha |
-| GET | `/api/reservas/disponibilidad/:numero/:fecha/:horaInicio/:horaTermino` | Verifica disponibilidad de una cancha en un horario específico |
-| GET | `/api/reservas/disponibilidad-dia/:numero/:fecha` | Obtiene todos los horarios disponibles de una cancha en una fecha |
-| GET | `/api/reservas/estadisticas` | Obtiene estadísticas de uso de las canchas (solo administradores) |
-
-### Formato de datos
-
-#### Creación de reserva (POST `/api/reservas`)
-```json
-{
-  "fecha": "2025-06-09",
-  "hora_inicio": "09:00",
-  "hora_termino": "10:30",
-  "rut_usuario": "22222222-2",
-  "numero_cancha": 2
-}
-```
-
-#### Actualización de reserva (PATCH `/api/reservas/:id`)
-```json
-{
-  "fecha": "2025-06-02",
-  "hora_inicio": "19:00",
-  "hora_termino": "20:00"
-}
-```
-
-#### Respuesta al crear una reserva
-```json
-{
-  "statusCode": 201,
-  "message": "Reserva #1 creada exitosamente para la cancha #2",
-  "data": {
-    "id_reserva": 1,
-    "fecha": "2025-06-09",
-    "hora_inicio": "09:00:00",
-    "hora_termino": "10:30:00",
-    "id_cancha": 2,
-    "id_usuario": 2,
-    "id_bloque": 2,
-    "usuario": {
-      "id_usuario": 2,
-      "rut": "22222222-2",
-      "nombre_usuario": "Juan Pérez",
-      "correo": "juan@example.com"
-    },
+    "fecha": "2024-12-20",
     "cancha": {
-      "id_cancha": 2,
-      "numero": 2,
-      "nombre": "Cancha Secundaria",
-      "valor": 12000
-    }
-  },
-  "success": true
-}
-```
-
-#### Consulta de disponibilidad (GET `/api/reservas/disponibilidad/:numero/:fecha/:horaInicio/:horaTermino`)
-```json
-{
-  "statusCode": 200,
-  "message": "La cancha #1 está disponible en el horario solicitado",
-  "data": {
-    "disponible": true
-  },
-  "success": true
-}
-```
-
-#### Consulta de horarios disponibles (GET `/api/reservas/disponibilidad-dia/:numero/:fecha`)
-```json
-{
-  "statusCode": 200,
-  "message": "Horarios disponibles para la cancha #1 en la fecha 2025-06-02",
-  "data": {
-    "horariosDisponibles": [
-      { 
-        "id_bloque": 1,
-        "fecha_date": "2025-06-02",
-        "hora_inicio": "08:00:00", 
-        "hora_fin": "09:00:00" 
-      },
-      { 
-        "id_bloque": 2,
-        "fecha_date": "2025-06-02",
-        "hora_inicio": "09:00:00", 
-        "hora_fin": "10:00:00" 
-      },
-      { 
-        "id_bloque": 3,
-        "fecha_date": "2025-06-02",
-        "hora_inicio": "10:00:00", 
-        "hora_fin": "11:00:00" 
-      },
-      { 
-        "id_bloque": 11,
-        "fecha_date": "2025-06-02",
-        "hora_inicio": "18:00:00", 
-        "hora_fin": "19:00:00" 
-      },
-      { 
-        "id_bloque": 12,
-        "fecha_date": "2025-06-02",
-        "hora_inicio": "19:00:00", 
-        "hora_fin": "20:00:00" 
-      }
+      "id_cancha": 1,
+      "nombre": "Cancha Principal"
+    },
+    "horarios_ocupados": [
+      "10:00-11:30",
+      "14:00-15:30"
+    ],
+    "horarios_disponibles": [
+      "08:00-09:30",
+      "12:00-13:30",
+      "16:00-17:30"
     ]
   },
   "success": true
 }
 ```
 
-#### Respuesta al obtener reservas de un usuario (GET `/api/reservas/usuario/:rut`)
-```json
-{
-  "statusCode": 200,
-  "message": "Reservas del usuario obtenidas exitosamente",
-  "data": [
-    {
-      "id_reserva": 1,
-      "fecha": "2025-06-09",
-      "hora_inicio": "09:00:00",
-      "hora_termino": "10:30:00",
-      "id_cancha": 2,
-      "id_usuario": 2,
-      "id_bloque": 2,
-      "cancha": {
-        "id_cancha": 2,
-        "numero": 2,
-        "nombre": "Cancha Secundaria",
-        "valor": 12000
-      }
-    }
-  ],
-  "success": true
-}
-```
+---
 
-#### Respuesta al obtener historial de una reserva (GET `/api/reservas/historial/:id`)
+## 📅 SISTEMA DE RESERVAS
+
+### **POST** `/api/reservas`
+🔒 *Requiere autenticación*
+
+Crea una nueva reserva
+
+**Request Body:**
 ```json
 {
-  "statusCode": 200,
-  "message": "Historial de la reserva obtenido exitosamente",
-  "data": [
+  "rut_usuario": "22222222-2",
+  "numero_cancha": 1,
+  "fecha": "2024-12-25",
+  "hora_inicio": "10:00",
+  "hora_termino": "11:30",
+  "equipamiento": [
     {
-      "id_historial": 1,
-      "estado": "Pendiente",
-      "fecha_estado": "2025-06-02",
-      "id_reserva": 1,
-      "id_usuario": 2
+      "id_equipamiento": 1,
+      "cantidad": 2
     },
     {
-      "id_historial": 2,
+      "id_equipamiento": 3,
+      "cantidad": 1
+    }
+  ],
+  "jugadores": [
+    {
+      "nombre": "Juan Pérez",
+      "telefono": "+56912345678"
+    },
+    {
+      "nombre": "María González",
+      "telefono": "+56987654321"
+    }
+  ]
+}
+```
+
+**Response Success (201):**
+```json
+{
+  "statusCode": 201,
+  "message": "Reserva creada exitosamente",
+  "data": {
+    "reserva": {
+      "id": "RES-2024-001",
+      "fecha": "2024-12-25",
+      "hora_inicio": "10:00",
+      "hora_termino": "11:30",
+      "cancha": {
+        "numero": 1,
+        "nombre": "Cancha Principal"
+      },
+      "usuario": {
+        "nombre": "Usuario Regular",
+        "rut": "22222222-2"
+      }
+    },
+    "equipamiento": [
+      {
+        "nombre": "Raqueta Premium",
+        "cantidad": 2,
+        "costo_unitario": 5000,
+        "subtotal": 10000
+      }
+    ],
+    "jugadores": [
+      {
+        "nombre": "Juan Pérez",
+        "telefono": "+56912345678"
+      }
+    ],
+    "costo_total": 15000
+  },
+  "success": true
+}
+```
+
+### **GET** `/api/reservas/usuario/{rut}`
+🔒 *Requiere autenticación*
+
+Obtiene las reservas de un usuario específico
+
+**Response Success (200):**
+```json
+{
+  "statusCode": 200,
+  "message": "Reservas encontradas para el usuario 22222222-2",
+  "data": [
+    {
+      "id_reserva": "RES-2024-001",
+      "fecha": "2024-12-25",
+      "hora_inicio": "10:00",
+      "hora_termino": "11:30",
       "estado": "Confirmada",
-      "fecha_estado": "2025-06-03",
-      "id_reserva": 1,
-      "id_usuario": 1
+      "cancha": {
+        "numero": 1,
+        "nombre": "Cancha Principal"
+      },
+      "costo_total": 15000
     }
   ],
   "success": true
 }
 ```
 
-#### Respuesta al obtener estadísticas (GET `/api/reservas/estadisticas`)
+### **PUT** `/api/reservas/{id}/estado`
+🔒 *Requiere autenticación y rol admin*
+
+Actualiza el estado de una reserva
+
+**Request Body:**
+```json
+{
+  "estado": "Confirmada",
+  "observaciones": "Reserva confirmada - Pago verificado"
+}
+```
+
+---
+
+## 🛠️ EQUIPAMIENTO
+
+### **GET** `/api/equipamiento`
+Obtiene todo el equipamiento disponible
+
+**Response Success (200):**
+```json
+{
+  "statusCode": 200,
+  "message": "Equipamiento obtenido exitosamente",
+  "data": [
+    {
+      "id_equipamiento": 1,
+      "nombre": "Raqueta Premium",
+      "tipo": "Raqueta",
+      "descripcion": "Raqueta profesional de fibra de carbono",
+      "costo": 5000,
+      "stock": 10,
+      "disponible": true
+    },
+    {
+      "id_equipamiento": 2,
+      "nombre": "Pelotas Wilson",
+      "tipo": "Pelota",
+      "descripcion": "Set de 3 pelotas oficiales",
+      "costo": 2000,
+      "stock": 25,
+      "disponible": true
+    }
+  ],
+  "success": true
+}
+```
+
+### **GET** `/api/equipamiento/disponibilidad?fecha=2024-12-20&hora_inicio=10:00&hora_termino=11:30`
+Verifica disponibilidad de equipamiento para un horario específico
+
+**Response Success (200):**
+```json
+{
+  "statusCode": 200,
+  "message": "Disponibilidad de equipamiento verificada",
+  "data": [
+    {
+      "id_equipamiento": 1,
+      "nombre": "Raqueta Premium",
+      "stock_total": 10,
+      "reservado": 2,
+      "disponible": 8
+    }
+  ],
+  "success": true
+}
+```
+
+---
+
+## 📊 ADMINISTRACIÓN (Solo Admins)
+
+### **GET** `/api/transacciones/estadisticas`
+🔒 *Requiere autenticación y rol admin*
+
+Obtiene estadísticas generales del sistema
+
+**Response Success (200):**
 ```json
 {
   "statusCode": 200,
   "message": "Estadísticas obtenidas exitosamente",
   "data": {
-    "totalReservas": 120,
-    "reservasPorCancha": [
-      { "numeroCancha": 1, "totalReservas": 45 },
-      { "numeroCancha": 2, "totalReservas": 38 },
-      { "numeroCancha": 3, "totalReservas": 37 }
-    ],
-    "usuariosConMasReservas": [
-      { "rutUsuario": "12345678-9", "nombreUsuario": "Juan Pérez", "totalReservas": 15 },
-      { "rutUsuario": "98765432-1", "nombreUsuario": "Ana López", "totalReservas": 12 }
-    ],
-    "reservasPorDia": [
-      { "diaSemana": "Monday", "totalReservas": 25 },
-      { "diaSemana": "Tuesday", "totalReservas": 20 },
-      { "diaSemana": "Wednesday", "totalReservas": 22 }
-    ],
-    "horasMasSolicitadas": [
-      { "hora": "18:00", "totalReservas": 30 },
-      { "hora": "19:00", "totalReservas": 28 }
-    ]
+    "cant_reservas_hoy": 5,
+    "cant_reservas_mes": 47,
+    "cant_reservas_pendientes": 3,
+    "cant_reservas_confirmadas": 44,
+    "cant_transacciones_hoy": 5,
+    "cant_transacciones_mes": 47,
+    "ingresos_hoy": 75000,
+    "ingresos_mes": 850000,
+    "clientes_activos": 23
   },
   "success": true
 }
 ```
 
-## Módulo de Historial de Reservas
+### **GET** `/api/transacciones`
+🔒 *Requiere autenticación y rol admin*
 
-El sistema mantiene un registro detallado del historial de cambios de estado de las reservas:
+Obtiene todas las transacciones del sistema
 
-### Atributos de Historial de Reserva
-- **ID**: Identificador único del registro de historial
-- **Estado**: Estado de la reserva (Cancelado, Modificado, Completado, Pendiente)
-- **Fecha Estado**: Fecha y hora del cambio de estado
-- **ID Reserva**: ID de la reserva relacionada
-- **ID Usuario**: ID del usuario que realizó el cambio
-
-### Endpoints de la API para Historial de Reservas
-
-| Método HTTP | Endpoint | Descripción |
-|-------------|----------|-------------|
-| GET | `/api/historial-reservas` | Obtiene todos los registros del historial |
-| GET | `/api/historial-reservas/:id` | Obtiene un registro específico del historial por su ID |
-| GET | `/api/historial-reservas/reserva/:id` | Obtiene todo el historial de una reserva específica |
-| GET | `/api/historial-reservas/usuario/:id` | Obtiene todo el historial de un usuario específico |
-| POST | `/api/historial-reservas` | Crea un nuevo registro en el historial |
-
-### Formato de datos
-
-#### Creación de registro de historial (POST `/api/historial-reservas`)
-```json
-{
-  "estado": "Confirmada",
-  "id_reserva": 1,
-  "id_usuario": 1
-}
-```
-
-#### Respuesta al obtener historial de una reserva (GET `/api/historial-reservas/reserva/:id`)
+**Response Success (200):**
 ```json
 {
   "statusCode": 200,
-  "message": "Historiales de reserva obtenidos exitosamente",
-  "data": [
-    {
-      "id": 1,
-      "estado": "Pendiente",
-      "fechaEstado": "2025-05-18T12:00:00.000Z",
-      "idReserva": 1,
-      "idUsuario": 1,
-      "usuario": {
-        "id": 1,
-        "rut": "12345678-9",
-        "nombre": "Juan Pérez"
-      }
-    },
-    {
-      "id": 2,
-      "estado": "Modificado",
-      "fechaEstado": "2025-05-19T14:30:00.000Z",
-      "idReserva": 1,
-      "idUsuario": 1,
-      "usuario": {
-        "id": 1,
-        "rut": "12345678-9",
-        "nombre": "Juan Pérez"
-      }
-    }
-  ],
-  "success": true
-}
-```
-
-#### Respuesta al obtener historial de un usuario (GET `/api/historial-reservas/usuario/:id`)
-```json
-{
-  "statusCode": 200,
-  "message": "Historiales de reserva obtenidos exitosamente",
-  "data": [
-    {
-      "id_historial": 1,
-      "estado": "Pendiente",
-      "fecha_estado": "2025-06-02",
-      "id_reserva": 1,
-      "id_usuario": 2,
-      "reserva": {
-        "id_reserva": 1,
-        "fecha": "2025-06-09",
-        "hora_inicio": "09:00:00",
-        "hora_termino": "10:30:00"
-      }
-    },
-    {
-      "id_historial": 3,
-      "estado": "Pendiente",
-      "fecha_estado": "2025-06-02",
-      "id_reserva": 2,
-      "id_usuario": 3,
-      "reserva": {
-        "id_reserva": 2,
-        "fecha": "2025-06-10",
-        "hora_inicio": "10:00:00",
-        "hora_termino": "11:30:00"
-      }
-    }
-  ],
-  "success": true
-}
-```
-
-## Módulo de Notificacion
-
-El sistema muestra notificaciones a los usuario por creaciones o modificaciones a sus reservas:
-
-## Atributos de Notificacion
-- **ID**
-- **Titulo**
-- **Mensaje**
-- **TipoEvento**
-- **FechaCreacion**
-- **Leida**
-- **Usuario**
-- **IDUsuario**
-- **Reserva**
-- **IDReserva**
-
-### Endpoints de la API para Notificiacion
-
-| Método HTTP | Endpoint | Descripción |
-|-------------|----------|-------------|
-| GET | `/api/notificaciones/no-leidas/:IdUsuario` | Mostar notificaciones que leida = false, para cierto usuario |
-| GET | `/api/notificaciones/historial/:idUsuario` | Mostrar historial de notificaciones para cierto usuario |
-| GET | `/api/notificaciones/estadisticas/:idUsuario` | Mostrar estadisticas ? (en Desarrollo) |
-| POST | `/api/notificaciones` | Crear notificaciones desde Admin |
-| PATCH | `/api/notificaciones/:id/marcar-leida` | Actualiza notificaciones cambiando leida = true |
-| PATCH | `/api/notificaciones/marcar-todas-leidas/:idUsuario` | Actualiza notificaciones cambiando a todas leida = true |
-| DELETE | `/api/notificaciones/:id` | Elimina una notificacion |
-
-### Formato de datos
-
-#### Creación de notificacion (Post `/api/notificaciones`)
-```json
-//hacer json, da problemas con dto
-```
-#### Actualizacion de notificacion (Patch `/api/notificaciones/marcar-todas-leidas/:idUsuario`)
-```json
-{
-  "statusCode": 200,
-  "message": "2 notificaciones marcadas como leídas",
-  "data": {
-    "actualizadas": 2
-  },
-  "success": true
-}
-```
-
-#### Actualizacion de notificacion (Patch `/api/notificaciones/:id/marcar-leida`)
-```json
-{
-  "statusCode": 200,
-  "message": "Notificación marcada como leída",
-  "data": {
-    "id": 12,
-    "leida": true
-  },
-  "success": true
-}
-```
-
-#### Mostrar historial de notificaciones (GET `/api/notificaciones/historial/:idUsuario`)
-```json
-{
-  "statusCode": 200,
-  "message": "10 notificaciones encontradas",
-  "data": [
-    {
-      "id": 12,
-      "titulo": "Reserva Creada y Pagada",
-      "mensaje": "Tu reserva para la cancha #1 el 12/25/2028 de 10:00 a 12:00 ha sido creada y pagada exitosamente. Costo: $30000",
-      "tipoEvento": "RESERVA_CREADA",
-      "fechaCreacion": "2025-06-17T06:19:28.067Z",
-      "leida": true,
-      "idUsuario": 1,
-      "reserva": {
-        "id": 8,
-        "fecha": "2028-12-25",
-        "hora_inicio": "10:00:00",
-        "hora_termino": "12:00:00",
-        "cancha": {
-          "id": 1,
-          "numero": 1,
-          "nombre": "Cancha Principal",
-          "descripcion": "Cancha de pádel profesional con paredes de cristal",
-          "valor": 15000,
-          "mantenimiento": false,
-          "cantidadMaxJugador": 4
-        }
-      },
-      "idReserva": 8
-    },
-    {
-      "id": 11,
-      "titulo": "Reserva Creada y Pagada",
-      "mensaje": "Tu reserva para la cancha #1 el 12/27/2027 de 10:00 a 12:00 ha sido creada y pagada exitosamente. Costo: $30000",
-      "tipoEvento": "RESERVA_CREADA",
-      "fechaCreacion": "2025-06-17T06:16:48.007Z",
-      "leida": true,
-      "idUsuario": 1,
-      "reserva": {
-        "id": 7,
-        "fecha": "2027-12-27",
-        "hora_inicio": "10:00:00",
-        "hora_termino": "12:00:00",
-        "cancha": {
-          "id": 1,
-          "numero": 1,
-          "nombre": "Cancha Principal",
-          "descripcion": "Cancha de pádel profesional con paredes de cristal",
-          "valor": 15000,
-          "mantenimiento": false,
-          "cantidadMaxJugador": 4
-        }
-      },
-      "idReserva": 7
-    }
-  ]
-}
-```
-
-
-#### Mostrar notificaciones no leidas (GET `/api/notificaciones/no-leidas/:IdUsuario`)
-```json
-{
-  "statusCode": 200,
-  "message": "1 notificaciones no leídas",
-  "data": [
-    {
-      "id": 12,
-      "titulo": "Reserva Creada y Pagada",
-      "mensaje": "Tu reserva para la cancha #1 el 12/25/2028 de 10:00 a 12:00 ha sido creada y pagada exitosamente. Costo: $30000",
-      "tipoEvento": "RESERVA_CREADA",
-      "fechaCreacion": "2025-06-17T06:19:28.067Z",
-      "leida": false,
-      "idUsuario": 1,
-      "reserva": {
-        "id": 8,
-        "fecha": "2028-12-25",
-        "hora_inicio": "10:00:00",
-        "hora_termino": "12:00:00",
-        "cancha": {
-          "id": 1,
-          "numero": 1,
-          "nombre": "Cancha Principal",
-          "descripcion": "Cancha de pádel profesional con paredes de cristal",
-          "valor": 15000,
-          "mantenimiento": false,
-          "cantidadMaxJugador": 4
-        }
-      },
-      "idReserva": 8
-    }
-  ],
-  "success": true
-}
-```
-## Módulo de Equipamiento
-
-El sistema permite la gestión de equipamiento deportivo disponible para alquiler durante las reservas:
-
-### Atributos de Equipamiento
-- **ID**: Identificador único del equipamiento
-- **Tipo**: Tipo de equipamiento (paleta, pelota, etc.)
-- **Nombre**: Nombre descriptivo del equipamiento
-- **Stock**: Cantidad disponible para alquilar
-- **Costo**: Costo por unidad del alquiler del equipamiento
-
-### Endpoints de la API para Equipamiento
-
-| Método HTTP | Endpoint | Descripción |
-|-------------|----------|-------------|
-| GET | `/api/equipamiento` | Obtiene todo el equipamiento disponible |
-| GET | `/api/equipamiento/:id` | Obtiene la información de un equipamiento específico |
-| POST | `/api/equipamiento` | Crea un nuevo equipamiento |
-| PATCH | `/api/equipamiento/:id` | Actualiza la información de un equipamiento existente |
-| DELETE | `/api/equipamiento/:id` | Elimina un equipamiento |
-
-### Formato de datos
-
-#### Creación de equipamiento (POST `/api/equipamiento`)
-```json
-{
-  "tipo": "Raquetas",
-  "nombre": "Raqueta Pro",
-  "stock": 10,
-  "costo": 2000
-}
-```
-
-#### Actualización de equipamiento (PATCH `/api/equipamiento/:id`)
-```json
-{
-  "stock": 15,
-  "costo": 5500,
-  "nombre": "Paleta Profesional Avanzada"
-}
-```
-
-#### Respuesta al obtener equipamientos (GET `/api/equipamiento`)
-```json
-{
-  "statusCode": 200,
-  "message": "Equipamientos obtenidos exitosamente",
-  "data": [
-    {
-      "id_equipamiento": 1,
-      "nombre": "Raqueta Pro",
-      "tipo": "Raquetas",
-      "stock": 10,
-      "costo": 2000
-    },
-    {
-      "id_equipamiento": 2,
-      "tipo": "Accesorios",
-      "nombre": "Cinta grip",
-      "stock": 30,
-      "costo": 800
-    },
-    {
-      "id_equipamiento": 3,
-      "tipo": "Pelotas",
-      "nombre": "Pelotas (pack)",
-      "stock": 20,
-      "costo": 500
-    },
-    {
-      "id_equipamiento": 4,
-      "tipo": "Protección",
-      "nombre": "Protector facial",
-      "stock": 15,
-      "costo": 1500
-    }
-  ],
-  "success": true
-}
-```
-
-## Módulo de Boleta de Equipamiento
-
-El sistema permite la gestión de boletas de alquiler de equipamiento asociadas a las reservas:
-
-### Atributos de Boleta de Equipamiento
-- **ID**: Identificador único de la boleta de equipamiento
-- **Cantidad**: Cantidad de unidades del equipamiento alquilado
-- **Monto Total**: Costo total del alquiler (cantidad * costo unitario del equipamiento)
-- **ID Reserva**: ID de la reserva asociada a la boleta
-- **ID Equipamiento**: ID del equipamiento alquilado
-
-### Endpoints de la API para Boleta de Equipamiento
-
-| Método HTTP | Endpoint | Descripción |
-|-------------|----------|-------------|
-| GET | `/api/boleta-equipamiento` | Obtiene todas las boletas de equipamiento |
-| GET | `/api/boleta-equipamiento/:id` | Obtiene la información de una boleta específica |
-| POST | `/api/boleta-equipamiento` | Crea una nueva boleta de equipamiento |
-| PATCH | `/api/boleta-equipamiento/:id` | Actualiza la información de una boleta existente |
-| DELETE | `/api/boleta-equipamiento/:id` | Elimina una boleta |
-
-### Formato de datos
-
-#### Creación de boleta de equipamiento (POST `/api/boleta-equipamiento`)
-```json
-{
-  "id_reserva": 1,
-  "id_equipamiento": 1,
-  "cantidad": 2
-}
-```
-
-#### Actualización de boleta de equipamiento (PATCH `/api/boleta-equipamiento/:id`)
-```json
-{
-  "cantidad": 4
-}
-```
-
-#### Respuesta al crear una boleta de equipamiento
-```json
-{
-  "statusCode": 201,
-  "message": "Boleta de equipamiento creada exitosamente",
-  "data": {
-    "id_boleta": 1,
-    "cantidad": 2,
-    "monto_total": 4000,
-    "id_reserva": 1,
-    "id_equipamiento": 1,
-    "equipamiento": {
-      "id_equipamiento": 1,
-      "tipo": "Raquetas",
-      "nombre": "Raqueta Pro",
-      "costo": 2000
-    }
-  },
-  "success": true
-}
-```
-
-#### Respuesta al obtener boletas de equipamiento por reserva
-```json
-{
-  "statusCode": 200,
-  "message": "Boletas de equipamiento por reserva obtenidas exitosamente",
-  "data": [
-    {
-      "id_boleta": 1,
-      "cantidad": 2,
-      "monto_total": 4000,
-      "id_reserva": 1,
-      "id_equipamiento": 1,
-      "equipamiento": {
-        "id_equipamiento": 1,
-        "tipo": "Raquetas",
-        "nombre": "Raqueta Pro",
-        "costo": 2000
-      }
-    },
-    {
-      "id_boleta": 2,
-      "cantidad": 1,
-      "monto_total": 800,
-      "id_reserva": 1,
-      "id_equipamiento": 2,
-      "equipamiento": {
-        "id_equipamiento": 2,
-        "tipo": "Accesorios",
-        "nombre": "Cinta grip",
-        "costo": 800
-      }
-    }
-  ],
-  "success": true
-}
-```
-
-## Módulo de Jugador
-
-El sistema permite registrar jugadores asociados a una reserva:
-
-### Atributos de Jugador
-- **ID**: Identificador único del jugador
-- **Nombre**: Nombre del jugador
-- **Apellido**: Apellido del jugador
-- **RUT**: RUT del jugador
-- **Edad**: Edad del jugador
-- **ID Reserva**: ID de la reserva a la que está asociado
-
-### Endpoints de la API para Jugador
-
-| Método HTTP | Endpoint | Descripción |
-|-------------|----------|-------------|
-| GET | `/api/jugador` | Obtiene todos los jugadores registrados |
-| GET | `/api/jugador/:id` | Obtiene la información de un jugador específico |
-| GET | `/api/jugador/reserva/:id` | Obtiene todos los jugadores de una reserva específica |
-| POST | `/api/jugador` | Crea un nuevo registro de jugador |
-| PATCH | `/api/jugador/:id` | Actualiza la información de un jugador existente |
-| DELETE | `/api/jugador/:id` | Elimina un registro de jugador |
-
-### Formato de datos
-
-#### Creación de jugador (POST `/api/jugador`)
-```json
-{
-  "nombre": "Pedro",
-  "apellido": "Gómez",
-  "rut": "55555555-5",
-  "edad": 30,
-  "id_reserva": 1
-}
-```
-
-#### Respuesta al obtener jugadores de una reserva (GET `/api/jugador/reserva/:id`)
-```json
-{
-  "statusCode": 200,
-  "message": "Jugadores obtenidos exitosamente",
-  "data": [
-    {
-      "id_jugador": 1,
-      "nombre": "Pedro",
-      "apellido": "Gómez",
-      "rut": "55555555-5",
-      "edad": 30,
-      "id_reserva": 1
-    },
-    {
-      "id_jugador": 2,
-      "nombre": "Laura",
-      "apellido": "Martínez",
-      "rut": "66666666-6",
-      "edad": 28,
-      "id_reserva": 1
-    }
-  ],
-  "success": true
-}
-```
-
-## Módulo de Transacciones
-
-El sistema registra transacciones asociadas a boletas de equipamiento:
-
-### Atributos de Transaccion
-- **ID**: Identificador único de la transacción
-- **Fecha**: Fecha de la transacción
-- **ID Boleta Equipamiento**: ID de la boleta de equipamiento asociada
-
-### Endpoints de la API para Transaccion
-
-| Método HTTP | Endpoint | Descripción |
-|-------------|----------|-------------|
-| GET | `/api/transaccion` | Obtiene todas las transacciones |
-| GET | `/api/transaccion/:id` | Obtiene la información de una transacción específica |
-| GET | `/api/transaccion/boleta/:id` | Obtiene la transacción asociada a una boleta específica |
-| POST | `/api/transaccion` | Crea una nueva transacción |
-| DELETE | `/api/transaccion/:id` | Elimina una transacción |
-
-### Formato de datos
-
-#### Creación de transacción (POST `/api/transaccion`)
-```json
-{
-  "fecha": "2025-06-02",
-  "id_boleta_equipamiento": 1
-}
-```
-
-#### Respuesta al obtener transacciones (GET `/api/transaccion`)
-```json
-{
-  "statusCode": 200,
-  "message": "Transacciones obtenidas exitosamente",
+  "message": "47 transacciones encontradas",
   "data": [
     {
       "id_transaccion": 1,
-      "fecha": "2025-06-02",
-      "id_boleta_equipamiento": 1,
-      "boleta": {
-        "id_boleta": 1,
-        "cantidad": 2,
-        "monto_total": 4000,
-        "id_reserva": 1,
-        "id_equipamiento": 1
-      }
-    },
-    {
-      "id_transaccion": 2,
-      "fecha": "2025-06-02",
-      "id_boleta_equipamiento": 2,
-      "boleta": {
-        "id_boleta": 2,
-        "cantidad": 1,
-        "monto_total": 800,
-        "id_reserva": 1,
-        "id_equipamiento": 2
-      }
+      "fecha": "2024-12-20",
+      "reserva": {
+        "id_reserva": "RES-2024-001",
+        "fecha": "2024-12-25",
+        "hora_inicio": "10:00",
+        "hora_termino": "11:30",
+        "usuario": {
+          "nombre": "Usuario Regular",
+          "rut": "22222222-2"
+        },
+        "cancha": {
+          "nombre": "Cancha Principal"
+        }
+      },
+      "monto_total": 15000
     }
   ],
   "success": true
 }
 ```
 
-## Notas importantes
+### **GET** `/api/transacciones/periodo?fechaInicio=2024-12-01&fechaFin=2024-12-31`
+🔒 *Requiere autenticación y rol admin*
 
-### 🔑 Autenticación y Autorización
+Obtiene transacciones por período con resumen de ingresos
 
-1. **Autenticación JWT**: Todos los endpoints (excepto `/api/auth/login` y `/api/auth/register`) requieren un token JWT válido.
-
-   **Cómo usar el token:**
-   ```http
-   Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjEsInJ1dCI6IjExMTExMTExLTEiLCJpc0FkbWluIjp0cnVlLCJpYXQiOjE3MzcyMjE2MjEsImV4cCI6MTczNzIyNTIyMX0.XYZ789...
-   ```
-
-   **Ejemplo completo con curl:**
-   ```bash
-   curl -X GET http://localhost:8080/api/usuarios \
-     -H "Authorization: Bearer YOUR_TOKEN_HERE" \
-     -H "Content-Type: application/json"
-   ```
-
-   **Ejemplo con JavaScript/Fetch:**
-   ```javascript
-   const token = localStorage.getItem('authToken');
-   
-   fetch('http://localhost:8080/api/usuarios', {
-     headers: {
-       'Authorization': `Bearer ${token}`,
-       'Content-Type': 'application/json'
-     }
-   })
-   .then(response => response.json())
-   .then(data => console.log(data));
-   ```
-
-2. **Expiración del token**: Los tokens JWT expiran después de **1 hora**. Después de ese tiempo, deberás iniciar sesión nuevamente para obtener un nuevo token.
-
-3. **Roles de usuario**: El sistema distingue entre dos tipos de usuarios:
-   - **Administradores** (`is_admin: true`): Pueden crear, modificar y eliminar canchas, equipamiento, y gestionar todos los usuarios
-   - **Usuarios regulares** (`is_admin: false`): Pueden hacer reservas, ver sus propias reservas y gestionar su perfil
-
-### 🛡️ Endpoints que Requieren Permisos de Administrador
-
-Los siguientes endpoints requieren que el usuario autenticado tenga `is_admin: true`:
-
-| Método | Endpoint | Descripción |
-|--------|----------|-------------|
-| POST | `/api/canchas` | Crear nueva cancha |
-| PATCH | `/api/canchas/:numero` | Modificar cancha |
-| DELETE | `/api/canchas/:numero` | Eliminar cancha |
-| POST | `/api/equipamiento` | Crear nuevo equipamiento |
-| PATCH | `/api/equipamiento/:id` | Modificar equipamiento |
-| DELETE | `/api/equipamiento/:id` | Eliminar equipamiento |
-| GET | `/api/usuarios` | Listar todos los usuarios |
-| DELETE | `/api/usuarios/:rut` | Eliminar usuario |
-| GET | `/api/reservas/estadisticas` | Ver estadísticas del sistema |
-
-### 📋 Reglas de Negocio
-
-2. **Estados del historial de reservas**: Los posibles estados son:
-   - `Pendiente`: Estado inicial al crear una reserva
-   - `Modificado`: Cuando se modifica una reserva existente
-   - `Cancelado`: Cuando se cancela una reserva
-   - `Completado`: Cuando una reserva se marca como realizada
-
-3. **Mantenimiento de canchas**: Las canchas con `mantenimiento=true` no están disponibles para reservas.
-
-4. **Horarios de reserva**: Por reglas de negocio, las canchas solo se pueden reservar:
-   - De lunes a viernes
-   - Entre las 8:00 y las 20:00 horas
-   - No hay disponibilidad los fines de semana
-
-5. **Validaciones específicas chilenas**:
-   - **Formato RUT**: 12345678-9 (con dígito verificador)
-   - **Formato teléfono**: +56XXXXXXXXX (código país + 9 dígitos)
-   - **Monedas**: Valores en pesos chilenos (CLP)
-
-### 🔧 Headers Requeridos
-
-Para todas las peticiones HTTP, incluye los siguientes headers:
-
-```http
-Content-Type: application/json
-Authorization: Bearer YOUR_JWT_TOKEN_HERE
-```
-
-### 🌐 CORS y Frontend
-
-El backend está configurado para aceptar peticiones desde cualquier origen durante el desarrollo. En producción, esto debe configurarse para aceptar solo dominios autorizados.
-
-## 🧪 Pruebas de API - Guía Práctica
-
-### Configuración de Cliente HTTP (Postman/Insomnia)
-
-#### 1. **Variables de Entorno**
-Crea las siguientes variables en tu cliente HTTP:
-
-```
-BASE_URL = http://localhost:8080/api
-AUTH_TOKEN = (se llenará después del login)
-```
-
-#### 2. **Flujo de Prueba Completo**
-
-**Paso 1: Registro de Usuario**
-```http
-POST {{BASE_URL}}/auth/register
-Content-Type: application/json
-
-{
-  "rut": "55555555-5",
-  "nombre_usuario": "Usuario Prueba",
-  "correo": "prueba@test.com",
-  "contraseña": "test123456",
-  "telefono": "+56955555555"
-}
-```
-
-**Paso 2: Inicio de Sesión**
-```http
-POST {{BASE_URL}}/auth/login
-Content-Type: application/json
-
-{
-  "rut": "55555555-5",
-  "contraseña": "test123456"
-}
-```
-*Guarda el token devuelto en la variable AUTH_TOKEN*
-
-**Paso 3: Consultar Canchas**
-```http
-GET {{BASE_URL}}/canchas
-Authorization: Bearer {{AUTH_TOKEN}}
-```
-
-**Paso 4: Verificar Disponibilidad**
-```http
-GET {{BASE_URL}}/reservas/disponibilidad-dia/1/2025-06-15
-Authorization: Bearer {{AUTH_TOKEN}}
-```
-
-**Paso 5: Crear Reserva**
-```http
-POST {{BASE_URL}}/reservas
-Authorization: Bearer {{AUTH_TOKEN}}
-Content-Type: application/json
-
-{
-  "fecha": "2025-06-15",
-  "hora_inicio": "10:00:00",
-  "hora_termino": "11:00:00",
-  "rut_usuario": "55555555-5",
-  "numero_cancha": 1,
-  "id_bloque": 3
-}
-```
-
-**Paso 6: Agregar Equipamiento**
-```http
-POST {{BASE_URL}}/boleta-equipamiento
-Authorization: Bearer {{AUTH_TOKEN}}
-Content-Type: application/json
-
-{
-  "id_reserva": 1,
-  "id_equipamiento": 1,
-  "cantidad": 2
-}
-```
-
-### Scripts de Prueba Automatizada
-
-#### Script en Node.js para Pruebas Rápidas
-
-```javascript
-const axios = require('axios');
-
-const BASE_URL = 'http://localhost:8080/api';
-let authToken = '';
-
-async function testAPI() {
-  try {    // 1. Login
-    const loginResponse = await axios.post(`${BASE_URL}/auth/login`, {
-      rut: '11111111-1',
-      contraseña: 'password123'
-    });
-    
-    authToken = loginResponse.data.data.token;
-    console.log('✅ Login exitoso');
-    
-    // 2. Obtener canchas
-    const canchasResponse = await axios.get(`${BASE_URL}/canchas`, {
-      headers: { Authorization: `Bearer ${authToken}` }
-    });
-    
-    console.log(`✅ Canchas obtenidas: ${canchasResponse.data.data.length}`);
-    
-    // 3. Verificar disponibilidad
-    const fecha = '2025-06-15';
-    const numeroCancha = 1;
-    
-    const disponibilidadResponse = await axios.get(
-      `${BASE_URL}/reservas/disponibilidad-dia/${numeroCancha}/${fecha}`,
-      { headers: { Authorization: `Bearer ${authToken}` } }
-    );
-    
-    console.log(`✅ Horarios disponibles: ${disponibilidadResponse.data.data.horariosDisponibles.length}`);
-    
-    console.log('🎉 Todas las pruebas pasaron correctamente');
-    
-  } catch (error) {
-    console.error('❌ Error en las pruebas:', error.response?.data || error.message);
-  }
-}
-
-testAPI();
-```
-
-### Colección de Postman
-
-Puedes importar esta colección JSON en Postman para tener todos los endpoints configurados:
-
+**Response Success (200):**
 ```json
 {
-  "info": {
-    "name": "PadelUCN API",
-    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
-  },
-  "variable": [
+  "statusCode": 200,
+  "message": "Transacciones del período 2024-12-01 - 2024-12-31",
+  "data": [
     {
-      "key": "BASE_URL",
-      "value": "http://localhost:8080/api"
+      "fecha": "2024-12-20",
+      "total_transacciones": 5,
+      "ingresos_totales": 75000
     },
     {
-      "key": "AUTH_TOKEN",
-      "value": ""
+      "fecha": "2024-12-19",
+      "total_transacciones": 3,
+      "ingresos_totales": 45000
     }
   ],
-  "item": [
-    {
-      "name": "Auth",
-      "item": [
-        {
-          "name": "Login",
-          "request": {
-            "method": "POST",
-            "header": [{"key": "Content-Type", "value": "application/json"}],
-            "body": {              "mode": "raw",
-              "raw": "{\n  \"rut\": \"11111111-1\",\n  \"contraseña\": \"password123\"\n}"
-            },
-            "url": {
-              "raw": "{{BASE_URL}}/auth/login",
-              "host": ["{{BASE_URL}}"],
-              "path": ["auth", "login"]
-            }
-          }
-        }
-      ]
-    }
-  ]
+  "success": true
 }
 ```
 
-## Instrucciones de Ejecución
+### **GET** `/api/usuarios/admin/todos`
+🔒 *Requiere autenticación y rol admin*
 
-### 📋 Requisitos Previos
+Obtiene todos los usuarios del sistema
 
-- **Docker** y **Docker Compose** instalados
-- **Node.js** versión 18 o superior
-- **PostgreSQL** (incluido en Docker Compose)
-- **NPM** o **Yarn**
-
-### 🚀 Instalación y Configuración
-
-#### 1. **Clonar el Repositorio**
-```bash
-git clone https://github.com/tu-usuario/PadelUcn.git
-cd PadelUcn
+**Response Success (200):**
+```json
+{
+  "statusCode": 200,
+  "message": "Usuarios obtenidos exitosamente",
+  "data": [
+    {
+      "id_usuario": 1,
+      "rut": "11111111-1",
+      "nombre_usuario": "Admin Usuario",
+      "correo": "admin@padelucn.cl",
+      "saldo": 100000,
+      "is_admin": true,
+      "total_reservas": 0
+    },
+    {
+      "id_usuario": 2,
+      "rut": "22222222-2",
+      "nombre_usuario": "Usuario Regular",
+      "correo": "usuario@example.com",
+      "saldo": 25000,
+      "is_admin": false,
+      "total_reservas": 5
+    }
+  ],
+  "success": true
+}
 ```
-
-#### 2. **Configurar Variables de Entorno**
-Crea un archivo `.env` en el directorio `backend/ingeso-back/`:
-
-```env
-# Base de datos
-DB_HOST=localhost
-DB_PORT=5433
-DB_USERNAME=padeluser
-DB_PASSWORD=padelpass
-DB_DATABASE=padelucn
-
-# JWT
-JWT_SECRET=tu_clave_secreta_muy_segura_aqui
-JWT_EXPIRES_IN=1h
-
-# Puerto del servidor
-PORT=8080
-```
-
-#### 3. **Iniciar Base de Datos**
-```bash
-# Desde el directorio raíz del proyecto
-docker-compose up -d padelucn-db
-
-# Verificar que esté corriendo
-docker-compose ps
-```
-
-#### 4. **Instalar Dependencias del Backend**
-```bash
-cd backend/ingeso-back
-npm install
-```
-
-#### 5. **Iniciar Backend en Modo Desarrollo**
-```bash
-npm run start:dev
-```
-
-#### 6. **Verificar Instalación**
-Abre tu navegador en: `http://localhost:8080/api`
-
-Deberías ver un mensaje de bienvenida de la API.
-
-### 🔧 Comandos Útiles
-
-```bash
-# Ver logs de la base de datos
-docker-compose logs padelucn-db
-
-# Reiniciar solo la base de datos
-docker-compose restart padelucn-db
-
-# Detener todos los servicios
-docker-compose down
-
-# Limpiar volúmenes (⚠️ Esto borrará todos los datos)
-docker-compose down -v
-
-# Ver el estado de los contenedores
-docker-compose ps
-
-# Ejecutar comandos en el contenedor de PostgreSQL
-docker-compose exec padelucn-db psql -U padeluser -d padelucn
-```
-
-### 🐛 Solución de Problemas Comunes
-
-#### **Puerto 8080 ocupado**
-```bash
-# Ver qué proceso usa el puerto 8080
-lsof -i :8080
-
-# En Windows
-netstat -ano | findstr :8080
-```
-
-#### **Base de datos no conecta**
-```bash
-# Verificar que PostgreSQL esté corriendo
-docker-compose logs padelucn-db
-
-# Conectar manualmente a la base de datos
-docker-compose exec padelucn-db psql -U padeluser -d padelucn
-```
-
-#### **Error de permisos en Docker**
-```bash
-# En Linux/Mac, agregar usuario al grupo docker
-sudo usermod -aG docker $USER
-
-# Luego cerrar sesión y volver a iniciar
-```
-
-### 📊 Acceso a Servicios
-
-Una vez que todo esté corriendo:
-
-- **Backend API**: `http://localhost:8080/api`
-- **Base de datos**: `localhost:5433` (usuario: `padeluser`, contraseña: `padelpass`)
-- **Frontend** (si aplica): `http://localhost:3000`
-
-### 🧪 Datos de Prueba
-
-El sistema incluye los siguientes usuarios de prueba:
-
-| RUT | Contraseña | Rol | Saldo |
-|-----|------------|-----|-------|
-| `11111111-1` | `password123` | Administrador | $100,000 |
-| `22222222-2` | `password123` | Usuario | $50,000 |
-| `33333333-3` | `password123` | Usuario | $30,000 |
-| `44444444-4` | `password123` | Usuario | $25,000 |
-
-## 🔧 Arquitectura del Sistema
-
-### Stack Tecnológico
-
-**Backend:**
-- **NestJS** - Framework de Node.js
-- **TypeScript** - Lenguaje de programación
-- **TypeORM** - ORM para base de datos
-- **PostgreSQL** - Base de datos relacional
-- **JWT** - Autenticación y autorización
-- **class-validator** - Validaciones de DTOs
-- **bcrypt** - Hashing de contraseñas
-
-**Infraestructura:**
-- **Docker & Docker Compose** - Containerización
-- **NPM** - Gestión de paquetes
-
-### Estructura del Proyecto
-
-```
-PadelUcn/
-├── backend/
-│   └── ingeso-back/
-│       ├── src/
-│       │   ├── modulos/           # Módulos de la aplicación
-│       │   │   ├── auth/          # Autenticación JWT
-│       │   │   ├── usuario/       # Gestión de usuarios
-│       │   │   ├── cancha/        # Gestión de canchas
-│       │   │   ├── reserva/       # Sistema de reservas
-│       │   │   ├── equipamiento/  # Equipamiento deportivo
-│       │   │   ├── bloque/        # Bloques de tiempo
-│       │   │   ├── jugador/       # Jugadores por reserva
-│       │   │   ├── historial-reserva/ # Historial de cambios
-│       │   │   ├── boleta-equipamiento/ # Boletas de alquiler
-│       │   │   └── transaccion/   # Transacciones
-│       │   ├── main.ts           # Punto de entrada
-│       │   └── app.module.ts     # Módulo principal
-│       ├── package.json
-│       └── tsconfig.json
-├── docker-compose.yml            # Servicios Docker
-├── esquemafinal.sql             # Schema de base de datos
-└── README.md                    # Esta documentación
-```
-
-### Base de Datos
-
-**Entidades Principales:**
-- `Usuario` - Usuarios del sistema (administradores y regulares)
-- `Cancha` - Canchas disponibles para reserva
-- `Reserva` - Reservas realizadas por usuarios
-- `Bloque` - Bloques de tiempo disponibles
-- `Equipamiento` - Equipamiento deportivo para alquiler
-- `HistorialReserva` - Historial de cambios de estado
-- `BoletaEquipamiento` - Boletas de alquiler de equipamiento
-- `Jugador` - Jugadores asociados a reservas
-- `Transaccion` - Transacciones del sistema
-
-## 📈 Próximos Pasos y Mejoras
-
-### Funcionalidades Pendientes
-
-1. **Sistema de Pagos**
-   - Integración con pasarelas de pago
-   - Gestión de saldos y transacciones
-   - Facturación automática
-
-2. **Notificaciones**
-   - Envío de emails de confirmación
-   - Recordatorios de reservas
-   - Notificaciones push
-
-3. **Reportes Avanzados**
-   - Dashboard administrativo
-   - Reportes de ingresos
-   - Análisis de uso de canchas
-
-4. **Frontend Completo**
-   - Interfaz web responsive
-   - Aplicación móvil
-   - Panel administrativo
-
-### Consideraciones de Producción
-
-1. **Seguridad**
-   - HTTPS obligatorio
-   - Rate limiting
-   - Logging de seguridad
-   - Validación de entrada más estricta
-
-2. **Performance**
-   - Cache con Redis
-   - Optimización de consultas
-   - CDN para assets estáticos
-
-3. **Monitoreo**
-   - Logging estructurado
-   - Métricas de aplicación
-   - Alertas automáticas
-
-## 🤝 Contribución
-
-Para contribuir al proyecto:
-
-1. Fork el repositorio
-2. Crea una rama para tu feature (`git checkout -b feature/nueva-funcionalidad`)
-3. Commit tus cambios (`git commit -am 'Agrega nueva funcionalidad'`)
-4. Push a la rama (`git push origin feature/nueva-funcionalidad`)
-5. Crea un Pull Request
-
-### Estándares de Código
-
-- **TypeScript** estricto
-- **ESLint** para linting
-- **Prettier** para formateo
-- **Conventional Commits** para mensajes de commit
-- **DTOs** con validaciones completas
-- **Documentación** en código y README
-
-## 📞 Soporte y Contacto
-
-- **Issues**: Reporta bugs o solicita features en GitHub Issues
-- **Documentación**: Esta documentación se actualiza continuamente
-- **Email**: contacto@padelucn.cl (ejemplo)
-
-## 📄 Licencia
-
-Este proyecto está bajo la Licencia MIT. Ver el archivo `LICENSE` para más detalles.
 
 ---
 
-**PadelUCN** - Sistema de Reservas v1.0
-Desarrollado para la Universidad Católica del Norte
+## 📱 NOTIFICACIONES
+
+### **GET** `/api/usuarios/notificaciones`
+🔒 *Requiere autenticación*
+
+Obtiene las notificaciones del usuario
+
+**Response Success (200):**
+```json
+{
+  "statusCode": 200,
+  "message": "Notificaciones obtenidas exitosamente",
+  "data": [
+    {
+      "id": 1,
+      "titulo": "Reserva Confirmada",
+      "mensaje": "Tu reserva para el 25/12/2024 a las 10:00 ha sido confirmada",
+      "tipo": "confirmacion",
+      "leida": false,
+      "fecha": "2024-12-20T10:00:00Z"
+    },
+    {
+      "id": 2,
+      "titulo": "Recordatorio",
+      "mensaje": "Tu reserva es mañana a las 10:00 en Cancha Principal",
+      "tipo": "recordatorio",
+      "leida": true,
+      "fecha": "2024-12-24T18:00:00Z"
+    }
+  ],
+  "success": true
+}
+```
+
+---
+
+## 🚨 CÓDIGOS DE ERROR COMUNES
+
+| Código | Mensaje | Descripción |
+|--------|---------|-------------|
+| 400 | Bad Request | Datos de entrada inválidos |
+| 401 | Unauthorized | Token JWT inválido o faltante |
+| 403 | Forbidden | Sin permisos para esta acción |
+| 404 | Not Found | Recurso no encontrado |
+| 409 | Conflict | Conflicto (ej: horario ya reservado) |
+| 422 | Unprocessable Entity | Validación de datos fallida |
+| 500 | Internal Server Error | Error interno del servidor |
+
+## 🔧 CONFIGURACIÓN DE DESARROLLO
+
+### Variables de Entorno
+```env
+# Base de datos
+DATABASE_HOST=localhost
+DATABASE_PORT=5432
+DATABASE_USER=ingeso
+DATABASE_PASSWORD=12342
+DATABASE_NAME=padelucn
+
+# JWT
+JWT_SECRET=tu_jwt_secret_key
+JWT_EXPIRES_IN=24h
+
+# Servidor
+PORT=8081
+NODE_ENV=development
+```
+
+### Comandos Útiles
+```bash
+# Reiniciar base de datos
+docker-compose down padelucn-postgres
+docker-compose up -d padelucn-postgres
+
+# Ver logs
+docker-compose logs padelucn-backend
+docker-compose logs padelucn-postgres
+
+# Ejecutar migraciones
+npm run migration:run
+
+# Generar nuevas migraciones
+npm run migration:generate -- -n NombreMigracion
+```
+
+---
+
+## 🏗️ ARQUITECTURA DEL SISTEMA
+
+```
+├── 🗄️ Base de Datos (PostgreSQL)
+│   ├── usuarios
+│   ├── canchas
+│   ├── reservas
+│   ├── equipamiento
+│   ├── boleta_equipamiento
+│   ├── transacciones
+│   └── historial_reservas
+│
+├── 🔧 Backend (NestJS + TypeORM)
+│   ├── Autenticación JWT
+│   ├── Validaciones con class-validator
+│   ├── Manejo de errores centralizado
+│   └── API RESTful
+│
+└── 🌐 Endpoints
+    ├── /api/auth (Autenticación)
+    ├── /api/usuarios (Gestión de usuarios)
+    ├── /api/canchas (Gestión de canchas)
+    ├── /api/reservas (Sistema de reservas)
+    ├── /api/equipamiento (Gestión de equipamiento)
+    └── /api/transacciones (Administración)
+```
+
+---
+
+## 📞 SOPORTE
+
+Para soporte técnico o reportar bugs, contactar a:
+- **Email**: soporte@padelucn.cl
+- **Teléfono**: +56 55 235 5000
+
+---
+
+**¡Sistema PadelUCN - Reserva tu cancha fácil y rápido! 🏓**
 
 
-POST /api/jugador/batch
+Aqui te dejo las que ocupe yo:
+-----
+LOGIN ADMIN
+POST  http://localhost:8081/api/auth/login
+{
+  "rut": "11111111-1",
+  "contrasena": "admin123"
+}
+-----
+Obtener reservas
+GET   http://localhost:8081/api/reservas
+-----
+Colocar jugadores
+POST  http://localhost:8081/api/jugador/batch
+
 [
   {
     "nombre": "Juan",
@@ -1795,7 +654,95 @@ POST /api/jugador/batch
     "rut": "98765432-1", 
     "edad": 28,
     "id_reserva": 1
-  },
-  // ... más jugadores
+  }
 ]
+-----
+Actualiza equipamiento 
+POST  http://localhost:8081/api/boleta-equipamiento
 
+{
+  "id_reserva": 1,
+  "id_equipamiento": 1,
+  "cantidad": 2
+}
+-----
+hacer reserva
+POST http://localhost:8081/api/reserva
+{
+  "fecha": "2024-12-25",
+  "hora_inicio": "10:00",
+  "hora_termino": "12:00",
+  "rut_usuario": "11111111-1",
+  "numero_cancha": 1,
+  "equipamiento": [],
+  "jugadores": []
+}
+-----
+modificar reserva (se da el id reserva)
+PATCH  http://localhost:8081/api/reserva/1
+{
+  "hora_inicio": "14:00",
+  "hora_termino": "16:00"
+}
+-----
+Recordatorios masivos
+POST  http://localhost:8081/api/usuarios/recordatorios/masivo
+{
+  "ruts": ["12345678-9", "98765432-1", "11111111-1"],
+  "titulo": "Mantenimiento de Canchas",
+  "mensaje": "Estimado cliente, las canchas estarán cerradas el sábado 18 de enero por mantenimiento. Gracias por su comprensión."
+}
+-----
+Obtener rquipamientos del admin
+GET http://localhost:8081/api/usuarios/admin/equipamientos
+-----
+obtener clientes del admin
+GET  http://localhost:8081/api/usuarios/admin/clientes
+-----
+crear usuario cliente desde el admin
+POST  http://localhost:8081/api/usuarios/admin/clientes
+{
+  "rut": "12345678-9",
+  "nombre": "Juan Pérez",
+  "correo": "juan@email.com",
+  "telefono": "987654321",
+  "contraseña": "password123",
+  "saldo": 50000,
+  "is_admin": false
+}
+-----
+crear canchas desde el admin
+POST http://localhost:8081/api/usuarios/admin/canchas
+{
+  "numero": 9,
+  "nombre": "Cancha Notificada",
+  "descripcion": "Cancha que notifica a usuarios",
+  "valor": 45000,
+  "cantidad_max_jugadores": 4
+}
+-----
+recordatorios para varios usuarios, colocas los ruts
+POST http://localhost:8081/api/usuarios/admin/recordatorios
+{
+  "tipo": "reserva",
+  "destinatarios": ["11111111-1"],
+  "mensaje": "Recordatorio de prueba"
+}
+-----
+recordatorio individual
+POST  http://localhost:8081/api/usuarios/recordatorios/individual
+{
+  "rut": "11111111-1",
+  "titulo": "Recordatorio de Reserva",
+  "mensaje": "Tu reserva es mañana a las 15:00 en la cancha 1. ¡No olvides asistir!",
+  "idReserva": 1
+}
+-----
+obtener las transacciones 
+GET  http://localhost:8081/api/transacciones
+-----
+obtener las estadisticas
+GET  http://localhost:8081/api/transacciones/estadisticas
+-----
+obtener notificaciones (va con el id usuario)
+GET http://localhost:8081/api/notificaciones/historial/1
