@@ -10,7 +10,8 @@ export class AuthController {
   constructor(
     private readonly authService: AuthService,
     private readonly usuarioService: UsuarioService,
-  ) {}  @Post('login')
+  ) {}  
+  @Post('login')
 async login(@Body() loginDto: LoginDto) {
   console.log('Login request received:', loginDto);
   try {

@@ -44,7 +44,7 @@ export class AuthService {
       is_admin: usuario.is_admin           
     };
       return {
-      access_token: this.jwtService.sign(payload, { expiresIn: '24h' }),
+      token: this.jwtService.sign(payload, { expiresIn: '24h' }),
       user: {
         id_usuario: usuario.id_usuario,         
         rut: usuario.rut,

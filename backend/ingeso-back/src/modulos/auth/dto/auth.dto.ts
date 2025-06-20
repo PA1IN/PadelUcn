@@ -38,7 +38,7 @@ export class RegisterDto {
 }
 
 export class LoginResponseDto {
-  access_token: string;
+  token: string;
   user: {
     id_usuario: number;  
     rut: string;
