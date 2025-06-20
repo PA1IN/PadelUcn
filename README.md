@@ -746,3 +746,6 @@ GET  http://localhost:8081/api/transacciones/estadisticas
 -----
 obtener notificaciones (va con el id usuario)
 GET http://localhost:8081/api/notificaciones/historial/1
+-----
+obtener el perfil pero de forma automatica ya que lo identifica por el token
+GET http://localhost:8081/api/auth/profile
