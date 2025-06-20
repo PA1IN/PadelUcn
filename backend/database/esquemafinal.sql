@@ -61,7 +61,11 @@ CREATE TABLE IF NOT EXISTS reserva(
     id_cancha INT NOT NULL,
     id_usuario INT NOT NULL,
     id_bloque INT,
+<<<<<<< Updated upstream
     existe BOOLEAN
+=======
+    existe BOOLEAN,
+>>>>>>> Stashed changes
     FOREIGN KEY (id_cancha) REFERENCES cancha(id_cancha) ON DELETE CASCADE,
     FOREIGN KEY (id_usuario) REFERENCES usuario(id_usuario) ON DELETE CASCADE,
     FOREIGN KEY (id_bloque) REFERENCES bloque(id_bloque) ON DELETE SET NULL
