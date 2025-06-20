@@ -30,7 +30,7 @@ export default function Login() {
 
     login.mutate({
       rut,
-      contraseña: password,
+      contrasena: password,
     })
   }
 
