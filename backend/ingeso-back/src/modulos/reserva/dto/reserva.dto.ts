@@ -4,15 +4,19 @@ import { CreateJugadorDto } from '../../jugador/dto/jugador.dto';
 
 export class EquipamientoReservaDto {
   @IsNotEmpty({ message: 'El ID del equipamiento es requerido' })
-  @IsNumber({}, { message: 'El ID del equipamiento debe ser un número' })
-  @Min(1, { message: 'El ID del equipamiento debe ser mayor a 0' })
-  id_equipamiento: number;
+  @IsNumber({}, { message: 'El ID debe ser un número' })
+  id: number; 
 
   @IsNotEmpty({ message: 'La cantidad es requerida' })
   @IsNumber({}, { message: 'La cantidad debe ser un número' })
   @Min(1, { message: 'La cantidad debe ser mayor a 0' })
   @Max(10, { message: 'La cantidad máxima es 10' })
   cantidad: number;
+
+  
+  @IsOptional()
+  @IsNumber({}, { message: 'El costo debe ser un número' })
+  costo?: number; 
 }
 
 export class CreateReservaDto {

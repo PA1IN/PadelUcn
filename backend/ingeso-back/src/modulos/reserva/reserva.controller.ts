@@ -93,6 +93,31 @@ export class ReservaController {
       );
     }
   }
+    @Get('usuario/:rut')
+  async findByUsuario(@Param('rut') rut: string, @Request() req) {
+    try {
+      // Solo permitir ver las reservas si es admin o es el mismo usuario
+      if (!req.user.is_admin && req.user.rut !== rut) {
+        return CreateResponse(
+          'No tienes permisos para ver estas reservas',
+          null,
+          'FORBIDDEN',
+          'Acceso denegado',
+          false
+        );
+      }
+      
+    return await this.reservaService.findByUsuario(rut);
+    } catch (error) {
+      return CreateResponse(
+        'Error al obtener las reservas del usuario',
+        null,
+        'BAD_REQUEST',
+        error.message,
+        false
+      );
+    }
+  }
 
   @Patch(':id')
   async update(
@@ -166,32 +191,6 @@ export class ReservaController {
     } catch (error) {
       return CreateResponse(
         'Error al cancelar la reserva',
-        null,
-        'BAD_REQUEST',
-        error.message,
-        false
-      );
-    }
-  }
-
-  @Get('usuario/:rut')
-  async findByUsuario(@Param('rut') rut: string, @Request() req) {
-    try {
-      // Solo permitir ver las reservas si es admin o es el mismo usuario
-      if (!req.user.is_admin && req.user.rut !== rut) {
-        return CreateResponse(
-          'No tienes permisos para ver estas reservas',
-          null,
-          'FORBIDDEN',
-          'Acceso denegado',
-          false
-        );
-      }
-      
-    return await this.reservaService.findByUsuario(rut);
-    } catch (error) {
-      return CreateResponse(
-        'Error al obtener las reservas del usuario',
         null,
         'BAD_REQUEST',
         error.message,

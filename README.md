@@ -199,7 +199,7 @@ Verifica disponibilidad de una cancha en fecha específica
 
 ## 📅 SISTEMA DE RESERVAS
 
-### **POST** `/api/reservas`
+### **POST** `/api/reserva`
 🔒 *Requiere autenticación*
 
 Crea una nueva reserva
@@ -207,31 +207,13 @@ Crea una nueva reserva
 **Request Body:**
 ```json
 {
-  "rut_usuario": "22222222-2",
+  "rut_usuario": "11111111-1",
   "numero_cancha": 1,
   "fecha": "2024-12-25",
   "hora_inicio": "10:00",
-  "hora_termino": "11:30",
-  "equipamiento": [
-    {
-      "id_equipamiento": 1,
-      "cantidad": 2
-    },
-    {
-      "id_equipamiento": 3,
-      "cantidad": 1
-    }
-  ],
-  "jugadores": [
-    {
-      "nombre": "Juan Pérez",
-      "telefono": "+56912345678"
-    },
-    {
-      "nombre": "María González",
-      "telefono": "+56987654321"
-    }
-  ]
+  "hora_termino": "12:00",
+  "equipamiento": [],
+  "jugadores": []
 }
 ```
 
@@ -241,405 +223,100 @@ Crea una nueva reserva
   "statusCode": 201,
   "message": "Reserva creada exitosamente",
   "data": {
-    "reserva": {
-      "id": "RES-2024-001",
+    "id": 1,
+    "fecha": "2024-12-25",
+    "hora_inicio": "10:00",
+    "hora_termino": "12:00",
+    "estado": "PENDIENTE",
+    "cancha": {
+      "numero": 1,
+      "nombre": "Cancha Principal"
+    },
+    "usuario": {
+      "nombre_usuario": "Admin Usuario",
+      "rut": "11111111-1"
+    }
+  },
+  "success": true
+}
+```
+
+### **GET** `/api/reservas`
+🔒 *Requiere autenticación y rol admin*
+
+Obtiene todas las reservas del sistema
+
+**Headers:**
+```
+Authorization: Bearer {token}
+```
+
+**Response Success (200):**
+```json
+{
+  "statusCode": 200,
+  "message": "Reservas encontradas",
+  "data": [
+    {
+      "id": 1,
       "fecha": "2024-12-25",
       "hora_inicio": "10:00",
-      "hora_termino": "11:30",
+      "hora_termino": "12:00",
+      "estado": "PENDIENTE",
       "cancha": {
         "numero": 1,
         "nombre": "Cancha Principal"
       },
       "usuario": {
-        "nombre": "Usuario Regular",
-        "rut": "22222222-2"
+        "nombre_usuario": "Admin Usuario",
+        "rut": "11111111-1"
       }
-    },
-    "equipamiento": [
-      {
-        "nombre": "Raqueta Premium",
-        "cantidad": 2,
-        "costo_unitario": 5000,
-        "subtotal": 10000
-      }
-    ],
-    "jugadores": [
-      {
-        "nombre": "Juan Pérez",
-        "telefono": "+56912345678"
-      }
-    ],
-    "costo_total": 15000
-  },
-  "success": true
-}
-```
-
-### **GET** `/api/reservas/usuario/{rut}`
-🔒 *Requiere autenticación*
-
-Obtiene las reservas de un usuario específico
-
-**Response Success (200):**
-```json
-{
-  "statusCode": 200,
-  "message": "Reservas encontradas para el usuario 22222222-2",
-  "data": [
-    {
-      "id_reserva": "RES-2024-001",
-      "fecha": "2024-12-25",
-      "hora_inicio": "10:00",
-      "hora_termino": "11:30",
-      "estado": "Confirmada",
-      "cancha": {
-        "numero": 1,
-        "nombre": "Cancha Principal"
-      },
-      "costo_total": 15000
     }
   ],
   "success": true
 }
 ```
 
-### **PUT** `/api/reservas/{id}/estado`
-🔒 *Requiere autenticación y rol admin*
+### **PATCH** `/api/reserva/{id}`
+🔒 *Requiere autenticación*
 
-Actualiza el estado de una reserva
+Modifica una reserva existente
 
 **Request Body:**
 ```json
 {
-  "estado": "Confirmada",
-  "observaciones": "Reserva confirmada - Pago verificado"
+  "hora_inicio": "14:00",
+  "hora_termino": "16:00"
 }
 ```
-
----
-
-## 🛠️ EQUIPAMIENTO
-
-### **GET** `/api/equipamiento`
-Obtiene todo el equipamiento disponible
 
 **Response Success (200):**
 ```json
 {
   "statusCode": 200,
-  "message": "Equipamiento obtenido exitosamente",
-  "data": [
-    {
-      "id_equipamiento": 1,
-      "nombre": "Raqueta Premium",
-      "tipo": "Raqueta",
-      "descripcion": "Raqueta profesional de fibra de carbono",
-      "costo": 5000,
-      "stock": 10,
-      "disponible": true
-    },
-    {
-      "id_equipamiento": 2,
-      "nombre": "Pelotas Wilson",
-      "tipo": "Pelota",
-      "descripcion": "Set de 3 pelotas oficiales",
-      "costo": 2000,
-      "stock": 25,
-      "disponible": true
-    }
-  ],
-  "success": true
-}
-```
-
-### **GET** `/api/equipamiento/disponibilidad?fecha=2024-12-20&hora_inicio=10:00&hora_termino=11:30`
-Verifica disponibilidad de equipamiento para un horario específico
-
-**Response Success (200):**
-```json
-{
-  "statusCode": 200,
-  "message": "Disponibilidad de equipamiento verificada",
-  "data": [
-    {
-      "id_equipamiento": 1,
-      "nombre": "Raqueta Premium",
-      "stock_total": 10,
-      "reservado": 2,
-      "disponible": 8
-    }
-  ],
-  "success": true
-}
-```
-
----
-
-## 📊 ADMINISTRACIÓN (Solo Admins)
-
-### **GET** `/api/transacciones/estadisticas`
-🔒 *Requiere autenticación y rol admin*
-
-Obtiene estadísticas generales del sistema
-
-**Response Success (200):**
-```json
-{
-  "statusCode": 200,
-  "message": "Estadísticas obtenidas exitosamente",
+  "message": "Reserva actualizada exitosamente",
   "data": {
-    "cant_reservas_hoy": 5,
-    "cant_reservas_mes": 47,
-    "cant_reservas_pendientes": 3,
-    "cant_reservas_confirmadas": 44,
-    "cant_transacciones_hoy": 5,
-    "cant_transacciones_mes": 47,
-    "ingresos_hoy": 75000,
-    "ingresos_mes": 850000,
-    "clientes_activos": 23
+    "id": 1,
+    "fecha": "2024-12-25",
+    "hora_inicio": "14:00",
+    "hora_termino": "16:00",
+    "estado": "PENDIENTE"
   },
   "success": true
 }
 ```
 
-### **GET** `/api/transacciones`
-🔒 *Requiere autenticación y rol admin*
-
-Obtiene todas las transacciones del sistema
-
-**Response Success (200):**
-```json
-{
-  "statusCode": 200,
-  "message": "47 transacciones encontradas",
-  "data": [
-    {
-      "id_transaccion": 1,
-      "fecha": "2024-12-20",
-      "reserva": {
-        "id_reserva": "RES-2024-001",
-        "fecha": "2024-12-25",
-        "hora_inicio": "10:00",
-        "hora_termino": "11:30",
-        "usuario": {
-          "nombre": "Usuario Regular",
-          "rut": "22222222-2"
-        },
-        "cancha": {
-          "nombre": "Cancha Principal"
-        }
-      },
-      "monto_total": 15000
-    }
-  ],
-  "success": true
-}
-```
-
-### **GET** `/api/transacciones/periodo?fechaInicio=2024-12-01&fechaFin=2024-12-31`
-🔒 *Requiere autenticación y rol admin*
-
-Obtiene transacciones por período con resumen de ingresos
-
-**Response Success (200):**
-```json
-{
-  "statusCode": 200,
-  "message": "Transacciones del período 2024-12-01 - 2024-12-31",
-  "data": [
-    {
-      "fecha": "2024-12-20",
-      "total_transacciones": 5,
-      "ingresos_totales": 75000
-    },
-    {
-      "fecha": "2024-12-19",
-      "total_transacciones": 3,
-      "ingresos_totales": 45000
-    }
-  ],
-  "success": true
-}
-```
-
-### **GET** `/api/usuarios/admin/todos`
-🔒 *Requiere autenticación y rol admin*
-
-Obtiene todos los usuarios del sistema
-
-**Response Success (200):**
-```json
-{
-  "statusCode": 200,
-  "message": "Usuarios obtenidos exitosamente",
-  "data": [
-    {
-      "id_usuario": 1,
-      "rut": "11111111-1",
-      "nombre_usuario": "Admin Usuario",
-      "correo": "admin@padelucn.cl",
-      "saldo": 100000,
-      "is_admin": true,
-      "total_reservas": 0
-    },
-    {
-      "id_usuario": 2,
-      "rut": "22222222-2",
-      "nombre_usuario": "Usuario Regular",
-      "correo": "usuario@example.com",
-      "saldo": 25000,
-      "is_admin": false,
-      "total_reservas": 5
-    }
-  ],
-  "success": true
-}
-```
-
 ---
 
-## 📱 NOTIFICACIONES
+## 👥 GESTIÓN DE JUGADORES
 
-### **GET** `/api/usuarios/notificaciones`
+### **POST** `/api/jugador/batch`
 🔒 *Requiere autenticación*
 
-Obtiene las notificaciones del usuario
+Agrega múltiples jugadores a una reserva
 
-**Response Success (200):**
+**Request Body:**
 ```json
-{
-  "statusCode": 200,
-  "message": "Notificaciones obtenidas exitosamente",
-  "data": [
-    {
-      "id": 1,
-      "titulo": "Reserva Confirmada",
-      "mensaje": "Tu reserva para el 25/12/2024 a las 10:00 ha sido confirmada",
-      "tipo": "confirmacion",
-      "leida": false,
-      "fecha": "2024-12-20T10:00:00Z"
-    },
-    {
-      "id": 2,
-      "titulo": "Recordatorio",
-      "mensaje": "Tu reserva es mañana a las 10:00 en Cancha Principal",
-      "tipo": "recordatorio",
-      "leida": true,
-      "fecha": "2024-12-24T18:00:00Z"
-    }
-  ],
-  "success": true
-}
-```
-
----
-
-## 🚨 CÓDIGOS DE ERROR COMUNES
-
-| Código | Mensaje | Descripción |
-|--------|---------|-------------|
-| 400 | Bad Request | Datos de entrada inválidos |
-| 401 | Unauthorized | Token JWT inválido o faltante |
-| 403 | Forbidden | Sin permisos para esta acción |
-| 404 | Not Found | Recurso no encontrado |
-| 409 | Conflict | Conflicto (ej: horario ya reservado) |
-| 422 | Unprocessable Entity | Validación de datos fallida |
-| 500 | Internal Server Error | Error interno del servidor |
-
-## 🔧 CONFIGURACIÓN DE DESARROLLO
-
-### Variables de Entorno
-```env
-# Base de datos
-DATABASE_HOST=localhost
-DATABASE_PORT=5432
-DATABASE_USER=ingeso
-DATABASE_PASSWORD=12342
-DATABASE_NAME=padelucn
-
-# JWT
-JWT_SECRET=tu_jwt_secret_key
-JWT_EXPIRES_IN=24h
-
-# Servidor
-PORT=8081
-NODE_ENV=development
-```
-
-### Comandos Útiles
-```bash
-# Reiniciar base de datos
-docker-compose down padelucn-postgres
-docker-compose up -d padelucn-postgres
-
-# Ver logs
-docker-compose logs padelucn-backend
-docker-compose logs padelucn-postgres
-
-# Ejecutar migraciones
-npm run migration:run
-
-# Generar nuevas migraciones
-npm run migration:generate -- -n NombreMigracion
-```
-
----
-
-## 🏗️ ARQUITECTURA DEL SISTEMA
-
-```
-├── 🗄️ Base de Datos (PostgreSQL)
-│   ├── usuarios
-│   ├── canchas
-│   ├── reservas
-│   ├── equipamiento
-│   ├── boleta_equipamiento
-│   ├── transacciones
-│   └── historial_reservas
-│
-├── 🔧 Backend (NestJS + TypeORM)
-│   ├── Autenticación JWT
-│   ├── Validaciones con class-validator
-│   ├── Manejo de errores centralizado
-│   └── API RESTful
-│
-└── 🌐 Endpoints
-    ├── /api/auth (Autenticación)
-    ├── /api/usuarios (Gestión de usuarios)
-    ├── /api/canchas (Gestión de canchas)
-    ├── /api/reservas (Sistema de reservas)
-    ├── /api/equipamiento (Gestión de equipamiento)
-    └── /api/transacciones (Administración)
-```
-
----
-
-## 📞 SOPORTE
-
-Para soporte técnico o reportar bugs, contactar a:
-- **Email**: soporte@padelucn.cl
-- **Teléfono**: +56 55 235 5000
-
----
-
-**¡Sistema PadelUCN - Reserva tu cancha fácil y rápido! 🏓**
-
-
-Aqui te dejo las que ocupe yo:
------
-LOGIN ADMIN
-POST  http://localhost:8081/api/auth/login
-{
-  "rut": "11111111-1",
-  "contrasena": "admin123"
-}
------
-Obtener reservas
-GET   http://localhost:8081/api/reservas
------
-Colocar jugadores
-POST  http://localhost:8081/api/jugador/batch
-
 [
   {
     "nombre": "Juan",
@@ -656,17 +333,436 @@ POST  http://localhost:8081/api/jugador/batch
     "id_reserva": 1
   }
 ]
------
-Actualiza equipamiento 
-POST  http://localhost:8081/api/boleta-equipamiento
+```
 
+**Response Success (201):**
+```json
+{
+  "statusCode": 201,
+  "message": "Jugadores creados exitosamente",
+  "data": [
+    {
+      "id_jugador": 1,
+      "nombre": "Juan",
+      "apellido": "Pérez",
+      "rut": "12345678-9",
+      "edad": 25,
+      "id_reserva": 1
+    },
+    {
+      "id_jugador": 2,
+      "nombre": "María",
+      "apellido": "González", 
+      "rut": "98765432-1",
+      "edad": 28,
+      "id_reserva": 1
+    }
+  ],
+  "success": true
+}
+```
+
+---
+
+## 🛠️ GESTIÓN DE EQUIPAMIENTO
+
+### **GET** `/api/equipamiento`
+Obtiene todo el equipamiento disponible
+
+**Response Success (200):**
+```json
+{
+  "statusCode": 200,
+  "message": "Equipamiento obtenido exitosamente",
+  "data": [
+    {
+      "id": 1,
+      "nombre": "Raqueta Premium",
+      "tipo": "Raqueta",
+      "costo": 5000,
+      "stock": 10
+    },
+    {
+      "id": 2,
+      "nombre": "Pelotas Wilson",
+      "tipo": "Pelota",
+      "costo": 2000,
+      "stock": 25
+    }
+  ],
+  "success": true
+}
+```
+
+### **POST** `/api/boleta-equipamiento`
+🔒 *Requiere autenticación*
+
+Agrega equipamiento a una reserva existente
+
+**Request Body:**
+```json
 {
   "id_reserva": 1,
   "id_equipamiento": 1,
   "cantidad": 2
 }
------
-hacer reserva
+```
+
+**Response Success (201):**
+```json
+{
+  "statusCode": 201,
+  "message": "Equipamiento agregado a la reserva",
+  "data": {
+    "id": 1,
+    "cantidad": 2,
+    "montoTotal": 10000,
+    "equipamiento": {
+      "nombre": "Raqueta Premium",
+      "costo": 5000
+    }
+  },
+  "success": true
+}
+```
+
+---
+
+## 👤 GESTIÓN DE USUARIOS (PERFIL)
+
+### **GET** `/api/auth/profile`
+🔒 *Requiere autenticación*
+
+Obtiene el perfil del usuario autenticado automáticamente por token
+
+**Headers:**
+```
+Authorization: Bearer {token}
+```
+
+**Response Success (200):**
+```json
+{
+  "statusCode": 200,
+  "message": "Perfil obtenido exitosamente",
+  "data": {
+    "id_usuario": 1,
+    "rut": "11111111-1",
+    "nombre_usuario": "Admin Usuario",
+    "correo": "admin@padelucn.cl",
+    "telefono": "+56911111111",
+    "saldo": 100000,
+    "is_admin": true,
+    "created_at": "2024-12-20T10:00:00.000Z"
+  },
+  "success": true
+}
+```
+
+---
+
+## 📊 ADMINISTRACIÓN (Solo Admins)
+
+### **GET** `/api/usuarios/admin/equipamientos`
+🔒 *Requiere autenticación y rol admin*
+
+Obtiene equipamientos para gestión administrativa
+
+**Response Success (200):**
+```json
+{
+  "statusCode": 200,
+  "message": "Equipamientos obtenidos",
+  "data": [
+    {
+      "id": 1,
+      "nombre": "Raqueta Premium",
+      "tipo": "Raqueta",
+      "stock": 10,
+      "costo": 5000,
+      "reservas_activas": 2
+    }
+  ],
+  "success": true
+}
+```
+
+### **GET** `/api/usuarios/admin/clientes`
+🔒 *Requiere autenticación y rol admin*
+
+Obtiene todos los clientes del sistema
+
+**Response Success (200):**
+```json
+{
+  "statusCode": 200,
+  "message": "Clientes obtenidos exitosamente",
+  "data": [
+    {
+      "id_usuario": 2,
+      "rut": "22222222-2",
+      "nombre": "Usuario Regular",
+      "correo": "usuario@example.com",
+      "saldo": 25000,
+      "total_reservas": 5,
+      "is_admin": false
+    }
+  ],
+  "success": true
+}
+```
+
+### **POST** `/api/usuarios/admin/clientes`
+🔒 *Requiere autenticación y rol admin*
+
+Crea un nuevo cliente desde administración
+
+**Request Body:**
+```json
+{
+  "rut": "12345678-9",
+  "nombre": "Juan Pérez",
+  "correo": "juan@email.com",
+  "telefono": "987654321",
+  "contraseña": "password123",
+  "saldo": 50000,
+  "is_admin": false
+}
+```
+
+### **POST** `/api/usuarios/admin/canchas`
+🔒 *Requiere autenticación y rol admin*
+
+Crea una nueva cancha desde administración
+
+**Request Body:**
+```json
+{
+  "numero": 9,
+  "nombre": "Cancha Notificada",
+  "descripcion": "Cancha que notifica a usuarios",
+  "valor": 45000,
+  "cantidad_max_jugadores": 4
+}
+```
+
+---
+
+## 📱 SISTEMA DE NOTIFICACIONES
+
+### **POST** `/api/usuarios/recordatorios/individual`
+🔒 *Requiere autenticación*
+
+Envía recordatorio individual a un usuario específico
+
+**Request Body:**
+```json
+{
+  "rut": "11111111-1",
+  "titulo": "Recordatorio de Reserva",
+  "mensaje": "Tu reserva es mañana a las 15:00 en la cancha 1. ¡No olvides asistir!",
+  "idReserva": 1
+}
+```
+
+### **POST** `/api/usuarios/recordatorios/masivo`
+🔒 *Requiere autenticación y rol admin*
+
+Envía recordatorios masivos a múltiples usuarios
+
+**Request Body:**
+```json
+{
+  "ruts": ["12345678-9", "98765432-1", "11111111-1"],
+  "titulo": "Mantenimiento de Canchas",
+  "mensaje": "Estimado cliente, las canchas estarán cerradas el sábado 18 de enero por mantenimiento. Gracias por su comprensión."
+}
+```
+
+### **POST** `/api/usuarios/admin/recordatorios`
+🔒 *Requiere autenticación y rol admin*
+
+Envía recordatorios administrativos
+
+**Request Body:**
+```json
+{
+  "tipo": "reserva",
+  "destinatarios": ["11111111-1"],
+  "mensaje": "Recordatorio de prueba"
+}
+```
+
+### **GET** `/api/notificaciones/historial/{id_usuario}`
+🔒 *Requiere autenticación*
+
+Obtiene el historial de notificaciones de un usuario
+
+**Response Success (200):**
+```json
+{
+  "statusCode": 200,
+  "message": "Historial de notificaciones obtenido",
+  "data": [
+    {
+      "id": 1,
+      "titulo": "Recordatorio de Reserva",
+      "mensaje": "Tu reserva es mañana a las 15:00",
+      "fecha": "2024-12-20T10:00:00.000Z",
+      "leida": false
+    }
+  ],
+  "success": true
+}
+```
+
+---
+
+## 💰 GESTIÓN DE SALDO
+
+### **GET** `/api/auth/saldo`
+🔒 *Requiere autenticación*
+
+Obtiene el saldo actual del usuario autenticado
+
+**Headers:**
+```
+Authorization: Bearer {token}
+```
+
+**Response Success (200):**
+```json
+{
+  "statusCode": 200,
+  "message": "Saldo obtenido exitosamente",
+  "data": {
+    "saldo": 50000
+  },
+  "success": true
+}
+```
+
+**Response Error (401):**
+```json
+{
+  "statusCode": 401,
+  "message": "Token no válido",
+  "data": null,
+  "success": false,
+  "error": "Unauthorized"
+}
+```
+
+### **PATCH** `/api/auth/saldo`
+🔒 *Requiere autenticación*
+
+Actualiza el saldo del usuario autenticado
+
+**Headers:**
+```
+Authorization: Bearer {token}
+```
+
+**Request Body:**
+```json
+{
+  "nuevoSaldo": 75000,
+  "transaccion": "Recarga de saldo: $25.000"
+}
+```
+
+**Response Success (200):**
+```json
+{
+  "statusCode": 200,
+  "message": "Saldo actualizado exitosamente",
+  "data": {
+    "saldo_anterior": 50000,
+    "saldo_nuevo": 75000,
+    "diferencia": 25000,
+    "transaccion": "Recarga de saldo: $25.000"
+  },
+  "success": true
+}
+```
+
+**Response Error (400):**
+```json
+{
+  "statusCode": 400,
+  "message": "Error al actualizar saldo",
+  "data": null,
+  "success": false,
+  "error": "Saldo insuficiente o datos inválidos"
+}
+```
+
+### **POST** `/api/usuarios/cargar-saldo`
+🔒 *Requiere autenticación*
+
+Carga saldo a la cuenta del usuario autenticado (simulación de pago)
+
+**Headers:**
+```
+Authorization: Bearer {token}
+```
+
+**Request Body:**
+```json
+{
+  "monto": 50000,
+  "datosPago": {
+    "metodoPago": "tarjeta_credito",
+    "numeroTarjeta": "****1234",
+    "codigoTransaccion": "TXN123456789"
+  }
+}
+```
+
+**Response Success (201):**
+```json
+{
+  "statusCode": 201,
+  "message": "Saldo cargado exitosamente",
+  "data": {
+    "saldo_anterior": 25000,
+    "saldo_nuevo": 75000,
+    "monto_cargado": 50000,
+    "transaccion": "Recarga de saldo: $50.000",
+    "fecha": "2024-12-20T15:30:00.000Z"
+  },
+  "success": true
+}
+```
+
+**Response Error (400):**
+```json
+{
+  "statusCode": 400,
+  "message": "El monto debe ser mayor que cero",
+  "data": null,
+  "success": false,
+  "error": "Monto inválido"
+}
+```
+
+---
+
+## 🧪 ENDPOINTS DE TEST UTILIZADOS
+
+```http
+# 1. LOGIN ADMIN
+POST http://localhost:8081/api/auth/login
+{
+  "rut": "11111111-1",
+  "contrasena": "admin123"
+}
+
+# 2. OBTENER PERFIL AUTOMÁTICO
+GET http://localhost:8081/api/auth/profile
+Authorization: Bearer {token}
+
+# 3. CREAR RESERVA
 POST http://localhost:8081/api/reserva
 {
   "fecha": "2024-12-25",
@@ -677,75 +773,35 @@ POST http://localhost:8081/api/reserva
   "equipamiento": [],
   "jugadores": []
 }
------
-modificar reserva (se da el id reserva)
-PATCH  http://localhost:8081/api/reserva/1
+
+# 4. OBTENER TODAS LAS RESERVAS (ADMIN)
+GET http://localhost:8081/api/reservas
+Authorization: Bearer {token}
+
+# 5. MODIFICAR RESERVA
+PATCH http://localhost:8081/api/reserva/1
 {
   "hora_inicio": "14:00",
   "hora_termino": "16:00"
 }
------
-Recordatorios masivos
-POST  http://localhost:8081/api/usuarios/recordatorios/masivo
+
+# 6. AGREGAR JUGADORES
+POST http://localhost:8081/api/jugador/batch
+[
+  {
+    "nombre": "Juan",
+    "apellido": "Pérez", 
+    "rut": "12345678-9",
+    "edad": 25,
+    "id_reserva": 1
+  }
+]
+
+# 7. AGREGAR EQUIPAMIENTO
+POST http://localhost:8081/api/boleta-equipamiento
 {
-  "ruts": ["12345678-9", "98765432-1", "11111111-1"],
-  "titulo": "Mantenimiento de Canchas",
-  "mensaje": "Estimado cliente, las canchas estarán cerradas el sábado 18 de enero por mantenimiento. Gracias por su comprensión."
+  "id_reserva": 1,
+  "id_equipamiento": 1,
+  "cantidad": 2
 }
------
-Obtener rquipamientos del admin
-GET http://localhost:8081/api/usuarios/admin/equipamientos
------
-obtener clientes del admin
-GET  http://localhost:8081/api/usuarios/admin/clientes
------
-crear usuario cliente desde el admin
-POST  http://localhost:8081/api/usuarios/admin/clientes
-{
-  "rut": "12345678-9",
-  "nombre": "Juan Pérez",
-  "correo": "juan@email.com",
-  "telefono": "987654321",
-  "contraseña": "password123",
-  "saldo": 50000,
-  "is_admin": false
-}
------
-crear canchas desde el admin
-POST http://localhost:8081/api/usuarios/admin/canchas
-{
-  "numero": 9,
-  "nombre": "Cancha Notificada",
-  "descripcion": "Cancha que notifica a usuarios",
-  "valor": 45000,
-  "cantidad_max_jugadores": 4
-}
------
-recordatorios para varios usuarios, colocas los ruts
-POST http://localhost:8081/api/usuarios/admin/recordatorios
-{
-  "tipo": "reserva",
-  "destinatarios": ["11111111-1"],
-  "mensaje": "Recordatorio de prueba"
-}
------
-recordatorio individual
-POST  http://localhost:8081/api/usuarios/recordatorios/individual
-{
-  "rut": "11111111-1",
-  "titulo": "Recordatorio de Reserva",
-  "mensaje": "Tu reserva es mañana a las 15:00 en la cancha 1. ¡No olvides asistir!",
-  "idReserva": 1
-}
------
-obtener las transacciones 
-GET  http://localhost:8081/api/transacciones
------
-obtener las estadisticas
-GET  http://localhost:8081/api/transacciones/estadisticas
------
-obtener notificaciones (va con el id usuario)
-GET http://localhost:8081/api/notificaciones/historial/1
------
-obtener el perfil pero de forma automatica ya que lo identifica por el token
-GET http://localhost:8081/api/auth/profile
+```

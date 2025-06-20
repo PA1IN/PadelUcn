@@ -40,9 +40,10 @@ export class ReservaService {
     private readonly jugadorRepository: Repository<Jugador>,
     private historialReservaService: HistorialReservaService,
     private readonly notificacionesService: NotificacionesService,
-    private readonly transaccionService: TransaccionService, // ✅ AGREGAR
+    private readonly transaccionService: TransaccionService, 
   ) {}
 
+  // ✅ MÉTODO CREATE PRINCIPAL (MANTENER SOLO ESTE)
   async create(createReservaDto: CreateReservaDto, isAdmin: boolean = false): Promise<ApiResponse<Reserva>> {
     try {
       const fecha = new Date(createReservaDto.fecha);
@@ -200,11 +201,11 @@ export class ReservaService {
       if (Array.isArray(createReservaDto.equipamiento) && createReservaDto.equipamiento.length > 0) {
         for (const item of createReservaDto.equipamiento) {
           const equipamiento = await this.equipamientoRepository.findOne({
-            where: { id: item.id_equipamiento }
+            where: { id: item.id } // ✅ USAR 'id' NO 'id_equipamiento'
           });
 
           if (!equipamiento) {
-            throw new BadRequestException(`Equipamiento con ID ${item.id_equipamiento} no encontrado`);
+            throw new BadRequestException(`Equipamiento con ID ${item.id} no encontrado`);
           }
 
           // Verificar stock
@@ -218,7 +219,7 @@ export class ReservaService {
           // Crear boleta de equipamiento
           const nuevaBoleta = this.boletaEquipamientoRepository.create({
             reserva: { id: savedReserva.id },
-            equipamiento: { id: item.id_equipamiento }, 
+            equipamiento: { id: item.id }, // ✅ USAR 'id'
             cantidad: item.cantidad,
             montoTotal: costoItem,
           });
@@ -229,21 +230,20 @@ export class ReservaService {
           equipamiento.stock -= item.cantidad;
           await this.equipamientoRepository.save(equipamiento);
         }
-
-        // Verificar saldo para el equipamiento
-        if (!isAdmin && usuario.saldo < costoTotalEquipamiento) {
-          // Revertir la reserva y lanzar error
-          await this.reservaRepository.delete(savedReserva.id);
-          throw new BadRequestException(`Saldo insuficiente para el equipamiento. Saldo actual: $${usuario.saldo}, Costo: $${costoTotalEquipamiento}`);
-        }
-
-        // Procesar el pago del equipamiento
-        if (!isAdmin && costoTotalEquipamiento > 0) {
-          usuario.saldo -= costoTotalEquipamiento;
-          await this.usuarioRepository.save(usuario);
-        }
       }
 
+      // Verificar saldo para el equipamiento
+      if (!isAdmin && usuario.saldo < costoTotalEquipamiento) {
+        // Revertir la reserva y lanzar error
+        await this.reservaRepository.delete(savedReserva.id);
+        throw new BadRequestException(`Saldo insuficiente para el equipamiento. Saldo actual: $${usuario.saldo}, Costo: $${costoTotalEquipamiento}`);
+      }
+
+      // Procesar el pago del equipamiento
+      if (!isAdmin && costoTotalEquipamiento > 0) {
+        usuario.saldo -= costoTotalEquipamiento;
+        await this.usuarioRepository.save(usuario);
+      }
       // Obtener la reserva completa con todas las relaciones
       const reservaCompleta = await this.reservaRepository.findOne({
         where: { id: savedReserva.id },
@@ -624,11 +624,11 @@ export class ReservaService {
         let costoTotalEquipamiento = 0;
         for (const item of updateReservaDto.equipamiento) {
           const equipamiento = await this.equipamientoRepository.findOne({
-            where: { id: item.id_equipamiento }
+            where: { id: item.id }
           });
 
           if (!equipamiento) {
-            throw new BadRequestException(`Equipamiento con ID ${item.id_equipamiento} no encontrado`);
+            throw new BadRequestException(`Equipamiento con ID ${item.id} no encontrado`);
           }
 
           // Verificar stock
@@ -641,8 +641,8 @@ export class ReservaService {
 
           // Crear boleta de equipamiento
           const nuevaBoleta = this.boletaEquipamientoRepository.create({
-            reserva: { id: id }, // ✅ CORREGIR: usar objeto reserva
-            equipamiento: { id: item.id_equipamiento },
+            reserva: { id: id }, 
+            equipamiento: { id: item.id},
             cantidad: item.cantidad,
             montoTotal: costoItem,
           });
@@ -1157,14 +1157,14 @@ export class ReservaService {
         }
       }
 
-      // ✅ ACTUALIZAR ESTADO A CANCELADA
+      
       reserva.estado = 'CANCELADA';
       await this.reservaRepository.save(reserva);
 
-      // ✅ CREAR HISTORIAL (USAR ESTADO CONSISTENTE)
+      
       try {
         await this.historialReservaService.create({
-          estado: 'CANCELADA', // ✅ CONSISTENTE CON ENUM
+          estado: 'CANCELADA', 
           idReserva: idReserva,
           idUsuario: idUsuario,
           observaciones: motivo
@@ -1173,7 +1173,7 @@ export class ReservaService {
         console.error('Error al crear historial (no crítico):', historialError);
       }
 
-      // ✅ CREAR NOTIFICACIÓN
+      
       try {
         await this.notificacionesService.create({
           titulo: 'Reserva Cancelada ❌',
@@ -1224,7 +1224,7 @@ export class ReservaService {
         HttpStatus.BAD_REQUEST,
       );
     }
-  }
 
+  }
 }
 

@@ -83,7 +83,7 @@ CREATE TABLE IF NOT EXISTS historial_reserva(
     id_historial SERIAL PRIMARY KEY,
     estado VARCHAR NOT NULL,
     observaciones TEXT,
-    fecha_estado DATE NOT NULL,
+    fecha_estado TIMESTAMP DEFAULT CURRENT_TIMESTAMP, 
     id_reserva INT NOT NULL,
     id_usuario INT NOT NULL,
     FOREIGN KEY (id_reserva) REFERENCES reserva(id_reserva) ON DELETE CASCADE,
@@ -308,14 +308,14 @@ BEGIN
 END;
 $$ language 'plpgsql';
 -- aqui para aplicar la funcion de forma automatica
+ALTER TABLE usuario ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP;
+
 CREATE TRIGGER update_reserva_updated_at 
     BEFORE UPDATE ON reserva 
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
-
-CREATE TRIGGER update_usuario_updated_at_if_exists
+CREATE TRIGGER update_usuario_updated_at 
     BEFORE UPDATE ON usuario 
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
-
 CREATE TRIGGER update_cancha_updated_at 
     BEFORE UPDATE ON cancha 
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
