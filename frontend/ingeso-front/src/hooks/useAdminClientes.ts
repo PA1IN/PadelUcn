@@ -31,7 +31,7 @@ export function useClientes() {
     return useQuery<Cliente[], Error>({
         queryKey:["admin-clientes"],
         queryFn: async () => {
-            const {data} = await api.post("api/admin/clientes");
+            const {data} = await api.get("api/admin/clientes");
             return data.data;
         },
     })

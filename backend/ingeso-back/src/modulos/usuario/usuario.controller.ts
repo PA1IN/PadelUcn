@@ -7,11 +7,12 @@ import { Roles } from '../auth/decorators/roles.decorator';
 import { ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { Usuario } from './entities/usuario.entity';
 import { NotificacionesService } from '../notificaciones/notificaciones.service';
-import { CreateResponse } from '../../common/helpers/create-response.helper';
 import { ReservaService } from '../reserva/reserva.service';
 import { CanchaService } from '../cancha/cancha.service';
 import { EquipamientoService } from '../equipamiento/equipamiento.service';
 import { TransaccionService } from '../transaccion/transaccion.service';
+import { CustomResponse as CreateResponse } from '../../utils/custom-response.util';
+
 
 
 interface ResultadoRecordatorio {
@@ -172,6 +173,32 @@ export class UsuarioController {
       return null;
     } catch (error) {
       throw new HttpException(error.message, HttpStatus.BAD_REQUEST);
+    }
+  }
+  @Get('admin/clientes')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('admin')
+  async obtenerClientes() {
+    try {
+      // Usar método existente findAll() y filtrar
+      const usuarios = await this.usuarioService.findAll();
+      
+      // Filtrar solo clientes (no admins) si es necesario
+      const clientes = usuarios.filter(usuario => !usuario.is_admin);
+      
+      return CreateResponse(
+        `${clientes.length} clientes encontrados`,
+        clientes,
+        'OK'
+      );
+    } catch (error) {
+      return CreateResponse(
+        'Error al obtener clientes',
+        null,
+        'BAD_REQUEST',
+        error.message,
+        false
+      );
     }
   }
 

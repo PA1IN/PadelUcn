@@ -13,8 +13,8 @@ export function useEquipamiento() {
   return useQuery<Equipamiento[], Error>({
     queryKey: ['equipamientos'],
     queryFn: async () => {
-      const { data } = await api.get('/equipamientos');
-      return data;
+      const { data } = await api.get('api/equipamientos');
+      return data.data;
     },
   });
 }

@@ -42,7 +42,7 @@ export function useTodasLasReservas() {
     return useQuery<reservaAdmin[], Error>({
         queryKey: ["admin-reservas"],
         queryFn: async () => {
-            const { data } = await api.get("/api/admin/reservas")
+            const { data } = await api.get("/api/reservas")
             return data.data
         },
     })
@@ -55,7 +55,7 @@ export function useCambiarEstadoReserva() {
 
     return useMutation({
         mutationFn: async ({ idReserva, nuevoEstado }: { idReserva: number; nuevoEstado: estadoReserva}) => {
-            const { data } = await api.post(`/api/admin/reservas/${idReserva}/estado`, { estado: nuevoEstado});
+            const { data } = await api.put(`/api/reservas/${idReserva}/estado`, { estado: nuevoEstado});
             return data;
         },
         onSuccess: () => {

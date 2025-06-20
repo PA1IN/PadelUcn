@@ -60,7 +60,7 @@ export function useEstadisticasVentas() {
     return useQuery<estadisticasVentas, Error>({
         queryKey:["admin-estadisticas"],
         queryFn: async () => {
-            const { data } = await api.get("/api/admin/estadisticas")
+            const { data } = await api.get("/api/transacciones/estadisticas")
             return data.data
         },
     })
@@ -78,7 +78,7 @@ export function useHistorialTransacciones(fechaInicio?: string, fechaFin?: strin
                 params.append("fechaFin", fechaFin)
             }
 
-            const { data } = await api.get(`/api/admin/transacciones?${params.toString()}`)
+            const { data } = await api.get(`/api//transacciones?${params.toString()}`)
             return data.data
         }
     })
