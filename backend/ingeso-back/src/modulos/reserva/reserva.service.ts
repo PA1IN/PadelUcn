@@ -641,11 +641,15 @@ export class ReservaService {
           equipamiento.stock -= equipamientoDto.cantidad;
           await this.equipamientoRepository.save(equipamiento);
 
+          
+          const costoItem = equipamiento.costo * equipamientoDto.cantidad;
+
           // Crear nueva boleta
           const nuevaBoleta = this.boletaEquipamientoRepository.create({
             cantidad: equipamientoDto.cantidad,
             equipamiento: equipamiento,
-            reserva: { id: id } as Reserva
+            reserva: { id: id } as Reserva,
+            montoTotal: costoItem  
           });
 
           await this.boletaEquipamientoRepository.save(nuevaBoleta);
@@ -1013,7 +1017,7 @@ export class ReservaService {
  async confirmarReserva(idReserva: number, idUsuario: number, observaciones?: string): Promise<ApiResponse<Reserva>> {
     try {
       const reserva = await this.reservaRepository.findOne({
-        where: { id: idReserva },
+        where: { id:idReserva },
         relations: ['usuario', 'cancha']
       });
 

@@ -503,7 +503,14 @@ export class UsuarioController {
           'SUCCESS'
         );
       } else {
-        return this.enviarRecordatorioMasivoFrontend(data);
+        return this.enviarRecordatorioMasivoFrontend({
+          tipo: data.tipo,
+          ruts: data.destinatarios,
+          titulo: this.getTituloByTipo(data.tipo),
+          mensaje: data.mensaje,
+          id_reserva: data.id_reserva,
+          id_cancha: data.id_cancha
+        });
       }
     } catch (error) {
       return CreateResponse(
@@ -514,38 +521,46 @@ export class UsuarioController {
     }
   }
 
-  // POST /api/admin/recordatorios/masivo (para el front)
+
   @Post('/admin/recordatorios/masivo')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('admin')
   async enviarRecordatorioMasivoFrontend(
     @Body() data: { 
-      tipo: "reserva" | "cancha_nueva" | "pago_pendiente";
-      destinatarios: string[];
+      tipo?: "reserva" | "cancha_nueva" | "pago_pendiente" | "recordatorio";
+      ruts?: string[];
+      titulo: string;
       mensaje: string;
       id_reserva?: number;
       id_cancha?: number;
     }
   ) {
     try {
+      // Usar tipo por defecto si no se especifica
+      const tipo = data.tipo || "recordatorio";
+      
+      // Obtener todos los usuarios
+      const todosUsuarios = await this.usuarioService.findAll();
+      const destinatarios = todosUsuarios.map(u => u.rut);
+      
       const resultados: ResultadoRecordatorio[] = [];
       
-      for (const rut of data.destinatarios) {
+      for (const rut of destinatarios) {
         try {
           const usuario = await this.usuarioService.findByRut(rut);
           
           if (usuario) {
             await this.notificacionesService.create({
-              titulo: this.getTituloByTipo(data.tipo),
+              titulo: data.titulo || this.getTituloByTipo(tipo),
               mensaje: data.mensaje,
-              tipoEvento: data.tipo,
+              tipoEvento: tipo,
               idUsuario: usuario.id_usuario,
               idReserva: data.id_reserva || null
             });
             
             resultados.push({
               id: Date.now() + Math.random(),
-              tipo: data.tipo,
+              tipo: tipo,
               destinatario: rut,
               mensaje: data.mensaje,
               fecha_envio: new Date().toISOString(),
@@ -554,7 +569,7 @@ export class UsuarioController {
           } else {
             resultados.push({
               id: Date.now() + Math.random(),
-              tipo: data.tipo,
+              tipo: tipo,
               destinatario: rut,
               mensaje: data.mensaje,
               fecha_envio: new Date().toISOString(),
@@ -564,7 +579,7 @@ export class UsuarioController {
         } catch (error) {
           resultados.push({
             id: Date.now() + Math.random(),
-            tipo: data.tipo,
+            tipo: tipo,
             destinatario: rut,
             mensaje: data.mensaje,
             fecha_envio: new Date().toISOString(),
@@ -573,11 +588,12 @@ export class UsuarioController {
         }
       }
 
+      const totalUsuarios = destinatarios.length;
       const exitosos = resultados.filter(r => r.estado === 'enviado').length;
       const fallidos = resultados.filter(r => r.estado === 'fallido').length;
 
       return CreateResponse(
-        `Recordatorios masivos: ${exitosos} exitosos, ${fallidos} fallidos`,
+        `Recordatorio masivo enviado a ${totalUsuarios} usuarios: ${exitosos} exitosos, ${fallidos} fallidos`,
         resultados,
         'SUCCESS'
       );

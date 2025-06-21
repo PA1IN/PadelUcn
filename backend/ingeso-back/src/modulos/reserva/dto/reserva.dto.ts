@@ -13,6 +13,10 @@ export class EquipamientoReservaDto {
   @Max(10, { message: 'La cantidad máxima es 10' })
   cantidad: number;
 
+   @IsOptional()
+  @IsString({ message: 'El nombre debe ser un texto' })
+  nombre?: string;
+
   
   @IsOptional()
   @IsNumber({}, { message: 'El costo debe ser un número' })
@@ -81,7 +85,7 @@ export class UpdateReservaDto {
   @IsArray({ message: 'El equipamiento debe ser un arreglo' })
   @ValidateNested({ each: true })
   @Type(() => EquipamientoReservaDto)
-  equipamiento?: any[];
+  equipamiento?: EquipamientoReservaDto[];
 
   @IsBoolean()
   @IsOptional()
