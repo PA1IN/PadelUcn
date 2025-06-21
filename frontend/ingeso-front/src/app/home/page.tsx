@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation"
 import { useAuth } from "@/context/AuthContext"
 import { useUserProfile } from "@/hooks/useUserProfile"
 import { useObtenerSaldo } from "@/hooks/useSaldo"
-import { Wallet, CreditCard, CalendarRange, ClipboardList } from "lucide-react"
+import { Wallet, CreditCard, CalendarRange, ClipboardList, Bell, Mail, BadgeIcon as IdCard, User } from "lucide-react"
 
 export default function Home() {
   const { token, setToken, loading } = useAuth()
@@ -29,9 +29,8 @@ export default function Home() {
   }
 
   const irANotificaciones = () => {
-    router.push('/notificacion');
-  };
-
+    router.push("/notificacion")
+  }
 
   const irATablaReserva = () => {
     router.push("/reservaTabla")
@@ -58,7 +57,6 @@ export default function Home() {
     )
   }
 
-  
   if (isErrorProfile || isErrorSaldo) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
@@ -75,10 +73,11 @@ export default function Home() {
     )
   }
 
-  if (!userProfile) return null
+  if (!userProfile || !saldo) return null
 
   return (
     <div className="min-h-screen flex bg-gray-100">
+      {/* Barra lateral mejorada */}
       <aside className="w-64 bg-white shadow-md p-6 space-y-6">
         <div className="mb-6">
           <h2 className="text-lg font-bold text-gray-800">Menú</h2>
@@ -107,28 +106,13 @@ export default function Home() {
           Ver mis reservas
         </button>
 
-
         <button
           onClick={irANotificaciones}
           className="w-full text-left flex items-center bg-yellow-500 hover:bg-yellow-600 text-white px-4 py-2 rounded-md transition"
         >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            className="h-5 w-5 mr-2"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6 6 0 10-12 0v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"
-            />
-          </svg>
+          <Bell className="h-5 w-5 mr-2" />
           Mis notificaciones
         </button>
-
 
         <button
           onClick={irACargarDinero}
@@ -148,30 +132,74 @@ export default function Home() {
 
       <main className="flex-1 p-8">
         <div className="bg-white p-8 rounded-xl shadow-md w-full max-w-xl mx-auto text-center">
+          {/* Avatar y bienvenida */}
           <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              className="h-10 w-10 text-green-600"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
-              />
-            </svg>
+            <User className="h-10 w-10 text-green-600" />
           </div>
           <h2 className="text-2xl font-bold text-gray-800 mb-4">¡Bienvenido, {userProfile?.nombre_usuario}!</h2>
 
-          <div className="bg-gray-50 p-4 rounded-lg mb-6">
-            <p className="text-gray-600 mb-2 flex items-center justify-center">
-              <strong>Correo: </strong> {userProfile?.correo}
-            </p>
-            <p className="text-gray-600 flex items-center justify-center">
-              <strong>RUT: </strong> {userProfile?.rut}
+          <div className="bg-gray-50 p-4 rounded-lg mb-6 space-y-3">
+            <div className="flex items-center justify-center text-gray-600">
+              <Mail className="h-5 w-5 mr-2 text-gray-500" />
+              <span className="font-medium"><strong>Correo: </strong></span>
+              <span className="ml-2">{userProfile?.correo}</span>
+            </div>
+
+            <div className="flex items-center justify-center text-gray-600">
+              <IdCard className="h-5 w-5 mr-2 text-gray-500" />
+              <span className="font-medium"><strong>RUT: </strong></span>
+              <span className="ml-2">{userProfile?.rut}</span>
+            </div>
+
+            <div className="flex items-center justify-center text-green-600 font-medium pt-2 border-t border-gray-200">
+              <Wallet className="h-5 w-5 mr-2" />
+              <span className="font-medium">Saldo disponible:</span>
+              <span className="ml-2 text-lg font-bold">${saldo?.saldo?.toLocaleString()}</span>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
+            <button
+              onClick={irATablaReserva}
+              className="p-4 bg-green-50 hover:bg-green-100 border border-green-200 rounded-lg transition group"
+            >
+              <CalendarRange className="h-8 w-8 text-green-600 mx-auto mb-2 group-hover:scale-110 transition-transform" />
+              <p className="font-medium text-green-800">Reservar cancha</p>
+              <p className="text-sm text-green-600 mt-1">Encuentra y reserva tu cancha favorita</p>
+            </button>
+
+            <button
+              onClick={irACargarDinero}
+              className="p-4 bg-purple-50 hover:bg-purple-100 border border-purple-200 rounded-lg transition group"
+            >
+              <CreditCard className="h-8 w-8 text-purple-600 mx-auto mb-2 group-hover:scale-110 transition-transform" />
+              <p className="font-medium text-purple-800">Cargar dinero</p>
+              <p className="text-sm text-purple-600 mt-1">Añade saldo a tu cuenta</p>
+            </button>
+
+            <button
+              onClick={irAVerReservas}
+              className="p-4 bg-blue-50 hover:bg-blue-100 border border-blue-200 rounded-lg transition group"
+            >
+              <ClipboardList className="h-8 w-8 text-blue-600 mx-auto mb-2 group-hover:scale-110 transition-transform" />
+              <p className="font-medium text-blue-800">Mis reservas</p>
+              <p className="text-sm text-blue-600 mt-1">Revisa tus reservas activas</p>
+            </button>
+
+            <button
+              onClick={irANotificaciones}
+              className="p-4 bg-yellow-50 hover:bg-yellow-100 border border-yellow-200 rounded-lg transition group"
+            >
+              <Bell className="h-8 w-8 text-yellow-600 mx-auto mb-2 group-hover:scale-110 transition-transform" />
+              <p className="font-medium text-yellow-800">Notificaciones</p>
+              <p className="text-sm text-yellow-600 mt-1">Revisa tus mensajes</p>
+            </button>
+          </div>
+
+          <div className="mt-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
+            <h3 className="font-medium text-blue-800 mb-2">¿Necesitas ayuda?</h3>
+            <p className="text-sm text-blue-600">
+              Si tienes alguna duda sobre cómo usar la plataforma, no dudes en contactarnos.
             </p>
           </div>
         </div>

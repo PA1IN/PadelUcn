@@ -5,18 +5,9 @@ import { useRouter } from "next/navigation"
 
 import { useCanchas } from "@/hooks/useCancha"
 import { useEquipamiento } from "@/hooks/useEquipamiento"
-import {
-  useCrearReserva,
-  useMaximoJugadoresPorCancha,
-  useVerificarDisponibilidad,
-  useFechasDisponibles,
-} from "@/hooks/useReserva"
+import { useCrearReserva, useVerificarDisponibilidad, useFechasDisponibles } from "@/hooks/useReserva"
 import { useObtenerSaldo, useActualizarSaldo } from "@/hooks/useSaldo"
 import { useUserProfile } from "@/hooks/useUserProfile"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
 import {
   ArrowRight,
   CalendarRange,
@@ -91,7 +82,7 @@ function esFechaValida(fecha: string): boolean {
 export default function ReservaTabla() {
   const router = useRouter()
 
-  // Hooks de datos
+  // Hooks de datos - CORREGIDOS con nombres reales
   const { data: canchas, isLoading: loadingCanchas } = useCanchas()
   const { data: equipamiento, isLoading: loadingEquipamiento } = useEquipamiento()
   const { data: userProfile, isLoading: loadingProfile } = useUserProfile()
@@ -108,6 +99,7 @@ export default function ReservaTabla() {
   const [filtroFecha, setFiltroFecha] = useState("")
   const [filtroHora, setFiltroHora] = useState("")
   const [filtroNumeroPersonas, setFiltroNumeroPersonas] = useState<number>(2)
+  const [filtroDuracion, setFiltroDuracion] = useState<number>(90) // NUEVO: duración en minutos
 
   // Estados de reserva
   const [canchaSeleccionada, setCanchaSeleccionada] = useState<any | null>(null)
@@ -120,19 +112,24 @@ export default function ReservaTabla() {
     edad: 0,
   })
 
+  // Agregar después de los otros estados
+  const [editandoReservante, setEditandoReservante] = useState(false)
+  const [datosReservante, setDatosReservante] = useState({
+    apellido: "",
+    edad: 18,
+  })
+
   // Estados de proceso
   const [reservaEnProceso, setReservaEnProceso] = useState<any | null>(null)
   const [confirmandoPago, setConfirmandoPago] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [success, setSuccess] = useState<string | null>(null)
 
   // Fechas y horarios disponibles
   const [availableDates, setAvailableDates] = useState<string[]>([])
   const [availableTimes, setAvailableTimes] = useState<string[]>([])
   const [canchasDisponibles, setCanchasDisponibles] = useState<any[]>([])
 
-  // Hooks condicionales - CORREGIDO: usar numeroPersonas en lugar de numero_cancha
-  const maxJugadores = useMaximoJugadoresPorCancha(canchaSeleccionada?.numero || 0)
+  // Hook de verificación de disponibilidad
   const verificarDisponibilidad = useVerificarDisponibilidad(filtroFecha, filtroHora, filtroNumeroPersonas)
 
   const crearReserva = useCrearReserva(
@@ -154,7 +151,7 @@ export default function ReservaTabla() {
     }
   }, [loadingProfile, loadingCanchas, loadingEquipamiento, loadingSaldo])
 
-  // CORREGIDO: Usar fechas del backend
+  // Usar fechas del backend
   useEffect(() => {
     if (fechasDisponibles && Array.isArray(fechasDisponibles)) {
       setAvailableDates(fechasDisponibles)
@@ -196,7 +193,7 @@ export default function ReservaTabla() {
     setAvailableTimes(baseTimes)
   }, [filtroFecha])
 
-  // CORREGIDO: Usar la respuesta del backend para canchas disponibles
+  // Usar la respuesta del backend para canchas disponibles
   useEffect(() => {
     if (!filtroFecha || !filtroHora || filtroNumeroPersonas < 1) {
       setCanchasDisponibles([])
@@ -211,44 +208,62 @@ export default function ReservaTabla() {
     // Si tenemos respuesta del backend sobre disponibilidad
     if (verificarDisponibilidad.data && verificarDisponibilidad.data.canchasDisponibles) {
       setCanchasDisponibles(verificarDisponibilidad.data.canchasDisponibles)
-    } else if (canchas) {
+    } else if (canchas && Array.isArray(canchas)) {
       // Fallback: filtrar por capacidad
       const canchasFiltradas = canchas.filter((cancha: any) => {
-        return cancha.cantidad_max_jugador >= filtroNumeroPersonas
+        const capacidad = cancha.cantidad_max_jugador || cancha.maxJugadores || 0
+        return capacidad >= filtroNumeroPersonas
       })
       setCanchasDisponibles(canchasFiltradas)
     }
   }, [filtroFecha, filtroHora, filtroNumeroPersonas, canchas, verificarDisponibilidad.data])
 
-  // Agregar usuario actual como primer jugador cuando se selecciona cancha
   useEffect(() => {
     if (userProfile && canchaSeleccionada && jugadores.length === 0) {
+      const nombreCompleto = userProfile.nombre_usuario || ""
+      const partesNombre = nombreCompleto.split(" ")
+      const nombre = partesNombre[0] || ""
+      const apellido = partesNombre.slice(1).join(" ") || ""
+
+      setDatosReservante({
+        apellido: apellido,
+        edad: 18,
+      })
+
       setJugadores([
         {
-          nombre: userProfile.nombre?.split(" ")[0] || "",
-          apellido: userProfile.nombre?.split(" ").slice(1).join(" ") || "",
+          nombre: nombre,
+          apellido: apellido,
           rut: userProfile.rut,
-          edad: 0,
+          edad: apellido ? 18 : 0, // Si no hay apellido, edad 0 para forzar edición
         },
       ])
+
+      // Si no hay apellido, activar modo edición
+      if (!apellido) {
+        setEditandoReservante(true)
+      }
     }
   }, [userProfile, canchaSeleccionada, jugadores.length])
 
   // Funciones auxiliares
-  const calcularHoraFin = (horaInicio: string): string => {
+  const calcularHoraFin = (horaInicio: string, duracionMinutos: number): string => {
     const [h, m] = horaInicio.split(":").map(Number)
-    const horaFin = h + 1
-    return `${horaFin.toString().padStart(2, "0")}:${m.toString().padStart(2, "0")}`
+    const totalMinutos = h * 60 + m + duracionMinutos
+    const horaFin = Math.floor(totalMinutos / 60)
+    const minutosFin = totalMinutos % 60
+    return `${horaFin.toString().padStart(2, "0")}:${minutosFin.toString().padStart(2, "0")}`
   }
 
   const calcularCostoTotal = (): number => {
     const costoCancha = canchaSeleccionada?.valor || 0
     const costoEquipamiento = equipamientoSeleccionado.reduce((total, eq) => total + eq.costo * eq.cantidad, 0)
-    return costoCancha + costoEquipamiento
+    const multiplicadorDuracion = filtroDuracion / 60 // convertir minutos a horas
+    return costoCancha * multiplicadorDuracion + costoEquipamiento
   }
 
   const handleEquipmentQuantityChange = (equipmentId: number, change: number) => {
-    const equipment = equipamiento?.find((e: any) => e.id_equipamiento === equipmentId)
+    const equipment = equipamiento?.find((e: any) => e.id === equipmentId)
     if (!equipment) return
 
     setEquipamientoSeleccionado((prev) => {
@@ -267,7 +282,7 @@ export default function ReservaTabla() {
         return [
           ...prev,
           {
-            id: equipment.id_equipamiento,
+            id: equipment.id,
             nombre: equipment.nombre,
             cantidad: change,
             costo: equipment.costo,
@@ -284,7 +299,7 @@ export default function ReservaTabla() {
   }
 
   const aplicarFiltros = () => {
-    if (!filtroFecha || !filtroHora || filtroNumeroPersonas < 1) {
+    if (!filtroFecha || !filtroHora || filtroNumeroPersonas < 1 || filtroDuracion < 90) {
       setError("Por favor completa todos los filtros")
       return
     }
@@ -303,6 +318,7 @@ export default function ReservaTabla() {
     setFiltroFecha("")
     setFiltroHora("")
     setFiltroNumeroPersonas(2)
+    setFiltroDuracion(90) // AGREGAR esta línea
     setCanchaSeleccionada(null)
     setEquipamientoSeleccionado([])
     setJugadores([])
@@ -312,10 +328,41 @@ export default function ReservaTabla() {
     setPantalla(0)
   }
 
-  // CORREGIDO: Simplificar la validación ya que el backend maneja la disponibilidad
+  const actualizarDatosReservante = () => {
+    if (!datosReservante.apellido || datosReservante.edad < 10) {
+      setError("El apellido es requerido y la edad mínima es 10 años")
+      return
+    }
+
+    setJugadores((prev) =>
+      prev.map((jugador, index) => {
+        if (index === 0) {
+          // Primer jugador es el reservante
+          return {
+            ...jugador,
+            apellido: datosReservante.apellido,
+            edad: datosReservante.edad,
+          }
+        }
+        return jugador
+      }),
+    )
+
+    setEditandoReservante(false)
+    setError(null)
+  }
+
   const manejarConfirmarFiltros = () => {
     if (!filtroFecha || !filtroHora || !canchaSeleccionada) {
       setError("Completa todos los campos requeridos")
+      return
+    }
+
+    // Validar que el reservante tenga datos completos
+    const reservante = jugadores[0]
+    if (!reservante || !reservante.apellido || reservante.edad < 10) {
+      setError("Completa los datos del reservante (apellido y edad mínima 10 años)")
+      setEditandoReservante(true)
       return
     }
 
@@ -324,7 +371,7 @@ export default function ReservaTabla() {
     setReservaEnProceso({
       fecha: filtroFecha,
       hora_inicio: filtroHora,
-      hora_termino: calcularHoraFin(filtroHora),
+      hora_termino: calcularHoraFin(filtroHora, filtroDuracion), // ACTUALIZAR esta línea
       numero_cancha: canchaSeleccionada.numero,
       cancha: canchaSeleccionada,
       equipamiento: equipamientoSeleccionado,
@@ -344,6 +391,7 @@ export default function ReservaTabla() {
     }
 
     setConfirmandoPago(true)
+    setError(null) // Clear any previous errors
 
     try {
       await crearReserva.mutateAsync({
@@ -364,15 +412,31 @@ export default function ReservaTabla() {
         nuevoSaldo: saldo.saldo - reservaEnProceso.costo_total,
         transaccion: "Reserva de cancha",
       })
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error al confirmar la reserva:", error)
-      setError("Error al confirmar la reserva. Intenta nuevamente.")
+
+      // Extract error message from backend response
+      const errorMessage =
+        error?.response?.data?.message ||
+        error?.response?.data?.error ||
+        error?.message ||
+        "Error al crear la reserva. Intenta nuevamente."
+
+      setError(`No se pudo completar la reserva: ${errorMessage}`)
       setConfirmandoPago(false)
+
+      // Ensure we don't proceed to success screen
+      return
     }
   }
 
   const handleAgregarJugador = () => {
-    const maxJugadoresCancha = canchaSeleccionada?.cantidad_max_jugador || 0
+    if (!canchaSeleccionada) {
+      setError("Selecciona una cancha primero")
+      return
+    }
+
+    const maxJugadoresCancha = canchaSeleccionada?.maximo_jugadores || canchaSeleccionada?.maxJugadores || 0
 
     if (jugadores.length >= maxJugadoresCancha) {
       setError(`No se pueden agregar más jugadores. El máximo para esta cancha es ${maxJugadoresCancha}.`)
@@ -384,8 +448,8 @@ export default function ReservaTabla() {
       return
     }
 
-    if (!nuevoJugador.nombre || !nuevoJugador.apellido || !nuevoJugador.rut || nuevoJugador.edad <= 0) {
-      setError("Completa todos los campos del jugador")
+    if (!nuevoJugador.nombre || !nuevoJugador.apellido || !nuevoJugador.rut || nuevoJugador.edad < 10) {
+      setError("Completa todos los campos del jugador. La edad mínima es 10 años.")
       return
     }
 
@@ -399,7 +463,7 @@ export default function ReservaTabla() {
       nombre: "",
       apellido: "",
       rut: "",
-      edad: 0,
+      edad: 10,
     })
     setError(null)
   }
@@ -474,12 +538,18 @@ export default function ReservaTabla() {
           </div>
 
           <div className="flex space-x-4">
-            <Button onClick={() => router.push("/reservas")} className="flex-1" variant="outline">
+            <button
+              onClick={() => router.push("/reservas")}
+              className="flex-1 py-2 px-4 bg-blue-600 hover:bg-blue-700 rounded text-white"
+            >
               Ver mis reservas
-            </Button>
-            <Button onClick={manejarVolverAInicio} className="flex-1">
+            </button>
+            <button
+              onClick={manejarVolverAInicio}
+              className="flex-1 py-2 px-4 bg-gray-200 hover:bg-gray-300 rounded text-gray-800"
+            >
               Volver al inicio
-            </Button>
+            </button>
           </div>
         </div>
       </div>
@@ -572,14 +642,12 @@ export default function ReservaTabla() {
                   Necesitas ${(reservaEnProceso.costo_total - (saldo?.saldo || 0)).toLocaleString()} más para completar
                   esta reserva.
                 </p>
-                <Button
+                <button
                   onClick={() => router.push("/cargar-dinero")}
-                  className="mt-1 w-full"
-                  size="sm"
-                  variant="destructive"
+                  className="mt-1 w-full py-1 bg-red-600 hover:bg-red-700 text-white rounded text-xs flex items-center justify-center"
                 >
                   <CreditCard className="h-3 w-3 mr-1" /> Cargar dinero
-                </Button>
+                </button>
               </div>
             ) : (
               <div className="mt-2 p-2 bg-green-100 text-green-700 text-sm rounded">
@@ -591,16 +659,23 @@ export default function ReservaTabla() {
           {error && <p className="text-red-600 text-sm mb-4">{error}</p>}
 
           <div className="flex space-x-4">
-            <Button onClick={() => setPantalla(0)} variant="outline" className="flex-1">
+            <button
+              onClick={() => setPantalla(0)}
+              className="flex-1 py-2 bg-gray-200 hover:bg-gray-300 rounded text-gray-800"
+            >
               Volver
-            </Button>
-            <Button
+            </button>
+            <button
               onClick={manejarConfirmarPago}
               disabled={confirmandoPago || (saldo?.saldo || 0) < reservaEnProceso.costo_total}
-              className="flex-1"
+              className={`flex-1 py-2 rounded text-white ${
+                confirmandoPago || (saldo?.saldo || 0) < reservaEnProceso.costo_total
+                  ? "bg-gray-400"
+                  : "bg-green-600 hover:bg-green-700"
+              }`}
             >
               {confirmandoPago ? "Procesando..." : "Confirmar pago"}
-            </Button>
+            </button>
           </div>
         </div>
       </div>
@@ -609,7 +684,7 @@ export default function ReservaTabla() {
 
   // Pantalla principal (pantalla 0)
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center p-4 bg-gray-50">
+    <div className="min-h-screen flex flex-col items-center justify-center p-4">
       <div className="bg-green-500 text-white p-4 rounded w-full max-w-md mb-4 flex justify-between items-center">
         <h1 className="text-xl font-bold">Reserva tu Cancha</h1>
         <div className="flex items-center bg-green-600 px-3 py-1 rounded">
@@ -634,7 +709,6 @@ export default function ReservaTabla() {
         </div>
 
         {error && <p className="text-red-600 text-sm">{error}</p>}
-        {success && <p className="text-green-600 text-sm whitespace-pre-line">{success}</p>}
 
         {/* Sección de Filtros */}
         {mostrarFiltros && (
@@ -646,10 +720,10 @@ export default function ReservaTabla() {
 
             <div className="space-y-3">
               <div>
-                <Label className="block text-sm font-medium text-gray-700 mb-1 flex items-center">
+                <label className="block text-sm font-medium text-gray-700 mb-1 flex items-center">
                   <CalendarRange size={16} className="mr-1" />
                   Fecha * (mínimo 7 días de antelación)
-                </Label>
+                </label>
                 <select
                   value={filtroFecha}
                   onChange={(e) => {
@@ -657,13 +731,13 @@ export default function ReservaTabla() {
                     setError(null)
                   }}
                   required
-                  className="w-full px-3 py-2 border rounded text-sm"
+                  className="w-full px-3 py-2 border rounded text-sm bg-white text-gray-900"
                 >
                   <option value="">Selecciona una fecha</option>
-                  {availableDates.map((date) => {
+                  {availableDates.map((date, index) => {
                     const diasAntelacion = calcularDiasDeAntelacion(date)
                     return (
-                      <option key={date} value={date}>
+                      <option key={`fecha-${date}`} value={date}>
                         {formatDateInSpanish(date)} ({diasAntelacion} días de antelación)
                       </option>
                     )
@@ -680,16 +754,16 @@ export default function ReservaTabla() {
               </div>
 
               <div>
-                <Label className="block text-sm font-medium text-gray-700 mb-1 flex items-center">
+                <label className="block text-sm font-medium text-gray-700 mb-1 flex items-center">
                   <Clock4 size={16} className="mr-1" />
                   Hora *
-                </Label>
+                </label>
                 <select
                   value={filtroHora}
                   onChange={(e) => setFiltroHora(e.target.value)}
                   required
                   disabled={!filtroFecha || !esFechaValida(filtroFecha)}
-                  className="w-full px-3 py-2 border rounded text-sm disabled:bg-gray-100"
+                  className="w-full px-3 py-2 border rounded text-sm disabled:bg-gray-100 bg-white text-gray-900"
                 >
                   <option value="">
                     {!filtroFecha
@@ -698,8 +772,8 @@ export default function ReservaTabla() {
                         ? "Fecha no válida (mínimo 7 días)"
                         : "Selecciona una hora"}
                   </option>
-                  {availableTimes.map((time) => (
-                    <option key={time} value={time}>
+                  {availableTimes.map((time, index) => (
+                    <option key={`hora-${time}`} value={time}>
                       {time}
                     </option>
                   ))}
@@ -707,41 +781,62 @@ export default function ReservaTabla() {
               </div>
 
               <div>
-                <Label className="block text-sm font-medium text-gray-700 mb-1 flex items-center">
+                <label className="block text-sm font-medium text-gray-700 mb-1 flex items-center">
                   <Users size={16} className="mr-1" />
                   Número de personas *
-                </Label>
+                </label>
                 <div className="flex items-center space-x-2">
-                  <Button
+                  <button
                     type="button"
                     onClick={() => setFiltroNumeroPersonas(Math.max(1, filtroNumeroPersonas - 1))}
-                    variant="outline"
-                    size="sm"
-                    className="w-8 h-8 p-0 rounded-full bg-red-500 text-white hover:bg-red-600"
+                    className="w-8 h-8 rounded-full bg-red-500 text-white flex items-center justify-center text-sm hover:bg-red-600"
                   >
                     <Minus size={14} />
-                  </Button>
+                  </button>
                   <span className="w-12 text-center font-medium">{filtroNumeroPersonas}</span>
-                  <Button
+                  <button
                     type="button"
-                    onClick={() => setFiltroNumeroPersonas(Math.min(22, filtroNumeroPersonas + 1))}
-                    variant="outline"
-                    size="sm"
-                    className="w-8 h-8 p-0 rounded-full bg-green-500 text-white hover:bg-green-600"
+                    onClick={() => setFiltroNumeroPersonas(Math.min(4, filtroNumeroPersonas + 1))}
+                    className="w-8 h-8 rounded-full bg-green-500 text-white flex items-center justify-center text-sm hover:bg-green-600"
                   >
                     <Plus size={14} />
-                  </Button>
+                  </button>
                 </div>
-                <p className="text-xs text-gray-500 mt-1">Mínimo: 1, Máximo: 22 personas</p>
+                <p className="text-xs text-gray-500 mt-1">Mínimo: 1, Máximo: 4 personas</p>
               </div>
 
-              <Button
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1 flex items-center">
+                  <Clock4 size={16} className="mr-1" />
+                  Duración de la reserva *
+                </label>
+                <select
+                  value={filtroDuracion}
+                  onChange={(e) => setFiltroDuracion(Number(e.target.value))}
+                  required
+                  className="w-full px-3 py-2 border rounded text-sm bg-white text-gray-900"
+                >
+                  <option value={90}>90 minutos (1.5 horas)</option>
+                  <option value={120}>120 minutos (2 horas)</option>
+                  <option value={150}>150 minutos (2.5 horas)</option>
+                  <option value={180}>180 minutos (3 horas)</option>
+                </select>
+                <p className="text-xs text-gray-500 mt-1">Duración mínima: 90 min, máxima: 180 min</p>
+              </div>
+
+              <button
                 onClick={aplicarFiltros}
-                disabled={!filtroFecha || !filtroHora || filtroNumeroPersonas < 1 || !esFechaValida(filtroFecha)}
-                className="w-full"
+                disabled={
+                  !filtroFecha ||
+                  !filtroHora ||
+                  filtroNumeroPersonas < 1 ||
+                  !esFechaValida(filtroFecha) ||
+                  filtroDuracion < 90
+                }
+                className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white py-2 rounded text-sm font-medium"
               >
                 Buscar Canchas Disponibles
-              </Button>
+              </button>
             </div>
           </div>
         )}
@@ -754,17 +849,13 @@ export default function ReservaTabla() {
                 <h4 className="font-medium text-gray-800 text-sm">Filtros aplicados:</h4>
                 <p className="text-xs text-gray-600">
                   📅 {formatDateInSpanish(filtroFecha)} ({calcularDiasDeAntelacion(filtroFecha)} días de antelación) •
-                  🕐 {filtroHora} • 👥 {filtroNumeroPersonas} personas
+                  🕐 {filtroHora} - {calcularHoraFin(filtroHora, filtroDuracion)} • 👥 {filtroNumeroPersonas} personas •
+                  ⏱️ {filtroDuracion} min
                 </p>
               </div>
-              <Button
-                onClick={limpiarFiltros}
-                variant="link"
-                size="sm"
-                className="text-blue-600 hover:text-blue-800 text-xs underline p-0"
-              >
+              <button onClick={limpiarFiltros} className="text-blue-600 hover:text-blue-800 text-xs underline">
                 Cambiar filtros
-              </Button>
+              </button>
             </div>
           </div>
         )}
@@ -776,46 +867,54 @@ export default function ReservaTabla() {
               <div className="text-center py-6 bg-yellow-50 rounded border">
                 <p className="text-yellow-800 font-medium">No hay canchas disponibles</p>
                 <p className="text-yellow-600 text-sm mt-1">Para la fecha, hora y número de personas seleccionados</p>
-                <Button onClick={limpiarFiltros} className="mt-3" variant="outline">
+                <button
+                  onClick={limpiarFiltros}
+                  className="mt-3 bg-yellow-600 hover:bg-yellow-700 text-white px-4 py-2 rounded text-sm"
+                >
                   Cambiar filtros
-                </Button>
+                </button>
               </div>
             ) : (
               <div className="space-y-6">
                 <div>
-                  <Label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
                     Canchas Disponibles ({canchasDisponibles.length})
-                  </Label>
+                  </label>
                   <div className="space-y-2 max-h-48 overflow-y-auto">
                     {canchasDisponibles.map((cancha: any) => (
-                      <Card
-                        key={cancha.numero}
-                        className={`cursor-pointer transition ${
+                      <label
+                        key={cancha.id}
+                        className={`block p-3 border rounded cursor-pointer transition ${
                           canchaSeleccionada?.numero === cancha.numero
-                            ? "border-2 border-green-500 bg-green-50"
-                            : "hover:border-green-300"
+                            ? "border-green-500 bg-green-50"
+                            : "border-gray-200 hover:border-gray-300"
                         }`}
-                        onClick={() => setCanchaSeleccionada(cancha)}
                       >
-                        <CardContent className="p-3">
-                          <div className="flex justify-between items-start">
-                            <div>
-                              <div className="font-medium text-sm">
-                                Cancha {cancha.numero} - {cancha.nombre}
-                              </div>
-                              <div className="text-xs text-gray-500 mt-1">
-                                Capacidad: {cancha.cantidad_max_jugador} personas • ${cancha.valor.toLocaleString()}
-                                /hora
-                              </div>
+                        <input
+                          type="radio"
+                          name="cancha"
+                          value={String(cancha.numero)}
+                          checked={canchaSeleccionada?.numero === cancha.numero}
+                          onChange={() => setCanchaSeleccionada(cancha)}
+                          className="sr-only"
+                        />
+                        <div className="flex justify-between items-start">
+                          <div>
+                            <div className="font-medium text-sm">
+                              Cancha {cancha.numero} - {cancha.nombre}
                             </div>
-                            {canchaSeleccionada?.numero === cancha.numero && (
-                              <div className="w-4 h-4 bg-green-500 rounded-full flex items-center justify-center">
-                                <div className="w-2 h-2 bg-white rounded-full"></div>
-                              </div>
-                            )}
+                            <div className="text-xs text-gray-500 mt-1">
+                              Capacidad: {cancha.maximo_jugadores || cancha.maxJugadores} personas • $
+                              {cancha.valor.toLocaleString()}/hora
+                            </div>
                           </div>
-                        </CardContent>
-                      </Card>
+                          {canchaSeleccionada?.numero === cancha.numero && (
+                            <div className="w-4 h-4 bg-green-500 rounded-full flex items-center justify-center">
+                              <div className="w-2 h-2 bg-white rounded-full"></div>
+                            </div>
+                          )}
+                        </div>
+                      </label>
                     ))}
                   </div>
                 </div>
@@ -823,7 +922,7 @@ export default function ReservaTabla() {
                 {/* Equipamiento */}
                 {canchaSeleccionada && equipamiento && (
                   <div>
-                    <Label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
                       Equipamiento
                       {equipamientoSeleccionado.length > 0 && (
                         <span className="ml-2 text-xs text-green-600">
@@ -832,16 +931,13 @@ export default function ReservaTabla() {
                           {equipamientoSeleccionado.length !== 1 ? "s" : ""})
                         </span>
                       )}
-                    </Label>
+                    </label>
 
                     <div className="space-y-3 max-h-48 overflow-y-auto border rounded p-3">
                       {equipamiento.map((equipment: any) => {
-                        const selectedQuantity = getEquipmentQuantity(equipment.id_equipamiento)
+                        const selectedQuantity = getEquipmentQuantity(equipment.id)
                         return (
-                          <div
-                            key={equipment.id_equipamiento}
-                            className="flex items-center justify-between bg-gray-50 p-2 rounded"
-                          >
+                          <div key={equipment.id} className="flex items-center justify-between bg-gray-50 p-2 rounded">
                             <div className="flex-1">
                               <div className="font-medium text-sm">{equipment.nombre}</div>
                               <div className="text-xs text-gray-500">
@@ -850,29 +946,25 @@ export default function ReservaTabla() {
                             </div>
 
                             <div className="flex items-center space-x-2">
-                              <Button
+                              <button
                                 type="button"
-                                onClick={() => handleEquipmentQuantityChange(equipment.id_equipamiento, -1)}
+                                onClick={() => handleEquipmentQuantityChange(equipment.id, -1)}
                                 disabled={selectedQuantity === 0}
-                                variant="outline"
-                                size="sm"
-                                className="w-6 h-6 p-0 rounded-full bg-red-500 text-white hover:bg-red-600 disabled:bg-gray-300"
+                                className="w-6 h-6 rounded-full bg-red-500 text-white flex items-center justify-center disabled:bg-gray-300 disabled:cursor-not-allowed text-xs hover:bg-red-600"
                               >
                                 <Minus size={12} />
-                              </Button>
+                              </button>
 
                               <span className="w-8 text-center text-sm font-medium">{selectedQuantity}</span>
 
-                              <Button
+                              <button
                                 type="button"
-                                onClick={() => handleEquipmentQuantityChange(equipment.id_equipamiento, 1)}
+                                onClick={() => handleEquipmentQuantityChange(equipment.id, 1)}
                                 disabled={selectedQuantity >= equipment.stock}
-                                variant="outline"
-                                size="sm"
-                                className="w-6 h-6 p-0 rounded-full bg-green-500 text-white hover:bg-green-600 disabled:bg-gray-300"
+                                className="w-6 h-6 rounded-full bg-green-500 text-white flex items-center justify-center disabled:bg-gray-300 disabled:cursor-not-allowed text-xs hover:bg-green-600"
                               >
                                 <Plus size={12} />
-                              </Button>
+                              </button>
                             </div>
                           </div>
                         )
@@ -917,31 +1009,96 @@ export default function ReservaTabla() {
                     {jugadores.length > 0 && (
                       <div className="mb-4 space-y-2">
                         {jugadores.map((jugador, index) => (
-                          <div key={jugador.rut} className="flex items-center justify-between bg-gray-50 p-2 rounded">
-                            <div>
+                          <div
+                            key={`jugador-${jugador.rut}`}
+                            className="flex items-center justify-between bg-gray-50 p-2 rounded"
+                          >
+                            <div className="flex-1">
                               <span className="font-medium">
-                                {jugador.nombre} {jugador.apellido}
+                                {jugador.nombre} {jugador.apellido || "(Sin apellido)"}
                               </span>
                               <span className="text-sm text-gray-500 ml-2">({jugador.rut})</span>
+                              {jugador.edad > 0 && (
+                                <span className="text-sm text-gray-500 ml-2">- {jugador.edad} años</span>
+                              )}
                               {index === 0 && (
                                 <span className="ml-2 text-xs bg-green-100 text-green-800 px-2 py-0.5 rounded">
                                   Reservante
                                 </span>
                               )}
+                              {index === 0 && (!jugador.apellido || jugador.edad < 10) && (
+                                <span className="ml-2 text-xs bg-red-100 text-red-800 px-2 py-0.5 rounded">
+                                  Datos incompletos
+                                </span>
+                              )}
                             </div>
-                            {index > 0 && (
-                              <Button
-                                type="button"
-                                onClick={() => handleRemoveJugador(jugador.rut)}
-                                variant="ghost"
-                                size="sm"
-                                className="text-red-500 hover:text-red-700 p-1"
-                              >
-                                <Trash2 size={16} />
-                              </Button>
-                            )}
+                            <div className="flex items-center gap-2">
+                              {index === 0 && (
+                                <button
+                                  type="button"
+                                  onClick={() => setEditandoReservante(true)}
+                                  className="text-blue-500 hover:text-blue-700 text-xs"
+                                >
+                                  Editar
+                                </button>
+                              )}
+                              {index > 0 && (
+                                <button
+                                  type="button"
+                                  onClick={() => handleRemoveJugador(jugador.rut)}
+                                  className="text-red-500 hover:text-red-700"
+                                >
+                                  <Trash2 size={16} />
+                                </button>
+                              )}
+                            </div>
                           </div>
                         ))}
+                      </div>
+                    )}
+
+                    {/* Modal/Form para editar datos del reservante */}
+                    {editandoReservante && (
+                      <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded">
+                        <h4 className="text-sm font-medium mb-2 text-blue-800">Completar datos del reservante</h4>
+                        <div className="grid grid-cols-2 gap-2 mb-2">
+                          <input
+                            type="text"
+                            placeholder="Apellido *"
+                            value={datosReservante.apellido}
+                            onChange={(e) => setDatosReservante({ ...datosReservante, apellido: e.target.value })}
+                            className="px-2 py-1 border rounded text-sm bg-white text-gray-900"
+                          />
+                          <input
+                            type="number"
+                            placeholder="Edad *"
+                            min="10"
+                            value={datosReservante.edad || ""}
+                            onChange={(e) =>
+                              setDatosReservante({ ...datosReservante, edad: Number.parseInt(e.target.value) || 10 })
+                            }
+                            className="px-2 py-1 border rounded text-sm bg-white text-gray-900"
+                          />
+                        </div>
+                        <div className="flex gap-2">
+                          <button
+                            type="button"
+                            onClick={actualizarDatosReservante}
+                            className="flex-1 bg-blue-500 hover:bg-blue-600 text-white text-sm py-1 rounded"
+                          >
+                            Guardar
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setEditandoReservante(false)}
+                            className="flex-1 bg-gray-300 hover:bg-gray-400 text-gray-800 text-sm py-1 rounded"
+                          >
+                            Cancelar
+                          </button>
+                        </div>
+                        <p className="text-xs text-blue-600 mt-1">
+                          * El apellido es requerido y la edad mínima es 10 años
+                        </p>
                       </div>
                     )}
 
@@ -949,40 +1106,45 @@ export default function ReservaTabla() {
                       <div className="bg-gray-50 p-3 rounded">
                         <h4 className="text-sm font-medium mb-2">Agregar jugador</h4>
                         <div className="grid grid-cols-2 gap-2 mb-2">
-                          <Input
+                          <input
                             type="text"
                             placeholder="Nombre"
                             value={nuevoJugador.nombre}
                             onChange={(e) => setNuevoJugador({ ...nuevoJugador, nombre: e.target.value })}
-                            className="text-sm"
+                            className="px-2 py-1 border rounded text-sm bg-white text-gray-900"
                           />
-                          <Input
+                          <input
                             type="text"
                             placeholder="Apellido"
                             value={nuevoJugador.apellido}
                             onChange={(e) => setNuevoJugador({ ...nuevoJugador, apellido: e.target.value })}
-                            className="text-sm"
+                            className="px-2 py-1 border rounded text-sm bg-white text-gray-900"
                           />
-                          <Input
+                          <input
                             type="text"
                             placeholder="RUT"
                             value={nuevoJugador.rut}
                             onChange={(e) => setNuevoJugador({ ...nuevoJugador, rut: e.target.value })}
-                            className="text-sm"
+                            className="px-2 py-1 border rounded text-sm bg-white text-gray-900"
                           />
-                          <Input
+                          <input
                             type="number"
-                            placeholder="Edad"
+                            placeholder="Edad (min. 10)"
+                            min="10"
                             value={nuevoJugador.edad || ""}
                             onChange={(e) =>
-                              setNuevoJugador({ ...nuevoJugador, edad: Number.parseInt(e.target.value) || 0 })
+                              setNuevoJugador({ ...nuevoJugador, edad: Number.parseInt(e.target.value) || 10 })
                             }
-                            className="text-sm"
+                            className="px-2 py-1 border rounded text-sm bg-white text-gray-900"
                           />
                         </div>
-                        <Button type="button" onClick={handleAgregarJugador} className="w-full" size="sm">
+                        <button
+                          type="button"
+                          onClick={handleAgregarJugador}
+                          className="w-full bg-blue-500 hover:bg-blue-600 text-white text-sm py-1 rounded"
+                        >
                           Agregar Jugador
-                        </Button>
+                        </button>
                       </div>
                     )}
                   </div>
@@ -997,8 +1159,8 @@ export default function ReservaTabla() {
                     </h3>
                     <div className="space-y-1 text-sm">
                       <div className="flex justify-between">
-                        <span>Cancha (1 hora):</span>
-                        <span>${canchaSeleccionada.valor.toLocaleString()}</span>
+                        <span>Cancha ({filtroDuracion} min):</span>
+                        <span>${(canchaSeleccionada.valor * (filtroDuracion / 60)).toLocaleString()}</span>
                       </div>
                       {equipamientoSeleccionado.length > 0 && (
                         <div className="flex justify-between">
@@ -1034,9 +1196,15 @@ export default function ReservaTabla() {
                 )}
 
                 <div className="pt-4">
-                  <Button onClick={manejarConfirmarFiltros} disabled={!canchaSeleccionada} className="w-full">
+                  <button
+                    onClick={manejarConfirmarFiltros}
+                    disabled={!canchaSeleccionada}
+                    className={`w-full py-2 rounded text-white flex items-center justify-center ${
+                      !canchaSeleccionada ? "bg-gray-400" : "bg-green-600 hover:bg-green-700"
+                    }`}
+                  >
                     Proceder al pago <ArrowRight className="ml-2 h-4 w-4" />
-                  </Button>
+                  </button>
                 </div>
               </div>
             )}
@@ -1045,14 +1213,9 @@ export default function ReservaTabla() {
 
         <div className="pt-4 border-t border-gray-200 mt-6">
           <p className="text-center text-sm text-black">
-            <Button
-              type="button"
-              onClick={() => router.push("/home")}
-              variant="link"
-              className="text-green-600 hover:underline p-0"
-            >
+            <button type="button" onClick={() => router.push("/home")} className="text-green-600 hover:underline">
               Volver a Home
-            </Button>
+            </button>
           </p>
         </div>
       </div>

@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import api from "@/api/axios"
+import { useAuth } from "@/context/AuthContext"
 
 
 export function useObtenerReservas(rut_usuario: string) {
@@ -65,18 +66,19 @@ export function useEliminarReserva(rut: string) {
 
 // 🔄 USAR ESTE HOOK PARA OBTENER UNA RESERVA POR ID
 export function useReservaPorId(id: number) {
+  const {token, loading } = useAuth();
   return useQuery({
     queryKey: ["reserva", id],
     queryFn: async () => {
       const respuesta = await api.get(`/api/reserva/${id}`)
       return respuesta.data.data
     },
-    enabled: !!id,
+    enabled: !!id && !loading && !!token,
   })
 }
 
 export interface DatosReservaParcial {
-  rut_usuario:string
+  //rut:string
   fecha?: string
   hora_inicio?: string
   hora_termino?: string
@@ -127,11 +129,13 @@ export function useVerificarDisponibilidad(fecha: string, hora: string, numeroPe
 
 // 🔄 NUEVO HOOK PARA OBTENER FECHAS DISPONIBLES
 export function useFechasDisponibles() {
+  const { loading, token } = useAuth();
   return useQuery({
     queryKey: ["fechasDisponibles"],
     queryFn: async () => {
       const respuesta = await api.get("/api/reserva/fechas-disponibles")
       return respuesta.data.data
     },
+    enabled: !loading && !!token,
   })
 }

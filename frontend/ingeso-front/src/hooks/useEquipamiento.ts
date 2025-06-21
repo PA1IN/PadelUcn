@@ -2,7 +2,7 @@ import { useQuery } from '@tanstack/react-query';
 import api from '@/api/axios';
 
 export interface Equipamiento {
-  id_equipamiento: number;
+  id: number;
   nombre: string;
   tipo: string;
   costo: number;
