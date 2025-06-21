@@ -81,15 +81,18 @@ export class UpdateReservaDto {
   @IsArray({ message: 'El equipamiento debe ser un arreglo' })
   @ValidateNested({ each: true })
   @Type(() => EquipamientoReservaDto)
-  equipamiento?: EquipamientoReservaDto[];
+  equipamiento?: any[];
 
   @IsBoolean()
   @IsOptional()
   existe?: boolean;
 
   @IsOptional()
-  @IsArray({ message: 'Los jugadores deben ser un arreglo' })
-  @ValidateNested({ each: true })
-  @Type(() => CreateJugadorDto)
-  jugadores?: CreateJugadorDto[];
+  @IsArray()
+  jugadores?: Array<{
+    nombre: string;
+    apellido: string;
+    rut: string;
+    edad: number;
+  }>;
 }

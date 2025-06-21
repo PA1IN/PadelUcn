@@ -575,13 +575,14 @@ export class ReservaService {
 
       // Actualizar jugadores si se proporcionaron
       if (Array.isArray(updateReservaDto.jugadores)) {
-        // Eliminar jugadores anteriores
-        await this.jugadorRepository
-         .createQueryBuilder()
-          .delete()
-          .from(Jugador)
-          .where('idReserva = :reservaId', { reservaId: id })
-          .execute();
+        // Eliminar jugadores anteriores usando relación
+        const jugadoresActuales = await this.jugadorRepository.find({
+          where: { reserva: { id: id } }
+        });
+        
+        if (jugadoresActuales.length > 0) {
+          await this.jugadorRepository.remove(jugadoresActuales);
+        }
         
         // Agregar nuevos jugadores
         for (const jugadorDto of updateReservaDto.jugadores) {
@@ -590,14 +591,14 @@ export class ReservaService {
             apellido: jugadorDto.apellido,
             rut: jugadorDto.rut,
             edad: jugadorDto.edad,
-            reserva: { id: id }
+            reserva: { id: id } as Reserva
           });
           
           await this.jugadorRepository.save(nuevoJugador);
         }
       }
 
-      // Actualizar equipamiento
+      // Actualizar equipamiento si se proporcionó
       if (Array.isArray(updateReservaDto.equipamiento)) {
         // Obtener boletas actuales para devolver stock
         const boletasActuales = await this.boletaEquipamientoRepository.find({
@@ -617,57 +618,37 @@ export class ReservaService {
           }
         }
         
-        // Eliminar boletas anteriores
-        await this.boletaEquipamientoRepository
-          .createQueryBuilder()
-          .delete()
-          .from(BoletaEquipamiento)
-          .where('idReserva = :reservaId', { reservaId: id })
-          .execute();
+        // Eliminar boletas anteriores usando relación
+        if (boletasActuales.length > 0) {
+          await this.boletaEquipamientoRepository.remove(boletasActuales);
+        }
 
-        // Procesar nuevo equipamiento
-        let costoTotalEquipamiento = 0;
-        for (const item of updateReservaDto.equipamiento) {
+        // Crear nuevas boletas para el nuevo equipamiento
+        for (const equipamientoDto of updateReservaDto.equipamiento) {
           const equipamiento = await this.equipamientoRepository.findOne({
-            where: { id: item.id }
+            where: { id: equipamientoDto.id }
           });
 
           if (!equipamiento) {
-            throw new BadRequestException(`Equipamiento con ID ${item.id} no encontrado`);
+            throw new BadRequestException(`Equipamiento con ID ${equipamientoDto.id} no encontrado`);
           }
 
-          // Verificar stock
-          if (equipamiento.stock < item.cantidad) {
-            throw new BadRequestException(`Stock insuficiente para el equipamiento ${equipamiento.nombre}. Disponible: ${equipamiento.stock}`);
+          if (equipamiento.stock < equipamientoDto.cantidad) {
+            throw new BadRequestException(`Stock insuficiente para ${equipamiento.nombre}. Stock disponible: ${equipamiento.stock}`);
           }
 
-          const costoItem = equipamiento.costo * item.cantidad;
-          costoTotalEquipamiento += costoItem;
+          // Descontar del stock
+          equipamiento.stock -= equipamientoDto.cantidad;
+          await this.equipamientoRepository.save(equipamiento);
 
-          // Crear boleta de equipamiento
+          // Crear nueva boleta
           const nuevaBoleta = this.boletaEquipamientoRepository.create({
-            reserva: { id: id }, 
-            equipamiento: { id: item.id},
-            cantidad: item.cantidad,
-            montoTotal: costoItem,
+            cantidad: equipamientoDto.cantidad,
+            equipamiento: equipamiento,
+            reserva: { id: id } as Reserva
           });
 
           await this.boletaEquipamientoRepository.save(nuevaBoleta);
-
-          // Actualizar stock
-          equipamiento.stock -= item.cantidad;
-          await this.equipamientoRepository.save(equipamiento);
-        }
-
-        // Verificar saldo para el equipamiento
-        if (!isAdmin && reserva.usuario.saldo < costoTotalEquipamiento) {
-          throw new BadRequestException(`Saldo insuficiente para el equipamiento. Saldo actual: $${reserva.usuario.saldo}, Costo: $${costoTotalEquipamiento}`);
-        }
-
-        // Procesar pago del equipamiento
-        if (!isAdmin && costoTotalEquipamiento > 0) {
-          reserva.usuario.saldo -= costoTotalEquipamiento;
-          await this.usuarioRepository.save(reserva.usuario);
         }
       }
 
