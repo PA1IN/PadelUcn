@@ -1,5 +1,6 @@
 import { useMutation, useQuery } from "@tanstack/react-query";
 import api from "@/api/axios";
+import { useAuth } from "@/context/AuthContext";
 
 export interface Recordatorio {
     id: number
@@ -17,14 +18,14 @@ export interface nuevoRecordatorio {
     id_reserva?:number
     id_cancha?:number
 }
-
 //pa mandar un recordatorio individual
 export function useEnviarRecordatorio() {
     return useMutation({
         mutationFn: async (recordatorio: nuevoRecordatorio) => {
-            const { data } = await api.post("/api/admin/recordatorios", recordatorio);
+            const { data } = await api.post("/api/usuarios/admin/recordatorios", recordatorio);
             return data;
         },
+        
     })
 }
 
@@ -32,7 +33,7 @@ export function useEnviarRecordatorio() {
 export function useEnviarRecordatorioMasico() {
     return useMutation({
         mutationFn: async (recordatorio: nuevoRecordatorio) => {
-            const { data } = await api.post("/api/admin/recordatorios/masivo", recordatorio);
+            const { data } = await api.post("/api/usuarios/admin/recordatorios/masivo", recordatorio);
             return data;
         },
     })
@@ -40,22 +41,27 @@ export function useEnviarRecordatorioMasico() {
 
 //pa ver el historial de los recordatorios
 export function useHistorialRecordatorios() {
+    const { token, loading } = useAuth();
+
     return useQuery<Recordatorio[], Error>({
         queryKey: ["admin-recordatorios"],
         queryFn: async () => {
-            const { data } = await api.get("api/admin/recordatorios");
+            const { data } = await api.get("api/usuarios/admin/recordatorios");
             return data.data;
-        }
+        },
+        enabled: !loading && !!token,
     })
 }
 
 //pa mandar recordatorios con anticipacion a una fecha de las reservas proximas
 export function useRecordatoriosAnticipados() {
+    
     return useMutation({
         mutationFn: async (horasAntes:number = 24) => {
-            const { data } = await api.post("/api/admin/recordatorios/anticipados", { horasAntes});
+            const { data } = await api.post("/api/usuarios/admin/recordatorios/anticipados", { horasAntes});
             return data;
-        }
+        },
+
     })
 }
 

@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import api from "@/api/axios";
+import { useAuth } from "@/context/AuthContext";
 
 export interface estadisticasVentas { 
     
@@ -57,16 +58,42 @@ export interface transaccionCompleta {
 
 
 export function useEstadisticasVentas() {
+    const { token, loading } = useAuth();
+
     return useQuery<estadisticasVentas, Error>({
         queryKey:["admin-estadisticas"],
         queryFn: async () => {
             const { data } = await api.get("/api/transacciones/estadisticas")
             return data.data
         },
+        enabled: !loading && !!token,
     })
 }
 
-export function useHistorialTransacciones(fechaInicio?: string, fechaFin?: string){
+
+export function useHistorialTransacciones(){
+    const { token, loading } = useAuth();
+
+    return useQuery<transaccionCompleta[],Error>({
+        queryKey: ["admin-transacciones"],
+        queryFn: async () => {
+            const { data } = await api.get('/api/usuarios/admin/transacciones/')
+            return data.data
+            
+            },
+            enabled: !loading && !!token,
+
+            
+        })
+    }
+        
+
+
+
+
+export function useHistorialTransaccionesperiodo(fechaInicio?: string, fechaFin?: string){
+    const { token, loading } = useAuth();
+
     return useQuery<transaccionCompleta[],Error>({
         queryKey: ["admin-transacciones", fechaInicio, fechaFin],
         queryFn: async () => {
@@ -78,8 +105,9 @@ export function useHistorialTransacciones(fechaInicio?: string, fechaFin?: strin
                 params.append("fechaFin", fechaFin)
             }
 
-            const { data } = await api.get(`/api/transacciones/periodo?${params.toString()}`)
-            return data.data
-        }
+            const { data } = await api.get(`/api/usuarios/admin/transacciones/periodo?${params.toString()}`)
+            return data.data.data
+        },
+        enabled: !loading && !!token,
     })
 }

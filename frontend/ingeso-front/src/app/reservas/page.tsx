@@ -4,7 +4,7 @@ import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { format, differenceInCalendarDays } from "date-fns"
 import { es } from "date-fns/locale"
-import { Clock, DollarSign, Trash2, Edit, AlertTriangle } from "lucide-react"
+import { Clock, DollarSign, Trash2, Edit, AlertTriangle, X } from "lucide-react"
 
 import { useUserProfile } from "@/hooks/useUserProfile"
 import { useObtenerReservas, useEliminarReserva } from "@/hooks/useReserva"
@@ -17,9 +17,14 @@ export default function VerReservasPage() {
 
   const { data: reservas = [], isLoading: cargandoReservas, isError, error, refetch } = useObtenerReservas(rutUsuario)
 
+  // Filtrar reservas para excluir las canceladas
+  const reservasActivas = reservas.filter(
+    (reserva: any) => reserva.estado !== "cancelada" && reserva.estado !== "CANCELADA",
+  )
+
   // Agregar después de la declaración de reservas
-  console.log("Datos de reservas:", reservas)
-  reservas.forEach((reserva: any, index: number) => {
+  console.log("Datos de reservas:", reservasActivas)
+  reservasActivas.forEach((reserva: any, index: number) => {
     console.log(`Reserva ${index}:`, {
       id: reserva.id,
       costo_total: reserva.costo_total,
@@ -31,6 +36,9 @@ export default function VerReservasPage() {
   const eliminarReserva = useEliminarReserva(rutUsuario)
 
   const [errorLocal, setErrorLocal] = useState<string | null>(null)
+  const [mostrarModalCancelacion, setMostrarModalCancelacion] = useState(false)
+  const [reservaACancelar, setReservaACancelar] = useState<number | null>(null)
+  const [motivoCancelacion, setMotivoCancelacion] = useState("")
 
   const calcularDiasDeAntelacion = (fechaReserva: string): number => {
     const fechaHoy = new Date()
@@ -46,18 +54,39 @@ export default function VerReservasPage() {
     }
   }
 
-  const cancelarReserva = (id: number) => {
-    if (!confirm("¿Seguro que deseas cancelar esta reserva?")) return
+  const iniciarCancelacion = (id: number) => {
+    setReservaACancelar(id)
+    setMostrarModalCancelacion(true)
+    setMotivoCancelacion("")
+  }
 
-    eliminarReserva.mutate(id, {
-      onSuccess: () => {
-        refetch()
-        setErrorLocal(null)
+  const confirmarCancelacion = () => {
+    if (!reservaACancelar || !motivoCancelacion.trim()) {
+      setErrorLocal("Por favor ingresa un motivo para la cancelación")
+      return
+    }
+
+    eliminarReserva.mutate(
+      { id: reservaACancelar, motivo: motivoCancelacion.trim() },
+      {
+        onSuccess: () => {
+          setMostrarModalCancelacion(false)
+          setReservaACancelar(null)
+          setMotivoCancelacion("")
+          setErrorLocal(null)
+          refetch()
+        },
+        onError: () => {
+          setErrorLocal("Error al cancelar la reserva")
+        },
       },
-      onError: () => {
-        setErrorLocal("Error al cancelar la reserva")
-      },
-    })
+    )
+  }
+
+  const cerrarModal = () => {
+    setMostrarModalCancelacion(false)
+    setReservaACancelar(null)
+    setMotivoCancelacion("")
   }
 
   const modificarReserva = (id: number) => {
@@ -131,7 +160,7 @@ export default function VerReservasPage() {
             </div>
             <div className="text-right">
               <p className="text-sm text-gray-500 mb-1">Total de reservas</p>
-              <p className="text-3xl font-bold text-green-600">{reservas.length}</p>
+              <p className="text-3xl font-bold text-green-600">{reservasActivas.length}</p>
             </div>
           </div>
         </div>
@@ -147,7 +176,7 @@ export default function VerReservasPage() {
         )}
 
         {/* Contenido principal */}
-        {reservas.length === 0 ? (
+        {reservasActivas.length === 0 ? (
           <div className="bg-white rounded-lg border border-gray-200 p-12 text-center">
             <h2 className="text-xl font-semibold text-gray-800 mb-2">No tienes reservas</h2>
             <p className="text-gray-600 mb-6">Aún no has realizado ninguna reserva. ¡Reserva tu cancha favorita!</p>
@@ -160,7 +189,7 @@ export default function VerReservasPage() {
           </div>
         ) : (
           <div className="space-y-4">
-            {reservas.map((reserva: any) => {
+            {reservasActivas.map((reserva: any) => {
               const diasAntelacion = calcularDiasDeAntelacion(reserva.fecha)
               const puedeModificar = diasAntelacion >= 2
 
@@ -205,7 +234,7 @@ export default function VerReservasPage() {
                     )}
 
                     <button
-                      onClick={() => cancelarReserva(reserva.id)}
+                      onClick={() => iniciarCancelacion(reserva.id)}
                       className="w-full bg-white text-red-600 py-3 px-4 rounded-lg border border-gray-200 hover:bg-red-50 flex items-center justify-center font-medium"
                     >
                       <Trash2 className="w-4 h-4 mr-2" />
@@ -232,6 +261,48 @@ export default function VerReservasPage() {
                 </div>
               )
             })}
+          </div>
+        )}
+
+        {/* Modal de cancelación */}
+        {mostrarModalCancelacion && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-lg max-w-md w-full p-6">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-semibold text-gray-900">Cancelar Reserva</h3>
+                <button onClick={cerrarModal} className="text-gray-400 hover:text-gray-600">
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              <p className="text-gray-600 mb-4">Por favor, indica el motivo de la cancelación:</p>
+
+              <textarea
+                value={motivoCancelacion}
+                onChange={(e) => setMotivoCancelacion(e.target.value)}
+                placeholder="Escribe el motivo de la cancelación..."
+                className="w-full p-3 border border-gray-300 rounded-lg resize-none h-24 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                maxLength={200}
+              />
+
+              <div className="text-right text-sm text-gray-500 mb-4">{motivoCancelacion.length}/200</div>
+
+              <div className="flex space-x-3">
+                <button
+                  onClick={cerrarModal}
+                  className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50"
+                >
+                  Cancelar
+                </button>
+                <button
+                  onClick={confirmarCancelacion}
+                  disabled={!motivoCancelacion.trim() || eliminarReserva.isPending}
+                  className="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {eliminarReserva.isPending ? "Cancelando..." : "Confirmar"}
+                </button>
+              </div>
+            </div>
           </div>
         )}
 

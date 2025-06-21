@@ -1,106 +1,6 @@
-/*'use client';
+"use client"
 
-import {
-  useTodasLasReservas,
-  useConfirmarReserva,
-  useCancelarReservaAdmin,
-} from '@/hooks/useAdminReservas';
-
-export default function AdminReservasPage() {
-  const { data: reservas, isLoading } = useTodasLasReservas();
-  const { mutateAsync: confirmarReserva } = useConfirmarReserva();
-  const { mutateAsync: cancelarReserva } = useCancelarReservaAdmin();
-
-  const handleConfirmar = async (id: number) => {
-    await confirmarReserva(id);
-  };
-
-  const handleCancelar = async (id: number) => {
-    await cancelarReserva(id);
-  };
-
-  return (
-    <div className="p-6">
-      <h1 className="text-2xl font-bold mb-4">Reservas</h1>
-
-      {isLoading ? (
-        <p>Cargando reservas...</p>
-      ) : (
-        <div className="overflow-x-auto">
-          <table className="min-w-full border border-gray-300">
-            <thead className="bg-gray-100">
-              <tr>
-                <th className="border px-4 py-2">ID</th>
-                <th className="border px-4 py-2">Fecha</th>
-                <th className="border px-4 py-2">Horario</th>
-                <th className="border px-4 py-2">Usuario</th>
-                <th className="border px-4 py-2">Cancha</th>
-                <th className="border px-4 py-2">Equipamiento</th>
-                <th className="border px-4 py-2">Estado</th>
-                <th className="border px-4 py-2">Total</th>
-                <th className="border px-4 py-2">Acciones</th>
-              </tr>
-            </thead>
-            <tbody>
-              {reservas?.map((reserva) => (
-                <tr key={reserva.id}>
-                  <td className="border px-4 py-2">{reserva.id}</td>
-                  <td className="border px-4 py-2">{reserva.fecha}</td>
-                  <td className="border px-4 py-2">
-                    {reserva.hora_inicio} - {reserva.hora_termino}
-                  </td>
-                  <td className="border px-4 py-2">
-                    <div>{reserva.usuario.nombre}</div>
-                    <div className="text-sm text-gray-500">{reserva.usuario.rut}</div>
-                  </td>
-                  <td className="border px-4 py-2">
-                    <div>{reserva.cancha.nombre}</div>
-                    <div className="text-sm text-gray-500">#{reserva.cancha.numero}</div>
-                  </td>
-                  <td className="border px-4 py-2">
-                    {(reserva.equipamiento ?? []).length === 0 ? (
-                      <span className="text-gray-400">Sin equipamiento</span>
-                    ) : (
-                      <ul className="text-sm">
-                        {reserva.equipamiento.map((eq) => (
-                          <li key={eq.id}>
-                            {eq.nombre} x{eq.cantidad} - ${eq.costo}
-                          </li>
-                        ))}
-                      </ul>
-                    )}
-                  </td>
-                  <td className="border px-4 py-2 capitalize">{reserva.historial_actual?.estado}</td>
-                  <td className="border px-4 py-2">${reserva.costo_total}</td>
-                  <td className="border px-4 py-2 space-x-2">
-                    <button
-                      onClick={() => handleConfirmar(reserva.id)}
-                      className="bg-green-500 text-white px-2 py-1 rounded text-sm"
-                    >
-                      Confirmar
-                    </button>
-                    <button
-                      onClick={() => handleCancelar(reserva.id)}
-                      className="bg-red-500 text-white px-2 py-1 rounded text-sm"
-                    >
-                      Cancelar
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      )}
-    </div>
-  );
-}
-*/
-
-
-/*"use client"
-
-import { useState } from "react"
+import { useState, useMemo } from "react"
 import {
   useTodasLasReservas,
   useConfirmarReserva,
@@ -134,7 +34,17 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
-import { CheckCircle, XCircle, Clock, User, MapPin, Package, DollarSign } from "lucide-react"
+import { CheckCircle, XCircle, Clock, User, MapPin, Package, DollarSign, Edit, Eye, Calendar } from "lucide-react"
+import { useRouter } from "next/navigation"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+
+const formatearPrecio = (precio: number | undefined | null) => {
+  if (!precio && precio !== 0) return "$0"
+  return new Intl.NumberFormat("es-CL", {
+    style: "currency",
+    currency: "CLP",
+  }).format(precio)
+}
 
 export default function AdminReservasPage() {
   const { data: todasLasReservas, isLoading } = useTodasLasReservas()
@@ -147,9 +57,18 @@ export default function AdminReservasPage() {
   const [motivoCancelacion, setMotivoCancelacion] = useState("")
   const [reservaAConfirmar, setReservaAConfirmar] = useState<reservaAdmin | null>(null)
 
-  // Filtrar solo reservas pendientes
-  const reservasPendientes =
-    todasLasReservas?.filter((reserva) => reserva.historial_actual?.estado?.toLowerCase() === "pendiente") || []
+  const [vistaActual, setVistaActual] = useState<"pendientes" | "todas">("pendientes")
+  const [filtroEstado, setFiltroEstado] = useState<string>("todos")
+  const [filtroFecha, setFiltroFecha] = useState<string>("")
+
+  const todasLasReservasActivas = todasLasReservas || []
+  const reservasPendientes = todasLasReservas?.filter((reserva) => reserva.estado?.toLowerCase() === "pendiente") || []
+
+  const router = useRouter()
+
+  const handleModificar = (reservaId: number) => {
+    router.push(`/adminDashboard/reservas/${reservaId}`)
+  }
 
   const handleConfirmar = async (reserva: reservaAdmin) => {
     try {
@@ -245,6 +164,70 @@ export default function AdminReservasPage() {
     }
   }
 
+  const reservasFiltradas = useMemo(() => {
+    console.log(" Iniciando filtrado...")
+    console.log(" Todas las reservas:", todasLasReservasActivas.length)
+    console.log(" Reservas pendientes:", reservasPendientes.length)
+    console.log(" Vista actual:", vistaActual)
+    console.log(" Filtro estado:", filtroEstado)
+    console.log(" Filtro fecha:", filtroFecha)
+
+    // Empezar con el conjunto base según la vista
+    let reservas = vistaActual === "pendientes" ? reservasPendientes : todasLasReservasActivas
+
+    console.log(" Reservas base después de vista:", reservas.length)
+
+    // Aplicar filtro de estado solo si no es "todos" Y si estamos en vista "todas"
+    if (filtroEstado !== "todos" && vistaActual === "todas") {
+      const reservasAntesFiltro = reservas.length
+      reservas = reservas.filter((r) => {
+        const estadoReserva = r.estado?.toLowerCase()
+        const coincide = estadoReserva === filtroEstado.toLowerCase()
+
+        if (!coincide) {
+          console.log(` Reserva ${r.id}: estado "${estadoReserva}" no coincide con filtro "${filtroEstado}"`)
+        }
+
+        return coincide
+      })
+      console.log(` Filtro estado aplicado: ${reservasAntesFiltro} → ${reservas.length}`)
+    }
+
+    // Aplicar filtro de fecha
+    if (filtroFecha) {
+      const reservasAntesFiltro = reservas.length
+      reservas = reservas.filter((r) => {
+        const fechaReserva = r.fecha
+        const coincide = fechaReserva === filtroFecha
+
+        if (!coincide) {
+          console.log(` Reserva ${r.id}: fecha "${fechaReserva}" no coincide con filtro "${filtroFecha}"`)
+        }
+
+        return coincide
+      })
+      console.log(` Filtro fecha aplicado: ${reservasAntesFiltro} → ${reservas.length}`)
+    }
+
+    console.log(" Reservas finales filtradas:", reservas.length)
+
+    // Mostrar muestra de los estados de las reservas para debug
+    if (reservas.length > 0) {
+      console.log(" Estados de las primeras 3 reservas:")
+      reservas.slice(0, 3).forEach((r) => {
+        console.log(`  - Reserva ${r.id}: estado = "${r.estado}"`)
+      })
+    }
+
+    return reservas
+  }, [vistaActual, reservasPendientes, todasLasReservasActivas, filtroEstado, filtroFecha])
+
+  const limpiarFiltros = () => {
+    setFiltroEstado("todos")
+    setFiltroFecha("")
+    setVistaActual("todas")
+  }
+
   if (isLoading) {
     return (
       <div className="container mx-auto p-6 space-y-6">
@@ -274,8 +257,10 @@ export default function AdminReservasPage() {
   return (
     <div className="container mx-auto p-6 space-y-6">
       <div className="space-y-2">
-        <h1 className="text-3xl font-bold tracking-tight">Gestión de Reservas</h1>
-        <p className="text-muted-foreground">Administra las reservas pendientes de confirmación</p>
+        <h1 className="text-3xl font-bold tracking-tight">Gestión Completa de Reservas</h1>
+        <p className="text-muted-foreground">
+          Administra todas las reservas: confirma, modifica y cancela sin restricciones
+        </p>
       </div>
 
       <div className="grid gap-4 md:grid-cols-3">
@@ -289,19 +274,114 @@ export default function AdminReservasPage() {
             <p className="text-xs text-muted-foreground">Esperando confirmación</p>
           </CardContent>
         </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Total Reservas</CardTitle>
+            <Calendar className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{todasLasReservasActivas.length}</div>
+            <p className="text-xs text-muted-foreground">Todas las reservas</p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Confirmadas</CardTitle>
+            <CheckCircle className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">
+              {todasLasReservasActivas.filter((r) => r.estado?.toLowerCase() === "confirmada").length}
+            </div>
+            <p className="text-xs text-muted-foreground">Reservas activas</p>
+          </CardContent>
+        </Card>
       </div>
 
       <Card>
         <CardHeader>
-          <CardTitle>Reservas Pendientes</CardTitle>
-          <CardDescription>Lista de reservas que requieren tu atención</CardDescription>
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle>Filtros y Vista</CardTitle>
+              <CardDescription>Personaliza la vista de reservas</CardDescription>
+            </div>
+          </div>
         </CardHeader>
         <CardContent>
-          {reservasPendientes.length === 0 ? (
+          <div className="flex flex-wrap gap-4">
+            <div className="flex items-center space-x-2">
+              <Label>Vista:</Label>
+              <Select value={vistaActual} onValueChange={(value: "pendientes" | "todas") => setVistaActual(value)}>
+                <SelectTrigger className="w-40">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="pendientes">Solo Pendientes</SelectItem>
+                  <SelectItem value="todas">Todas las Reservas</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="flex items-center space-x-2">
+              <Label>Estado:</Label>
+              <Select value={filtroEstado} onValueChange={setFiltroEstado} disabled={vistaActual === "pendientes"}>
+                <SelectTrigger className="w-40">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="todos">Todos</SelectItem>
+                  <SelectItem value="pendiente">Pendiente</SelectItem>
+                  <SelectItem value="confirmada">Confirmada</SelectItem>
+                  <SelectItem value="cancelada">Cancelada</SelectItem>
+                </SelectContent>
+              </Select>
+              {vistaActual === "pendientes" && (
+                <span className="text-xs text-muted-foreground">(Deshabilitado en vista pendientes)</span>
+              )}
+            </div>
+
+            <div className="flex items-center space-x-2">
+              <Label>Fecha:</Label>
+              <input
+                type="date"
+                value={filtroFecha}
+                onChange={(e) => setFiltroFecha(e.target.value)}
+                className="px-3 py-2 border border-gray-300 rounded-md text-sm"
+              />
+            </div>
+
+            <Button variant="outline" onClick={limpiarFiltros} className="bg-gray-50 hover:bg-gray-100">
+              Limpiar Filtros
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>
+            {vistaActual === "pendientes" ? "Reservas Pendientes" : "Todas las Reservas"} ({reservasFiltradas.length})
+          </CardTitle>
+          <CardDescription>
+            {vistaActual === "pendientes"
+              ? "Lista de reservas que requieren tu atención"
+              : "Vista completa de todas las reservas del sistema"}
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          {reservasFiltradas.length === 0 ? (
             <div className="text-center py-8">
-              <CheckCircle className="mx-auto h-12 w-12 text-green-500 mb-4" />
-              <h3 className="text-lg font-medium mb-2">¡Todo al día!</h3>
-              <p className="text-muted-foreground">No hay reservas pendientes por revisar.</p>
+              <Eye className="mx-auto h-12 w-12 text-gray-400 mb-4" />
+              <h3 className="text-lg font-medium mb-2">
+                {vistaActual === "pendientes" ? "¡Todo al día!" : "No hay reservas"}
+              </h3>
+              <p className="text-muted-foreground">
+                {vistaActual === "pendientes"
+                  ? "No hay reservas pendientes por revisar."
+                  : "No se encontraron reservas con los filtros aplicados."}
+              </p>
             </div>
           ) : (
             <div className="rounded-md border">
@@ -318,7 +398,7 @@ export default function AdminReservasPage() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {reservasPendientes.map((reserva) => (
+                  {reservasFiltradas.map((reserva) => (
                     <TableRow key={reserva.id}>
                       <TableCell>
                         <div className="space-y-1">
@@ -363,24 +443,37 @@ export default function AdminReservasPage() {
                           </div>
                         )}
                       </TableCell>
-                      <TableCell>{getEstadoBadge(reserva.historial_actual?.estado)}</TableCell>
+                      <TableCell>{getEstadoBadge(reserva.estado)}</TableCell>
                       <TableCell>
                         <div className="flex items-center space-x-1">
                           <DollarSign className="h-4 w-4 text-muted-foreground" />
-                          <span className="font-medium">{reserva.costo_total.toLocaleString()}</span>
+                          <span className="font-medium">{formatearPrecio(reserva.costo_total)}</span>
                         </div>
                       </TableCell>
                       <TableCell className="text-right">
                         <div className="flex justify-end space-x-2">
                           <Button
                             size="sm"
-                            onClick={() => setReservaAConfirmar(reserva)}
-                            disabled={confirmando}
-                            className="bg-green-600 hover:bg-green-700"
+                            variant="outline"
+                            onClick={() => handleModificar(reserva.id)}
+                            className="bg-blue-50 hover:bg-blue-100 text-blue-700 border-blue-200"
                           >
-                            <CheckCircle className="w-4 h-4 mr-1" />
-                            Confirmar
+                            <Edit className="w-4 h-4 mr-1" />
+                            Modificar
                           </Button>
+
+                          {reserva.estado?.toLowerCase() === "pendiente" && (
+                            <Button
+                              size="sm"
+                              onClick={() => setReservaAConfirmar(reserva)}
+                              disabled={confirmando}
+                              className="bg-green-600 hover:bg-green-700"
+                            >
+                              <CheckCircle className="w-4 h-4 mr-1" />
+                              Confirmar
+                            </Button>
+                          )}
+
                           <Button
                             size="sm"
                             variant="destructive"
@@ -401,6 +494,7 @@ export default function AdminReservasPage() {
         </CardContent>
       </Card>
 
+      {/* Dialog para confirmar reserva */}
       <AlertDialog open={!!reservaAConfirmar} onOpenChange={() => setReservaAConfirmar(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
@@ -422,6 +516,7 @@ export default function AdminReservasPage() {
         </AlertDialogContent>
       </AlertDialog>
 
+      {/* Dialog para cancelar reserva */}
       <Dialog
         open={!!reservaACancelar}
         onOpenChange={() => {
@@ -466,11 +561,4 @@ export default function AdminReservasPage() {
       </Dialog>
     </div>
   )
-}*/
-
-import AdminReservasPage from "@/components/adminreserva"
-
-export default function ReservasAdminPage() {
-  return <AdminReservasPage />
 }
-

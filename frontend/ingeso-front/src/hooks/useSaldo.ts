@@ -21,6 +21,8 @@ export function useActualizarSaldo() {
   return useMutation({
     mutationFn: async ({ nuevoSaldo, transaccion }: { nuevoSaldo: number; transaccion?: string }) => {
       const respuesta = await api.patch("/api/auth/saldo", { nuevoSaldo, transaccion })
+      console.log(nuevoSaldo);
+      console.log(respuesta.data);
       return respuesta.data
     },
     onSuccess: () => {

@@ -3,8 +3,8 @@
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 
-import { useCanchas } from "@/hooks/useCancha"
-import { useEquipamiento } from "@/hooks/useEquipamiento"
+import { type Cancha, useCanchas } from "@/hooks/useCancha"
+import { type Equipamiento, useEquipamiento } from "@/hooks/useEquipamiento"
 import { useCrearReserva, useVerificarDisponibilidad, useFechasDisponibles } from "@/hooks/useReserva"
 import { useObtenerSaldo, useActualizarSaldo } from "@/hooks/useSaldo"
 import { useUserProfile } from "@/hooks/useUserProfile"
@@ -127,7 +127,7 @@ export default function ReservaTabla() {
   // Fechas y horarios disponibles
   const [availableDates, setAvailableDates] = useState<string[]>([])
   const [availableTimes, setAvailableTimes] = useState<string[]>([])
-  const [canchasDisponibles, setCanchasDisponibles] = useState<any[]>([])
+  const [canchasDisponibles, setCanchasDisponibles] = useState<Cancha[]>([])
 
   // Hook de verificación de disponibilidad
   const verificarDisponibilidad = useVerificarDisponibilidad(filtroFecha, filtroHora, filtroNumeroPersonas)
@@ -210,8 +210,8 @@ export default function ReservaTabla() {
       setCanchasDisponibles(verificarDisponibilidad.data.canchasDisponibles)
     } else if (canchas && Array.isArray(canchas)) {
       // Fallback: filtrar por capacidad
-      const canchasFiltradas = canchas.filter((cancha: any) => {
-        const capacidad = cancha.cantidad_max_jugador || cancha.maxJugadores || 0
+      const canchasFiltradas = canchas.filter((cancha: Cancha) => {
+        const capacidad = cancha.maxJugadores || 0
         return capacidad >= filtroNumeroPersonas
       })
       setCanchasDisponibles(canchasFiltradas)
@@ -263,7 +263,7 @@ export default function ReservaTabla() {
   }
 
   const handleEquipmentQuantityChange = (equipmentId: number, change: number) => {
-    const equipment = equipamiento?.find((e: any) => e.id === equipmentId)
+    const equipment = equipamiento?.find((e: Equipamiento) => e.id === equipmentId)
     if (!equipment) return
 
     setEquipamientoSeleccionado((prev) => {
@@ -391,10 +391,12 @@ export default function ReservaTabla() {
     }
 
     setConfirmandoPago(true)
-    setError(null) // Clear any previous errors
+    setError(null)
 
     try {
-      await crearReserva.mutateAsync({
+      // Paso 1: Crear la reserva
+      console.log("Creando reserva...")
+      const reservaResponse = await crearReserva.mutateAsync({
         fecha: reservaEnProceso.fecha,
         hora_inicio: reservaEnProceso.hora_inicio,
         hora_termino: reservaEnProceso.hora_termino,
@@ -408,25 +410,56 @@ export default function ReservaTabla() {
         })),
       })
 
-      await actualizarSaldo.mutateAsync({
-        nuevoSaldo: saldo.saldo - reservaEnProceso.costo_total,
-        transaccion: "Reserva de cancha",
-      })
+      
+      const costoTotal = calcularCostoTotal(); 
+      const nuevoSaldoCalculado = Number(saldo.saldo) - costoTotal;
+
+      if (isNaN(nuevoSaldoCalculado) || nuevoSaldoCalculado <= 0) {
+        throw new Error("Error en el cálculo del nuevo saldo");
+      }
+
+      console.log("Actualizando saldo...");
+      console.log(nuevoSaldoCalculado);
+
+      const saldoResponse = await actualizarSaldo.mutateAsync({
+        nuevoSaldo: nuevoSaldoCalculado,
+        transaccion: `Reserva de cancha: $${costoTotal.toLocaleString()}`,
+      });
+
+
+      // Solo si ambas operaciones fueron exitosas, ir a la pantalla de confirmación
+      console.log("Proceso completado exitosamente, mostrando confirmación")
+      setPantalla(2)
+      setConfirmandoPago(false)
     } catch (error: any) {
-      console.error("Error al confirmar la reserva:", error)
+      console.error("Error en el proceso de reserva:", error)
 
-      // Extract error message from backend response
-      const errorMessage =
-        error?.response?.data?.message ||
-        error?.response?.data?.error ||
-        error?.message ||
-        "Error al crear la reserva. Intenta nuevamente."
+      // Extraer mensaje de error más específico
+      let errorMessage = "Error desconocido al procesar la reserva"
 
-      setError(`No se pudo completar la reserva: ${errorMessage}`)
+      if (error?.response?.data?.message) {
+        errorMessage = error.response.data.message
+      } else if (error?.response?.data?.error) {
+        errorMessage = error.response.data.error
+      } else if (error?.message) {
+        errorMessage = error.message
+      }
+
+      // Mostrar error específico según el tipo
+      if (errorMessage.includes("no está disponible")) {
+        setError(`❌ Reserva no disponible: ${errorMessage}`)
+      } else if (errorMessage.includes("monto") || errorMessage.includes("saldo")) {
+        setError(`💰 Error de saldo: ${errorMessage}`)
+      } else if (errorMessage.includes("cancha")) {
+        setError(`🏟️ Error de cancha: ${errorMessage}`)
+      } else {
+        setError(`⚠️ Error: ${errorMessage}`)
+      }
+
       setConfirmandoPago(false)
 
-      // Ensure we don't proceed to success screen
-      return
+      // NO avanzar a la pantalla de éxito - mantener al usuario en la pantalla de pago
+      // setPantalla(2) <- Esta línea NO debe ejecutarse en caso de error
     }
   }
 
@@ -883,7 +916,7 @@ export default function ReservaTabla() {
                   <div className="space-y-2 max-h-48 overflow-y-auto">
                     {canchasDisponibles.map((cancha: any) => (
                       <label
-                        key={cancha.id}
+                        key={cancha.id_cancha}
                         className={`block p-3 border rounded cursor-pointer transition ${
                           canchaSeleccionada?.numero === cancha.numero
                             ? "border-green-500 bg-green-50"

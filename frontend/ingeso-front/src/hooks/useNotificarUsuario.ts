@@ -2,23 +2,23 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '@/api/axios';
 
 export interface notificacion {
-    id: number;
+    id_notificacion: number;
     titulo: string;
     mensaje: string;
-    tipoEvento: string;
-    fechaCreacion: string;
+    tipo_evento: string;
+    fecha_creacion: string;
     leida: boolean;
-    idUsuario: number;
+    id_usuario: number;
 }
 
-export function useNotificaciones(idUsuario: number) {
+export function useNotificaciones(id_usuario: number) {
     return useQuery<notificacion[],Error>({
-        queryKey:['notificaciones-usuario', idUsuario],
+        queryKey:['notificaciones-usuario', id_usuario],
         queryFn: async () => {
-            const { data } = await api.get(`/api/notificaciones/historial/${idUsuario}`)
+            const { data } = await api.get(`/api/notificaciones/historial/${id_usuario}`)
             return data.data
         }, 
-        enabled: !!idUsuario
+        enabled: !!id_usuario
     })
 
 }

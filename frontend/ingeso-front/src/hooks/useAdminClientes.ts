@@ -1,10 +1,11 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import api from '@/api/axios';
+import { useAuth } from "@/context/AuthContext";
 
 export interface Cliente {
     id_usuario: number
     rut: string 
-    nombre: string
+    nombre_usuario: string
     correo: string
     telefono: string
     direccion?: string
@@ -28,12 +29,14 @@ export interface nuevoCliente {
 
 
 export function useClientes() {
+    const { token, loading } = useAuth();
     return useQuery<Cliente[], Error>({
         queryKey:["admin-clientes"],
         queryFn: async () => {
-            const {data} = await api.get("api/admin/clientes");
+            const {data} = await api.get("api/usuarios/admin/clientes");
             return data.data;
         },
+        enabled: !loading && !!token,
     })
 }
 
@@ -43,7 +46,7 @@ export function useCrearCliente(){
 
     return useMutation({
         mutationFn: async (cliente: nuevoCliente) => {
-            const {data} = await api.post("/api/admin/clientes", cliente);
+            const {data} = await api.post("/api/usuarios/admin/clientes", cliente);
             return data;
         },
         onSuccess: () => {

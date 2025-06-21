@@ -33,8 +33,8 @@ export default function MisNotificacionesPage() {
         <ul className="space-y-4">
           {notificaciones.map((n) => (
             <li
-              key={n.id}
-              onClick={() => handleMarcarLeida(n.id, n.leida)}
+              key={n.id_notificacion}
+              onClick={() => handleMarcarLeida(n.id_notificacion, n.leida)}
               className={`p-4 border rounded bg-white shadow-sm cursor-pointer ${
                 n.leida ? '' : 'border-yellow-400'
               }`}
@@ -42,7 +42,7 @@ export default function MisNotificacionesPage() {
               <h2 className="text-lg font-semibold">{n.titulo}</h2>
               <p className="text-gray-700">{n.mensaje}</p>
               <div className="text-sm text-gray-500 mt-1">
-                {dayjs(n.fechaCreacion).format('DD-MM-YYYY HH:mm')} · Tipo: {n.tipoEvento}
+                {dayjs(n.fecha_creacion).format('DD-MM-YYYY HH:mm')} · Tipo: {n.tipo_evento}
               </div>
               {!n.leida && (
                 <span className="text-xs text-yellow-700 bg-yellow-100 px-2 py-0.5 rounded mt-1 inline-block">

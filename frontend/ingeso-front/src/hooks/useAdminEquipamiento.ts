@@ -1,8 +1,9 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import api from "@/api/axios";
+import { useAuth } from "@/context/AuthContext";
 
 export interface Equipamiento {
-    id_equipamiento: number
+    id: number
     nombre: string
     tipo: string
     costo: number
@@ -17,12 +18,14 @@ export interface nuevoEquipamiento {
 }
 
 export function useEquipamientos() {
+    const { token, loading } = useAuth();
     return useQuery<Equipamiento[], Error>({
         queryKey:["admin-equipamientos"],
         queryFn: async () => {
             const { data } = await api.get("/api/usuarios/admin/equipamientos"); 
                         return data.data
         },
+        enabled: !loading && !!token,
     })
 }
 
@@ -33,7 +36,7 @@ export function useCrearEquipamiento(){
 
     return useMutation({
         mutationFn: async (equipamiento: nuevoEquipamiento) => {
-            const { data } = await api.post("/api/usuarios/admin/equipamiento", equipamiento); // ✅ Ruta correcta
+            const { data } = await api.post("/api/usuarios/admin/equipamiento", equipamiento); 
             return data;
         },
         onSuccess: () => {
@@ -49,7 +52,7 @@ export function useActualizarEquipamiento () {
 
     return useMutation({
         mutationFn: async ({id, equipamiento}: {id: number; equipamiento: Partial<nuevoEquipamiento>}) => {
-            const { data } = await api.patch(`/api/usuarios/admin/equipamiento/${id}`, equipamiento); // ✅ Ruta correcta
+            const { data } = await api.patch(`/api/usuarios/admin/equipamiento/${id}`, equipamiento); 
             return data;
         },
         onSuccess: () => {

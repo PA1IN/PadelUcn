@@ -1,7 +1,8 @@
+"use client"
+
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import api from "@/api/axios"
 import { useAuth } from "@/context/AuthContext"
-
 
 export function useObtenerReservas(rut_usuario: string) {
   return useQuery({
@@ -31,31 +32,27 @@ export interface Datosreserva {
   jugadores: Jugador[]
 }
 
-
-export function useCrearReserva(onSuccess?: () => void, onError?: (error: string) => void) {
+export function useCrearReserva() {
   const clienteQuery = useQueryClient()
   return useMutation({
     mutationFn: async (reserva: Datosreserva) => {
       const respuesta = await api.post("api/reserva", reserva)
-      return respuesta.data
+      return respuesta.data.data
     },
     onSuccess: () => {
+      clienteQuery.invalidateQueries({queryKey:['saldo']})
       clienteQuery.invalidateQueries({ queryKey: ["reservas"] })
-      if (onSuccess) onSuccess()
-    },
-    onError: (error: string) => {
-      if (onError) onError(error)
+      
     },
   })
 }
-
 
 export function useEliminarReserva(rut: string) {
   const clienteQuery = useQueryClient()
 
   return useMutation({
-    mutationFn: async (id: number) => {
-      const respuesta = await api.delete(`api/reserva/${id}`)
+    mutationFn: async ({ id, motivo }: { id: number; motivo: string }) => {
+      const respuesta = await api.put(`api/reserva/${id}/cancelar`, { motivo })
       return respuesta.data
     },
     onSuccess: () => {
@@ -66,7 +63,7 @@ export function useEliminarReserva(rut: string) {
 
 // 🔄 USAR ESTE HOOK PARA OBTENER UNA RESERVA POR ID
 export function useReservaPorId(id: number) {
-  const {token, loading } = useAuth();
+  const { token, loading } = useAuth()
   return useQuery({
     queryKey: ["reserva", id],
     queryFn: async () => {
@@ -129,7 +126,7 @@ export function useVerificarDisponibilidad(fecha: string, hora: string, numeroPe
 
 // 🔄 NUEVO HOOK PARA OBTENER FECHAS DISPONIBLES
 export function useFechasDisponibles() {
-  const { loading, token } = useAuth();
+  const { loading, token } = useAuth()
   return useQuery({
     queryKey: ["fechasDisponibles"],
     queryFn: async () => {

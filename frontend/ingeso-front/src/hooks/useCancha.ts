@@ -17,7 +17,7 @@ export function useCanchas() {
     queryFn: async () => {
       const respuesta = await api.get("/api/canchas")
       const lista = respuesta.data
-      console.log(lista.maxJugadores)
+      console.log(lista)
 
       if (!Array.isArray(lista)) {
         throw new Error("Error en la respuesta")

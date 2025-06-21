@@ -4,6 +4,7 @@ import { type SyntheticEvent, useState } from "react"
 import { useRouter } from "next/navigation"
 import { useAuth } from "@/context/AuthContext"
 import { useLogin } from "@/hooks/useLogin"
+import api from "@/api/axios" // este es tu archivo axios.ts
 
 export default function Login() {
   const [rut, setRut] = useState("")
@@ -13,11 +14,24 @@ export default function Login() {
   const router = useRouter()
 
   const login = useLogin(
-    (token: string) => {
+    async (token: string) => {
       setToken(token)
       sessionStorage.setItem("token", token)
-      
-      router.push("/home")
+
+      try {
+        // Usa axios con token ya incluido (tu archivo axios ya lo maneja si está configurado correctamente)
+        const respuesta = await api.get("/api/auth/profile")
+        const usuario = respuesta.data?.data
+
+        if (usuario?.is_admin) {
+          router.push("/adminDashboard")
+        } else {
+          router.push("/home")
+        }
+      } catch (error) {
+        console.error("Error al obtener el perfil del usuario", error)
+        setErrorMsg("Error al verificar los datos del usuario.")
+      }
     },
     (mensajeError: string) => {
       setErrorMsg(mensajeError)

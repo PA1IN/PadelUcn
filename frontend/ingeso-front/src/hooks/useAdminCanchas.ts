@@ -1,14 +1,15 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import api from "@/api/axios";
+import { useAuth } from "@/context/AuthContext";
 
 export interface Cancha {
-    id_cancha: number
+    id: number
     numero: number
     nombre: string
     descripcion: string
     valor: number
-    cantidad_max_jugadores: number
-    mantenimienti: boolean
+    cantidadMaxJugador: number
+    mantenimiento: boolean
 }
 
 export interface nuevaCancha {
@@ -16,16 +17,19 @@ export interface nuevaCancha {
     nombre: string; 
     descripcion: string;
     valor: number;
-    cantidad_max_jugadores: number;
+    cantidadMaxJugador: number
+
 }
 
 export function useAdminCanchas() {
+    const { token, loading } = useAuth();
     return useQuery<Cancha[], Error>({
         queryKey: ["admin-canchas"],
         queryFn: async () => {
             const { data } = await api.get("/api/usuarios/admin/canchas");
             return data.data;
         },
+        enabled: !loading && !!token,
     })
 }
 
@@ -38,6 +42,7 @@ export function useCrearCancha() {
         },
         onSuccess: () => {
             clienteQuery.invalidateQueries({queryKey: ["canchas"]})
+            clienteQuery.invalidateQueries({queryKey: ["admin-canchas"]})
         },
     })
 }
@@ -52,6 +57,7 @@ export function useActualizarCancha() {
         },
         onSuccess: () => {
             clienteQuery.invalidateQueries({queryKey:["canchas"]})
+            clienteQuery.invalidateQueries({queryKey: ["admin-canchas"]})
         },
     })
 }

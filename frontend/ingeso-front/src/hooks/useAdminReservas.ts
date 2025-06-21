@@ -1,9 +1,10 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import api from "@/api/axios";
+import { useAuth } from "@/context/AuthContext";
 
 
 export interface reservaAdmin {
-    id_reserva: number
+    id: number
     fecha: string
     hora_inicio: string
     hora_termino: string
@@ -15,19 +16,20 @@ export interface reservaAdmin {
         telefono: string
     }
     cancha: {
-        id_cancha: number
+        id: number
         nombre: string
         numero: number
         valor: number
     }
 
     historial_actual: {
+        id:number
         estado: string
-        fecha_estado: string
+        fechaEstado: string
     }
 
     equipamiento: Array<{
-        id_equipamiento: number
+        id: number
         nombre: string
         cantidad: number
         costo: number
@@ -39,23 +41,26 @@ export interface reservaAdmin {
 }
 
 export function useTodasLasReservas() {
+
+    const { token,loading } = useAuth();
     return useQuery<reservaAdmin[], Error>({
         queryKey: ["admin-reservas"],
         queryFn: async () => {
-            const { data } = await api.get("/api/reservas")
+            const { data } = await api.get("/api/reserva")
             return data.data
         },
+        enabled: !loading && !!token,
     })
 }
 
-export type estadoReserva = "confirmada" | "cancelada" | "pendiente"
+export type estadoReserva = "confirmar" | "cancelar" | "pendiente"
 
 export function useCambiarEstadoReserva() {
     const clienteQuery = useQueryClient()
 
     return useMutation({
-        mutationFn: async ({ idReserva, nuevoEstado }: { idReserva: number; nuevoEstado: estadoReserva}) => {
-            const { data } = await api.put(`/api/reservas/${idReserva}/estado`, { estado: nuevoEstado});
+        mutationFn: async ({ id, nuevoEstado }: { id: number; nuevoEstado: estadoReserva}) => {
+            const { data } = await api.put(`/api/reserva/${id}/${nuevoEstado}`, {});
             return data;
         },
         onSuccess: () => {
@@ -72,8 +77,8 @@ export function useConfirmarReserva() {
 
     return {
         ...cambiarEstado,
-        mutateAsync: (idReserva: number) => cambiarEstado.mutateAsync({
-            idReserva, nuevoEstado: "confirmada"
+        mutateAsync: (id: number) => cambiarEstado.mutateAsync({
+            id, nuevoEstado: "confirmar"
         }),
     }
 }
@@ -83,8 +88,8 @@ export function useCancelarReservaAdmin() {
 
     return {
         ...cambiarEstado,
-        mutateAsync: (idReserva: number) => cambiarEstado.mutateAsync({
-            idReserva, nuevoEstado: "cancelada"
+        mutateAsync: (id: number) => cambiarEstado.mutateAsync({
+            id, nuevoEstado: "cancelar"
         }),
     }
 }
