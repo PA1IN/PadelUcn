@@ -151,14 +151,58 @@ export class ReservaService {
       if (!cancha) {
         throw new BadRequestException(`Cancha número ${createReservaDto.numero_cancha} no encontrada`);
       }      
+      // Calcular costo de la cancha
       const costoReserva = cancha.valor * (duracionMinutos / 60);
 
-      // Verificar que el usuario tenga saldo suficiente
-      if (!isAdmin && usuario.saldo < costoReserva) {
-        throw new BadRequestException(`Saldo insuficiente para realizar la reserva. Saldo actual: $${usuario.saldo}, Costo: $${costoReserva}`);
+      // Procesar equipamiento y calcular costo adicional
+      let costoTotalEquipamiento = 0;
+      interface EquipamientoProcesado {
+        equipamiento: Equipamiento;
+        cantidad: number;
+        costoItem: number;
       }
 
-      //Crear la reserva
+      const equipamientosProcesados: EquipamientoProcesado[] = [];
+
+      if (Array.isArray(createReservaDto.equipamiento) && createReservaDto.equipamiento.length > 0) {
+        for (const item of createReservaDto.equipamiento) {
+          const equipamiento = await this.equipamientoRepository.findOne({
+            where: { id: item.id }
+          });
+
+          if (!equipamiento) {
+            throw new BadRequestException(`Equipamiento con ID ${item.id} no encontrado`);
+          }
+
+          // Verificar stock
+          if (equipamiento.stock < item.cantidad) {
+            throw new BadRequestException(`Stock insuficiente para el equipamiento ${equipamiento.nombre}. Disponible: ${equipamiento.stock}`);
+          }
+
+          const costoItem = equipamiento.costo * item.cantidad;
+          costoTotalEquipamiento += costoItem;
+          
+          equipamientosProcesados.push({
+            equipamiento,
+            cantidad: item.cantidad,
+            costoItem
+          });
+        }
+      }
+
+      // ✅ CALCULAR COSTO TOTAL (CANCHA + EQUIPAMIENTO)
+      const costoTotal = costoReserva + costoTotalEquipamiento;
+
+      // ✅ VERIFICAR SALDO TOTAL UNA SOLA VEZ
+      if (!isAdmin && usuario.saldo < costoTotal) {
+        throw new BadRequestException(
+          `Saldo insuficiente para realizar la reserva. Saldo: $${usuario.saldo}, ` +
+          `Costo cancha: $${costoReserva}, Equipamiento: $${costoTotalEquipamiento}, ` +
+          `Total: $${costoTotal}`
+        );
+      }
+
+      // Crear la reserva
       const newReserva = this.reservaRepository.create({
         fecha: fechaFormateada,
         hora_inicio: createReservaDto.hora_inicio,
@@ -170,11 +214,32 @@ export class ReservaService {
 
       const savedReserva = await this.reservaRepository.save(newReserva);
 
-      //Procesar el pago (descontar del saldo) si no es admin
+      // ✅ PROCESAR PAGO TOTAL EN UNA SOLA OPERACIÓN
       if (!isAdmin) {
-        usuario.saldo -= costoReserva;
+        usuario.saldo -= costoTotal;
         await this.usuarioRepository.save(usuario);
-      }      //Crear el historial de la reserva
+      }
+
+      // Procesar equipamiento y actualizar stock
+      if (equipamientosProcesados.length > 0) {
+        for (const proc of equipamientosProcesados) {
+          // Crear boleta de equipamiento
+          const nuevaBoleta = this.boletaEquipamientoRepository.create({
+            reserva: { id: savedReserva.id },
+            equipamiento: { id: proc.equipamiento.id },
+            cantidad: proc.cantidad,
+            montoTotal: proc.costoItem,
+          });
+          
+          await this.boletaEquipamientoRepository.save(nuevaBoleta);
+          
+          // Actualizar stock
+          proc.equipamiento.stock -= proc.cantidad;
+          await this.equipamientoRepository.save(proc.equipamiento);
+        }
+      }
+
+      //Crear el historial de la reserva
       try {
         await this.historialReservaService.create({
           estado: 'Pendiente',
@@ -193,60 +258,12 @@ export class ReservaService {
             apellido: jugadorDto.apellido,
             rut: jugadorDto.rut,
             edad: jugadorDto.edad,
-            reserva: { id: jugadorDto.id_reserva }
+            reserva: { id: savedReserva.id } 
           });
           
           await this.jugadorRepository.save(nuevoJugador);
         }
-      }      //Procesar el equipamiento si se proporcionó
-      let costoTotalEquipamiento = 0;
-      if (Array.isArray(createReservaDto.equipamiento) && createReservaDto.equipamiento.length > 0) {
-        for (const item of createReservaDto.equipamiento) {
-          const equipamiento = await this.equipamientoRepository.findOne({
-            where: { id: item.id } // ✅ USAR 'id' NO 'id_equipamiento'
-          });
-
-          if (!equipamiento) {
-            throw new BadRequestException(`Equipamiento con ID ${item.id} no encontrado`);
-          }
-
-          // Verificar stock
-          if (equipamiento.stock < item.cantidad) {
-            throw new BadRequestException(`Stock insuficiente para el equipamiento ${equipamiento.nombre}. Disponible: ${equipamiento.stock}`);
-          }
-
-          const costoItem = equipamiento.costo * item.cantidad;
-          costoTotalEquipamiento += costoItem;
-
-          // Crear boleta de equipamiento
-          const nuevaBoleta = this.boletaEquipamientoRepository.create({
-            reserva: { id: savedReserva.id },
-            equipamiento: { id: item.id }, // ✅ USAR 'id'
-            cantidad: item.cantidad,
-            montoTotal: costoItem,
-          });
-
-          await this.boletaEquipamientoRepository.save(nuevaBoleta);
-
-          // Actualizar stock
-          equipamiento.stock -= item.cantidad;
-          await this.equipamientoRepository.save(equipamiento);
-        }
-      }
-
-      // Verificar saldo para el equipamiento
-      if (!isAdmin && usuario.saldo < costoTotalEquipamiento) {
-        // Revertir la reserva y lanzar error
-        await this.reservaRepository.delete(savedReserva.id);
-        throw new BadRequestException(`Saldo insuficiente para el equipamiento. Saldo actual: $${usuario.saldo}, Costo: $${costoTotalEquipamiento}`);
-      }
-
-      // Procesar el pago del equipamiento
-      if (!isAdmin && costoTotalEquipamiento > 0) {
-        usuario.saldo -= costoTotalEquipamiento;
-        await this.usuarioRepository.save(usuario);
-      }
-      // Obtener la reserva completa con todas las relaciones
+      }      // Obtener la reserva completa con todas las relaciones
       const reservaCompleta = await this.reservaRepository.findOne({
         where: { id: savedReserva.id },
         relations: ['usuario', 'cancha', 'boletas', 'boletas.equipamiento', 'jugadores'],
@@ -287,7 +304,9 @@ export class ReservaService {
       try {
         await this.notificacionesService.create({
           titulo: 'Reserva Creada y Pagada',
-          mensaje: `Tu reserva para la cancha #${createReservaDto.numero_cancha} el ${fechaFormateada.toLocaleDateString()} de ${createReservaDto.hora_inicio} a ${createReservaDto.hora_termino} ha sido creada y pagada exitosamente. Costo: $${costoReserva}`,
+          mensaje: `Tu reserva para la cancha #${createReservaDto.numero_cancha} el ${fechaFormateada.toLocaleDateString()} ` +
+            `de ${createReservaDto.hora_inicio} a ${createReservaDto.hora_termino} ha sido creada y pagada exitosamente. ` +
+            `Cancha: $${costoReserva}, Equipamiento: $${costoTotalEquipamiento}, Total: $${costoTotal}`,
           tipoEvento: 'RESERVA_CREADA',
           idUsuario: usuario.id_usuario,
           idReserva: savedReserva.id

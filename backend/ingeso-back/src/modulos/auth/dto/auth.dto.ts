@@ -1,4 +1,4 @@
-import { IsEmail, IsNotEmpty, IsString, MinLength, Matches, IsOptional } from 'class-validator';
+import { IsEmail, IsNotEmpty, IsString, MinLength, Matches, IsOptional, IsNumber,Min } from 'class-validator';
 
 export class LoginDto {
   @IsNotEmpty({ message: 'El RUT es requerido' })
@@ -58,4 +58,15 @@ export class RegisterResponseDto {
   telefono?: string;
   saldo: number;
   is_admin: boolean;
+}
+
+export class AgregarSaldoDto {
+  @IsNotEmpty({ message: 'El monto a agregar es requerido' })
+  @IsNumber({}, { message: 'El monto debe ser un número' })
+  @Min(0, { message: 'El monto debe ser mayor o igual a 0' })
+  montoAAgregar: number;
+
+  @IsOptional()
+  @IsString({ message: 'La descripción de la transacción debe ser texto' })
+  transaccion?: string;
 }
