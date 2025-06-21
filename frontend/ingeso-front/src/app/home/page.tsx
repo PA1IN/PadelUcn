@@ -29,7 +29,7 @@ export default function Home() {
   }
 
   const irANotificaciones = () => {
-    router.push('/mis-notificaciones');
+    router.push('/notificacion');
   };
 
 
@@ -42,7 +42,7 @@ export default function Home() {
   }
 
   const irACargarDinero = () => {
-    router.push("/cargar-dinero")
+    router.push("/cargarDinero")
   }
 
   if (loading || isLoadingProfile || isLoadingSaldo) {
@@ -87,7 +87,7 @@ export default function Home() {
               <Wallet className="h-5 w-5 mr-2" />
               <span className="font-medium">Tu Saldo</span>
             </div>
-            <div className="mt-1 text-xl font-bold text-green-700">${saldo?.toLocaleString()}</div>
+            <div className="mt-1 text-xl font-bold text-green-700">${saldo.saldo.toLocaleString()}</div>
           </div>
         </div>
 
@@ -164,7 +164,7 @@ export default function Home() {
               />
             </svg>
           </div>
-          <h2 className="text-2xl font-bold text-gray-800 mb-4">¡Bienvenido, {userProfile?.nombre}!</h2>
+          <h2 className="text-2xl font-bold text-gray-800 mb-4">¡Bienvenido, {userProfile?.nombre_usuario}!</h2>
 
           <div className="bg-gray-50 p-4 rounded-lg mb-6">
             <p className="text-gray-600 mb-2 flex items-center justify-center">

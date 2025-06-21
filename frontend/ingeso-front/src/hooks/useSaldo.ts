@@ -1,14 +1,16 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import api from "@/api/axios"
-
+import { useAuth } from "@/context/AuthContext"
 // 🔄 NUEVO HOOK PARA OBTENER SALDO DEL USUARIO
 export function useObtenerSaldo() {
+  const { token, loading } = useAuth();
   return useQuery({
     queryKey: ["saldo"],
     queryFn: async () => {
       const respuesta = await api.get("/api/auth/saldo")
       return respuesta.data.data
     },
+    enabled: !loading && !!token,
   })
 }
 

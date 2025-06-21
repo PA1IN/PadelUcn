@@ -4,25 +4,25 @@ import { AxiosError } from 'axios';
 
 interface Logindata {
     rut: string;
-    contraseña: string;
+    contrasena: string;
 }
 
 interface Loginresponse {
     message: string;
-    data: {
-        token: string;
-    };
+    //data: {
+    token: string;
+    //};
     statusCode: number;
     success: boolean;
 }
 
-export function useLogin(onSuccess: (token: string)=> void, onFail:(error:string)=> void) {
-    return useMutation<Loginresponse,AxiosError,Logindata>({ mutationFn: async ({rut, contraseña}: Logindata): Promise<Loginresponse> => {
-            const respuesta = await api.post('/api/auth/login', {rut, contraseña});
+export function useLogin(onSuccess: (access_token: string)=> void, onFail:(error:string)=> void) {
+    return useMutation<Loginresponse,AxiosError,Logindata>({ mutationFn: async ({rut, contrasena}: Logindata): Promise<Loginresponse> => {
+            const respuesta = await api.post('/api/auth/login', {rut, contrasena});
             return respuesta.data;
         },
         onSuccess: (data) => {
-            onSuccess(data.data.token);
+            onSuccess(data.token);
         },
         onError:(error) => {
             const mensaje = (error.response?.data as {message?: string})?.message || 'no se pudo identificar el error xd';
