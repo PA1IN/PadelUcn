@@ -28,7 +28,7 @@ export function useMarcarNotificacionLeida () {
 
     return useMutation({
         mutationFn: async (id: number) => {
-            await api.patch(`/api/notificaciones/historial/${id}`, { leida: true});
+            await api.patch(`/api/notificaciones/marcar-leida/${id}`, { leida: true});
         },
         onSuccess: () => {
             clienteQuery.invalidateQueries({ queryKey: ['notificaciones-usuario']});

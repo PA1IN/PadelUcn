@@ -69,7 +69,7 @@ async login(@Body() loginDto: LoginDto) {
   @UseGuards(JwtAuthGuard)
   async actualizarSaldo(@Req() req, @Body() data: { nuevoSaldo: number; transaccion?: string }) {
     try {
-      // ✅ VALIDAR NUEVO SALDO
+      
       if (data.nuevoSaldo < 0) {
         return CreateResponse(
           'El saldo no puede ser negativo',
@@ -80,23 +80,30 @@ async login(@Body() loginDto: LoginDto) {
         );
       }
 
+    
       const usuario = await this.usuarioService.findOne(req.user.id_usuario);
       
-      // Calcular diferencia de saldo
+      
       const diferencia = data.nuevoSaldo - usuario.saldo;
       
-      // ✅ ACTUALIZAR DIRECTAMENTE EL SALDO
-      const usuarioActualizado = await this.usuarioService.update(
-        req.user.id_usuario, 
-        { saldo: data.nuevoSaldo },
-         req.user  // ✅ AGREGAR PARÁMETRO currentUser
-    );
+      let usuarioActualizado;
+      
+      if (diferencia !== 0) {
+        
+        usuarioActualizado = await this.usuarioService.addSaldo(
+          usuario.rut, 
+          { monto: diferencia }
+        );
+      } else {
+        
+        usuarioActualizado = usuario;
+      }
       
       return CreateResponse(
         'Saldo actualizado exitosamente',
         {
           saldo_anterior: usuario.saldo,
-          saldo_nuevo: data.nuevoSaldo,
+          saldo_nuevo: usuarioActualizado.saldo,
           diferencia: diferencia,
           transaccion: data.transaccion || 'Actualización de saldo'
         },

@@ -78,7 +78,7 @@ export function useHistorialTransacciones(fechaInicio?: string, fechaFin?: strin
                 params.append("fechaFin", fechaFin)
             }
 
-            const { data } = await api.get(`/api//transacciones?${params.toString()}`)
+            const { data } = await api.get(`/api/transacciones/periodo?${params.toString()}`)
             return data.data
         }
     })

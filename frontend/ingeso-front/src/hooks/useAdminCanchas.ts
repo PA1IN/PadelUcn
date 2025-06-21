@@ -23,7 +23,7 @@ export function useAdminCanchas() {
     return useQuery<Cancha[], Error>({
         queryKey: ["admin-canchas"],
         queryFn: async () => {
-            const { data } = await api.get("/api/admin/canchas");
+            const { data } = await api.get("/api/usuarios/admin/canchas");
             return data.data;
         },
     })
@@ -33,7 +33,7 @@ export function useCrearCancha() {
     const clienteQuery = useQueryClient();
     return useMutation({
         mutationFn: async (cancha: nuevaCancha) => {
-            const { data } = await api.post("/api/admin/canchas", cancha);
+            const { data } = await api.post("/api/usuarios/admin/canchas", cancha);
             return data;
         },
         onSuccess: () => {
@@ -47,7 +47,7 @@ export function useActualizarCancha() {
     const clienteQuery = useQueryClient();
     return useMutation({
         mutationFn: async ({id, cancha }: {id: number; cancha: Partial<nuevaCancha>}) => {
-            const { data } = await api.patch(`/api/admin/canchas/${id}`, cancha)
+            const { data } = await api.patch(`/api/usuarios/admin/canchas/${id}`, cancha)
             return data; 
         },
         onSuccess: () => {

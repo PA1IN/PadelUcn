@@ -117,7 +117,7 @@ export function useVerificarDisponibilidad(fecha: string, hora: string, numeroPe
     queryKey: ["disponibilidad", fecha, hora, numeroPersonas],
     queryFn: async () => {
       const respuesta = await api.get(
-        `/api/disponibilidad?fecha=${fecha}&hora=${hora}&numeroPersonas=${numeroPersonas}`,
+        `/api/reserva/disponibilidad?fecha=${fecha}&hora=${hora}&numeroPersonas=${numeroPersonas}`,
       )
       return respuesta.data.data
     },
