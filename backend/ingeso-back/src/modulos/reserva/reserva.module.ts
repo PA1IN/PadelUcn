@@ -13,7 +13,7 @@ import { HistorialReserva } from '../historial-reserva/entities/historial-reserv
 import { NotificacionesService } from '../notificaciones/notificaciones.service';
 import { Notificacion } from '../notificaciones/entities/notificacione.entity';
 import { TransaccionModule } from '../transaccion/transaccion.module';
-
+import { CanchaModule } from '../cancha/cancha.module';
 
 @Module({
   imports: [
@@ -28,7 +28,8 @@ import { TransaccionModule } from '../transaccion/transaccion.module';
       Notificacion,
       
     ]),
-    TransaccionModule, 
+    TransaccionModule,
+    CanchaModule, 
   ],
   controllers: [ReservaController],
   providers: [

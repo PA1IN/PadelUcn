@@ -130,7 +130,7 @@ export function useFechasDisponibles() {
   return useQuery({
     queryKey: ["fechasDisponibles"],
     queryFn: async () => {
-      const respuesta = await api.get("/api/fechas-disponibles")
+      const respuesta = await api.get("/api/reserva/fechas-disponibles")
       return respuesta.data.data
     },
   })

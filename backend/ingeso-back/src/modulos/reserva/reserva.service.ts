@@ -22,6 +22,7 @@ import { NotificacionesService } from '../notificaciones/notificaciones.service'
 import { TransaccionService } from '../transaccion/transaccion.service';
 import { CreateTransaccionDto } from '../transaccion/dto/create-transaccion.dto';
 import { EstadoReserva } from './entities/reserva.entity';
+import { CanchaService } from '../cancha/cancha.service';
 
 @Injectable()
 export class ReservaService {
@@ -41,6 +42,7 @@ export class ReservaService {
     private historialReservaService: HistorialReservaService,
     private readonly notificacionesService: NotificacionesService,
     private readonly transaccionService: TransaccionService, 
+    private readonly canchaService: CanchaService,
   ) {}
 
   // ✅ MÉTODO CREATE PRINCIPAL (MANTENER SOLO ESTE)
@@ -326,8 +328,11 @@ export class ReservaService {
 
   async findOne(id: number): Promise<ApiResponse<Reserva>> {
     try {
+      if (!id || isNaN(id) || id <= 0) {
+      throw new BadRequestException(`ID de reserva inválido: ${id}`);
+     }
       const reserva = await this.reservaRepository.findOne({
-        where: { id: id },
+        where: {id: id},
         relations: ['usuario', 'cancha', 'boletas', 'boletas.equipamiento', 'historiales'],
       });
       
@@ -1224,7 +1229,8 @@ export class ReservaService {
         HttpStatus.BAD_REQUEST,
       );
     }
-
   }
+
+  
 }
 
