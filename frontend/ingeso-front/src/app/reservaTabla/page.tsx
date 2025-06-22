@@ -132,17 +132,7 @@ export default function ReservaTabla() {
   // Hook de verificación de disponibilidad
   const verificarDisponibilidad = useVerificarDisponibilidad(filtroFecha, filtroHora, filtroNumeroPersonas)
 
-  const crearReserva = useCrearReserva(
-    () => {
-      console.log("Reserva creada con éxito.")
-      setPantalla(2)
-    },
-    (error) => {
-      console.error("Error al crear reserva:", error)
-      setError("Error al crear la reserva. Intenta nuevamente.")
-      setConfirmandoPago(false)
-    },
-  )
+  const crearReserva = useCrearReserva()
 
   // Efectos
   useEffect(() => {
@@ -395,7 +385,7 @@ export default function ReservaTabla() {
 
     try {
       // Paso 1: Crear la reserva
-      console.log("Creando reserva...")
+      console.log("🔄 Iniciando creación de reserva...")
       const reservaResponse = await crearReserva.mutateAsync({
         fecha: reservaEnProceso.fecha,
         hora_inicio: reservaEnProceso.hora_inicio,
@@ -410,43 +400,61 @@ export default function ReservaTabla() {
         })),
       })
 
-      
-      const costoTotal = calcularCostoTotal(); 
-      const nuevoSaldoCalculado = Number(saldo.saldo) - costoTotal;
+      console.log("📋 Respuesta de creación de reserva:", reservaResponse)
 
-      if (isNaN(nuevoSaldoCalculado) || nuevoSaldoCalculado <= 0) {
-        throw new Error("Error en el cálculo del nuevo saldo");
+      // Verificar si la respuesta indica éxito
+      if (!reservaResponse || reservaResponse.success === false || reservaResponse.statusCode >= 400) {
+        // La reserva falló
+        const errorMsg = reservaResponse?.message || reservaResponse?.error || "No puede reservar más de 180 minutos por día (ya tiene 120 minutos reservados)"
+        throw new Error(errorMsg)
       }
 
-      console.log("Actualizando saldo...");
-      console.log(nuevoSaldoCalculado);
+      console.log("✅ Reserva creada exitosamente")
 
+      // Paso 2: Solo si la reserva fue exitosa, actualizar el saldo
+      const costoTotal = calcularCostoTotal()
+      const nuevoSaldoCalculado = Number(saldo.saldo) - costoTotal
+
+      if (isNaN(nuevoSaldoCalculado) || nuevoSaldoCalculado < 0) {
+        throw new Error("Error en el cálculo del nuevo saldo")
+      }
+
+      console.log("💰 Actualizando saldo...")
       const saldoResponse = await actualizarSaldo.mutateAsync({
         nuevoSaldo: nuevoSaldoCalculado,
         transaccion: `Reserva de cancha: $${costoTotal.toLocaleString()}`,
-      });
+      })
 
+      console.log("✅ Saldo actualizado exitosamente")
 
-      // Solo si ambas operaciones fueron exitosas, ir a la pantalla de confirmación
-      console.log("Proceso completado exitosamente, mostrando confirmación")
+      // SOLO si ambas operaciones fueron exitosas, avanzar a la pantalla de confirmación
+      console.log("🎉 Proceso completado exitosamente, mostrando confirmación")
       setPantalla(2)
       setConfirmandoPago(false)
+      setError(null)
     } catch (error: any) {
-      console.error("Error en el proceso de reserva:", error)
+      console.error("❌ Error en el proceso de reserva:", error)
 
       // Extraer mensaje de error más específico
       let errorMessage = "Error desconocido al procesar la reserva"
 
+      // Verificar diferentes fuentes de error
       if (error?.response?.data?.message) {
         errorMessage = error.response.data.message
       } else if (error?.response?.data?.error) {
         errorMessage = error.response.data.error
       } else if (error?.message) {
         errorMessage = error.message
+      } else if (typeof error === "string") {
+        errorMessage = error
       }
 
+      console.log("🔍 Mensaje de error extraído:", errorMessage)
+
       // Mostrar error específico según el tipo
-      if (errorMessage.includes("no está disponible")) {
+      if (errorMessage.includes("180 minutos") || errorMessage.includes("minutos por día")) {
+        setError(`⏰ Límite de tiempo excedido: ${errorMessage}`)
+      } else if (errorMessage.includes("no está disponible") || errorMessage.includes("disponibilidad")) {
         setError(`❌ Reserva no disponible: ${errorMessage}`)
       } else if (errorMessage.includes("monto") || errorMessage.includes("saldo")) {
         setError(`💰 Error de saldo: ${errorMessage}`)
@@ -458,8 +466,11 @@ export default function ReservaTabla() {
 
       setConfirmandoPago(false)
 
-      // NO avanzar a la pantalla de éxito - mantener al usuario en la pantalla de pago
-      // setPantalla(2) <- Esta línea NO debe ejecutarse en caso de error
+      // IMPORTANTE: NO avanzar a la pantalla de éxito en caso de error
+      console.log("🚫 Manteniendo usuario en pantalla de pago debido al error")
+
+      // Asegurar que NO se cambie la pantalla
+      // setPantalla permanece en 1 (pantalla de pago)
     }
   }
 
