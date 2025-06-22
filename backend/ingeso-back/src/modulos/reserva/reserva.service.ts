@@ -216,8 +216,29 @@ export class ReservaService {
 
       // ✅ PROCESAR PAGO TOTAL EN UNA SOLA OPERACIÓN
       if (!isAdmin) {
-        usuario.saldo -= costoTotal;
+          console.log('>>> ANTES: Saldo usuario', usuario.saldo);
+          console.log('>>> Costo a restar:', costoTotal);
+        // Convertir explícitamente a números y restar
+        const saldoActual = Number(usuario.saldo);
+        const costoReservacion = Number(costoTotal);
+        
+        console.log('>>> Saldo antes:', saldoActual);
+        console.log('>>> Costo reserva:', costoReservacion);
+        
+        // Actualizar saldo con operación de resta explícita
+        usuario.saldo = saldoActual - costoReservacion;
+        
+        console.log('>>> Saldo después:', usuario.saldo);
         await this.usuarioRepository.save(usuario);
+        
+        // Registrar transacción
+        try {
+          await this.transaccionService.create({
+          fecha: new Date(),                   
+         });
+        } catch (transaccionError) {
+          console.error('Error al registrar transacción:', transaccionError);
+        }
       }
 
       // Procesar equipamiento y actualizar stock
